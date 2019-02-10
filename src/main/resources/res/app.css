@@ -23,18 +23,8 @@
 }
 .button:focused, .buttonStop:focused, .buttonUp:focused{
     -fx-background-color: #6a6a6a;
-    -fx-border-color: #6a6a6a;
-    -fx-border-radius: 3;
-    -fx-border-width: 2;
-    -fx-text-fill: #f7fafa;
 }
-.button:hover:focused, .buttonStop:hover:focused, .buttonUp:hover:focused{
-    -fx-background-color: #6a6a6a;
-    -fx-border-color: #a4ffff;
-    -fx-border-radius: 3;
-    -fx-border-width: 2;
-    -fx-text-fill: #f7fafa;
-}
+
 .button:pressed, .dialog-pane .button:pressed{
     -fx-background-color: #4f4f4f;
     -fx-border-color: #289de8;
@@ -48,7 +38,6 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #f7fafa;
-    
 }
 .buttonStop:pressed{
     -fx-background-color: #4f4f4f;
@@ -56,7 +45,6 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #f7fafa;
-    
 }
 
 .text-area{

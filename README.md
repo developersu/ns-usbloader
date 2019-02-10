@@ -7,6 +7,14 @@ With GUI and cookies.
 
 Source code spreads under the GNU General Public License v.3. You can find it in LICENSE file.
 
+## Requirements
+
+JRE 8 or higher.
+
+## Usage
+
+`>_ java -jar /path/to/NS-USBloader.jar`
+
 ## Used libraries
 * OpenJFX https://wiki.openjdk.java.net/display/OpenJFX/Main
 * usb4java: https://mvnrepository.com/artifact/org.usb4java/usb4java
