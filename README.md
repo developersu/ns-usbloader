@@ -18,6 +18,7 @@ JRE 8 or higher.
 ## Used libraries
 * OpenJFX https://wiki.openjdk.java.net/display/OpenJFX/Main
 * usb4java: https://mvnrepository.com/artifact/org.usb4java/usb4java
+* Few icons taken from: http://materialdesignicons.com/
 
 ## Tips&tricks
 ### Add user to udev rules to use NS non-root:

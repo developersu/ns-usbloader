@@ -21,28 +21,28 @@
             </TextArea>
             <ProgressBar fx:id="progressBar" prefWidth="Infinity" progress="0.0">
                <VBox.margin>
-                  <Insets left="5.0" right="5.0" top="5.0" />
+                  <Insets left="5.0" right="5.0" top="2.0" />
                </VBox.margin>
             </ProgressBar>
             <HBox alignment="TOP_CENTER" VBox.vgrow="NEVER">
                <children>
                   <Button fx:id="selectNspBtn" contentDisplay="TOP" mnemonicParsing="false" prefHeight="60.0" text="%btnFileOpen">
                      <HBox.margin>
-                        <Insets left="2.0" right="2.0" />
+                        <Insets />
                      </HBox.margin>
                      <graphic>
-                        <SVGPath content="M15,7H20.5L15,1.5V7M8,0H16L22,6V18A2,2 0 0,1 20,20H8C6.89,20 6,19.1 6,18V2A2,2 0 0,1 8,0M4,4V22H20V24H4A2,2 0 0,1 2,22V4H4Z" fill="#289de8" />
+                        <SVGPath content="M 8,0 C 6.8954305,0 6,0.8954305 6,2 v 16 c 0,1.1 0.89,2 2,2 h 12 c 1.104569,0 2,-0.895431 2,-2 V 2 C 22,0.90484721 21.089844,0 20,0 Z m 2.1,1.2 h 7.8 C 18,1.20208 18,1.2002604 18,1.3 v 0.1 c 0,0.095833 0,0.097917 -0.1,0.1 H 10.1 C 10,1.5057292 10,1.5036458 10,1.4 V 1.3 C 10,1.20026 10,1.1981771 10.1,1.2 Z M 8,2 h 12 c 0.303385,0 0.5,0.2044271 0.5,0.5 v 12 C 20.5,14.789959 20.29836,15 20,15 H 8 C 7.7044271,15 7.5,14.803385 7.5,14.5 V 2.5 C 7.5,2.2083333 7.7122396,2 8,2 Z M 2,4 v 18 c 0,1.104569 0.8954305,2 2,2 H 20 V 22 H 4 V 4 Z m 8,12 h 8 l -4,3 z" fill="#289de8" />
                      </graphic>
                   </Button>
                   <Pane HBox.hgrow="ALWAYS" />
                   <Button fx:id="uploadStopBtn" contentDisplay="TOP" mnemonicParsing="false" prefHeight="60.0" prefWidth="130.0" text="%btnUpload">
                      <HBox.margin>
-                        <Insets left="2.0" />
+                        <Insets />
                      </HBox.margin>
                   </Button>
                </children>
                <VBox.margin>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="2.0" />
                </VBox.margin>
             </HBox>
          </children>
