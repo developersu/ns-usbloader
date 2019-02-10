@@ -134,7 +134,7 @@ class UsbCommunications extends Task<Void> {
             printLog("NS in connected USB devices found", MsgType.PASS);
         }
         else {
-            printLog("NS in connected USB devices no found\n  Returned: "+result, MsgType.FAIL);
+            printLog("NS in connected USB devices not found\n  Returned: "+result, MsgType.FAIL);
             close();
             return null;
         }
@@ -144,7 +144,7 @@ class UsbCommunications extends Task<Void> {
         if (result != LibUsb.SUCCESS) {
             printLog("Open NS USB device\n  Returned: " + result, MsgType.FAIL);
             if (result == -3){
-                printLog("Double check that you have administrator privileges (you're 'root') or udev rules set for your user!",MsgType.INFO);
+                printLog("Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!",MsgType.INFO);
             }
             close();
             return null;
