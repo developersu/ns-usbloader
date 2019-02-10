@@ -28,10 +28,12 @@ public class NSLMain extends Application {
             rb = ResourceBundle.getBundle("locale", new Locale("en"));
 
         // If it's windows, refuse to work
+        /*
         if (System.getProperty("os.name").toLowerCase().startsWith("win")){
             ServiceWindow.getErrorNotification(rb.getString("windowErrorHeader"), rb.getString("windowItsWindowsMessage"));
         }
         else{
+        /*/
             // If it's not, go ahead
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/NSLMain.fxml"));
 
@@ -59,8 +61,9 @@ public class NSLMain extends Application {
                         e.consume();
             });
         }
+        /*/
     }
-
+        /*/
 
     public static void main(String[] args) {
         if ((args.length == 1) && (args[0].equals("-v") || args[0].equals("--version"))){

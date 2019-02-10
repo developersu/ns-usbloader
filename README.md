@@ -11,22 +11,21 @@ Source code spreads under the GNU General Public License v.3. You can find it in
 
 JRE 8 or higher.
 
-## Usage
-
-`>_ java -jar /path/to/NS-USBloader.jar`
-
 ## Used libraries
 * OpenJFX https://wiki.openjdk.java.net/display/OpenJFX/Main
 * usb4java: https://mvnrepository.com/artifact/org.usb4java/usb4java
 * Few icons taken from: http://materialdesignicons.com/
 
+## Usage
+Linux:
+
+`root # java -jar /path/to/NS-USBloader.jar`
+
 ## Tips&tricks
 ### Add user to udev rules to use NS non-root:
-root # vim /etc/udev/rules.d/99-NS.rules
-
-SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", GROUP="plugdev"
-
-root # udevadm control --reload-rules && udevadm trigger
+`root # vim /etc/udev/rules.d/99-NS.rules`
+`SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", GROUP="plugdev"`
+`root # udevadm control --reload-rules && udevadm trigger`
 
 ## Known bugs
 * Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't selected anything on NS).
