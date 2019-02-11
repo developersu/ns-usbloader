@@ -565,7 +565,7 @@ class UsbCommunications extends Task<Void> {
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
 
         int result;
-        result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 5000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+        result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
         if (result != LibUsb.SUCCESS){
             switch (result){

@@ -60,7 +60,7 @@ public class NSLMainController implements Initializable {
     private void selectFilesBtnAction(){
         List<File> filesList;
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle(resourceBundle.getString("FilesChooserFileChooser"));
+        fileChooser.setTitle(resourceBundle.getString("btnFileOpen"));
         fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));         // TODO: read from prefs
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NS ROM", "*.nsp"));
 
