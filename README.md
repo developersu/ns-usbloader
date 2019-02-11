@@ -37,7 +37,9 @@ Install JRE/JDK 8 or higher (openJDK is good. Oracle's one is also good). JavaFX
 
 ### macOS
 
-Coming...
+Not tested.
+
+See 'Linux' section
 
 ## Tips&tricks
 ### Add user to udev rules to use NS non-root (Linux):
