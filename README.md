@@ -41,7 +41,9 @@ Coming...
 ## Tips&tricks
 ### Add user to udev rules to use NS non-root (Linux):
 `root # vim /etc/udev/rules.d/99-NS.rules`
+
 `SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", GROUP="plugdev"`
+
 `root # udevadm control --reload-rules && udevadm trigger`
 
 ## Known bugs
