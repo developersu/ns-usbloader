@@ -433,8 +433,8 @@ class UsbCommunications extends Task<Void> {
                     return true;
                 if ((currentOffset + readPice) >= receivedRangeSize )
                     readPice = Math.toIntExact(receivedRangeSize - currentOffset);
-                System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // TODO: -----------------------DEBUG-----------------
-                // updating progress bar if needed START
+                //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // TODO: NOTE: -----------------------DEBUG-----------------
+                // updating progress bar (if a lot of data requested) START BLOCK
                 if (isProgessBarInitiated){
                     try {
                         if (currentOffset+readPice == receivedRangeOffset){
@@ -451,7 +451,7 @@ class UsbCommunications extends Task<Void> {
                     if ((readPice == 8388608) && (currentOffset == 0))
                         isProgessBarInitiated = true;
                 }
-                // updating progress bar if needed END
+                // updating progress bar if needed END BLOCK
 
                 bufferCurrent = new byte[readPice];                                                         // TODO: not perfect moment, consider refactoring.
 
@@ -587,12 +587,12 @@ class UsbCommunications extends Task<Void> {
             printLog("Execution stopped", MsgType.FAIL);
             return null;
         } else {
-            // DEBUG START----------------------------------------------------------------------------------------------
             int trans = readBufTransferred.get();
             byte[] receivedBytes = new byte[trans];
             readBuffer.get(receivedBytes);
+            /* DEBUG START----------------------------------------------------------------------------------------------
             hexDumpUTF8(receivedBytes);
-            // DEBUG END------------------------------------------------------------------------------------------------
+            // DEBUG END----------------------------------------------------------------------------------------------*/
             return receivedBytes;
         }
     }
@@ -625,6 +625,7 @@ class UsbCommunications extends Task<Void> {
     /**
      * Debug tool like hexdump <3
      */
+    /*
     private void hexDumpUTF8(byte[] byteArray){
         for (int i=0; i < byteArray.length; i++)
             System.out.print(String.format("%02d-", i%10));
@@ -635,4 +636,5 @@ class UsbCommunications extends Task<Void> {
                 + new String(byteArray, StandardCharsets.UTF_8)
                 + "\n");
     }
+    */
 }
