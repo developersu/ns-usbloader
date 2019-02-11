@@ -2,6 +2,7 @@
 
 NS-USBloader is a PC-side tinfoil NSP USB uploader. Replacement for default usb_install_pc.py
 With GUI and cookies.
+Read more: https://developersu.blogspot.com/2019/02/ns-usbloader-en.html
 
 ## License
 
