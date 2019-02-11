@@ -45,7 +45,7 @@ public class NSLMainController implements Initializable {
 
         uploadStopBtn.setDisable(true);
         selectNspBtn.setOnAction(e->{ selectFilesBtnAction(); });
-        uploadStopBtn.setOnAction(e->{ uploadToNsBtnAction(); });
+        uploadStopBtn.setOnAction(e->{ uploadBtnAction(); });
 
         this.btnUpStopImage = new Region();
         btnUpStopImage.getStyleClass().add("regionUpload");
@@ -85,7 +85,7 @@ public class NSLMainController implements Initializable {
     /**
      * It's button listener when no transmission executes
      * */
-    private void uploadToNsBtnAction(){
+    private void uploadBtnAction(){
         if (usbThread == null || !usbThread.isAlive()){
             UsbCommunications usbCommunications = new UsbCommunications(logArea, progressBar, nspToUpload);  //todo: progress bar
             usbThread = new Thread(usbCommunications);
@@ -119,7 +119,7 @@ public class NSLMainController implements Initializable {
         }
         else {
             selectNspBtn.setDisable(false);
-            uploadStopBtn.setOnAction(e->{ uploadToNsBtnAction(); });
+            uploadStopBtn.setOnAction(e->{ uploadBtnAction(); });
 
             uploadStopBtn.setText(resourceBundle.getString("btnUpload"));
 

@@ -10,6 +10,7 @@ public class ServiceWindow   {
     /**
      * Create window with notification
      * */
+    /* // not used
     static void getErrorNotification(String title, String body){
         Alert alertBox = new Alert(Alert.AlertType.ERROR);
         alertBox.setTitle(title);
@@ -22,6 +23,10 @@ public class ServiceWindow   {
         alertBox.getDialogPane().getStylesheets().add("/res/app.css");
         alertBox.show();
     }
+    */
+    /**
+     * Create notification window with confirm/deny
+     * */
     static boolean getConfirmationWindow(String title, String body){
         Alert alertBox = new Alert(Alert.AlertType.CONFIRMATION);
         alertBox.setTitle(title);
