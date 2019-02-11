@@ -24,7 +24,7 @@
     -fx-background-color: #6a6a6a;
 }
 
-.button:pressed, .dialog-pane .button:pressed{
+.button:pressed{
     -fx-background-color: #4f4f4f;
     -fx-border-color: #289de8;
     -fx-border-radius: 3;
@@ -59,7 +59,6 @@
 .progress-bar {
     -fx-background-color: transparent;
     -fx-box-border: transparent;
-   -fx-max-height: 10px;
 }
 .progress-bar > .track {
     -fx-background-color: transparent;
@@ -67,9 +66,23 @@
 }
 .progress-bar > .bar {
     -fx-background-color: linear-gradient(to right, #00bce4, #ff5f53);
-    -fx-background-insets: 3 3 4 3;
     -fx-background-radius: 2;
+    -fx-background-insets: 1 1 2 1;
+    -fx-padding: 0.23em;
 }
+
+.dialog-pane {
+    -fx-background-color: #4f4f4f;
+}
+.dialog-pane > .button-bar > .container{
+    -fx-background-color: #2d2d2d;
+}
+
+.dialog-pane > .label{
+    -fx-padding: 10 5 10 5;
+}
+
+
 
 .regionUpload{
     -fx-shape: "M8,21V19H16V21H8M8,17V15H16V17H8M8,13V11H16V13H8M19,9H5L12,2L19,9Z";
