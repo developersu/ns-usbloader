@@ -336,7 +336,7 @@ class UsbCommunications extends Task<Void> {
      * After we sent commands to NS, this chain starts
      * */
     private void proceedCommands(){
-        printLog("Waiting for NS commands.", MsgType.INFO);
+        printLog("Awaiting for NS commands.", MsgType.INFO);
 
         /*  byte[] magic = new byte[4];
             ByteBuffer bb = StandardCharsets.UTF_8.encode("TUC0").rewind().get(magic);
@@ -565,7 +565,7 @@ class UsbCommunications extends Task<Void> {
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
 
         int result;
-        result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+        result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 5000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
         if (result != LibUsb.SUCCESS){
             switch (result){
@@ -588,7 +588,6 @@ class UsbCommunications extends Task<Void> {
             return null;
         } else {
             // DEBUG START----------------------------------------------------------------------------------------------
-            readBuffer.rewind();
             int trans = readBufTransferred.get();
             byte[] receivedBytes = new byte[trans];
             readBuffer.get(receivedBytes);
