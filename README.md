@@ -1,8 +1,12 @@
 # NS-USBloader
 
 NS-USBloader is a PC-side tinfoil NSP USB uploader. Replacement for default usb_install_pc.py
+
 With GUI and cookies.
+
 Read more: https://developersu.blogspot.com/2019/02/ns-usbloader-en.html
+
+Here is the version of 'not perfect byt anyway' [tinfoil I use](https://cloud.mail.ru/public/DwbX/H8d2p3aYR).
 
 ## License
 
@@ -13,9 +17,9 @@ Source code spreads under the GNU General Public License v.3. You can find it in
 JRE 8 or higher. See below.
 
 ## Used libraries
-* OpenJFX https://wiki.openjdk.java.net/display/OpenJFX/Main
-* usb4java: https://mvnrepository.com/artifact/org.usb4java/usb4java
-* Few icons taken from: http://materialdesignicons.com/
+* [OpenJFX](https://wiki.openjdk.java.net/display/OpenJFX/Main)
+* [usb4java](https://mvnrepository.com/artifact/org.usb4java/usb4java)
+* Few icons taken from: [materialdesignicons](http://materialdesignicons.com/)
 
 ## Usage
 ### Linux:
@@ -23,6 +27,12 @@ JRE 8 or higher. See below.
 Install JRE/JDK 8 or higher (openJDK is good. Oracle's one is also good). JavaFX not needed, if you're interested (it's embedded).
 
 `root # java -jar /path/to/NS-USBloader.jar`
+
+### macOS
+
+See 'Linux' section.
+
+Set 'Security & Privacy' if needed.
 
 ### Windows: 
 
@@ -34,12 +44,6 @@ Install JRE/JDK 8 or higher (openJDK is good. Oracle's one is also good). JavaFX
 * Download and install Java JRE (8+)
 * Get this application (JAR file) double-click on on it (alternatively open 'cmd', go to place where jar located and execute via 'java -jar thisAppName.jar')
 * Remember to have fun!
-
-### macOS
-
-Not tested.
-
-See 'Linux' section
 
 ## Tips&tricks
 ### Add user to udev rules to use NS non-root (Linux):
@@ -53,6 +57,6 @@ See 'Linux' section
 * Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't selected anything on NS).
 
 ## TODO:
-- [ ] macOS QA
+- [x] macOS QA by [Konstanin Kelemen](https://github.com/konstantin-kelemen). Appreciate assistance of [Vitaliy Natarov](https://github.com/SebastianUA). 
 - [x] Windows support
 - [ ] code refactoring

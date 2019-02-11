@@ -590,7 +590,7 @@ class UsbCommunications extends Task<Void> {
             int trans = readBufTransferred.get();
             byte[] receivedBytes = new byte[trans];
             readBuffer.get(receivedBytes);
-            /* DEBUG START----------------------------------------------------------------------------------------------
+            /* DEBUG START----------------------------------------------------------------------------------------------*
             hexDumpUTF8(receivedBytes);
             // DEBUG END----------------------------------------------------------------------------------------------*/
             return receivedBytes;
