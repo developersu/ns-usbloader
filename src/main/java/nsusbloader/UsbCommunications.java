@@ -96,11 +96,13 @@ class UsbCommunications extends Task<Void> {
             }
         }
         // Free device list.
-        LibUsb.freeDeviceList(deviceList, true);
+
         ////////////////////////////////////////// DEBUG INFORMATION START ///////////////////////////////////////////
         /*
         ConfigDescriptor configDescriptor = new ConfigDescriptor();
-        result = LibUsb.getConfigDescriptor(deviceNS, (byte)0x0, configDescriptor);
+                //result = LibUsb.getConfigDescriptor(deviceNS, (byte)0x01, configDescriptor);
+        result = LibUsb.getActiveConfigDescriptor(deviceNS, configDescriptor);
+
         switch (result){
             case 0:
                 System.out.println("SUCCES");
@@ -115,10 +117,11 @@ class UsbCommunications extends Task<Void> {
         }
         System.out.println();
 
-        LibUsb.freeConfigDescriptor(configDescriptor);
-        */
+        //LibUsb.freeConfigDescriptor(configDescriptor);
+        //*/
         /*
          * So what did we learn?
+         * bConfigurationValue     1
          * bInterfaceNumber = 0
          * bEndpointAddress      0x81  EP 1 IN
          * Transfer Type             Bulk
@@ -142,9 +145,19 @@ class UsbCommunications extends Task<Void> {
         handlerNS = new DeviceHandle();
         result = LibUsb.open(deviceNS, handlerNS);
         if (result != LibUsb.SUCCESS) {
-            printLog("Open NS USB device\n  Returned: " + result, MsgType.FAIL);
-            if (result == -3){
-                printLog("Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!",MsgType.INFO);
+            switch (result){
+                case LibUsb.ERROR_ACCESS:
+                    printLog("Open NS USB device\n  Returned: ERROR_ACCESS", MsgType.FAIL);
+                    printLog("Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!",MsgType.INFO);
+                    break;
+                case LibUsb.ERROR_NO_MEM:
+                    printLog("Open NS USB device\n  Returned: ERROR_NO_MEM", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_NO_DEVICE:
+                    printLog("Open NS USB device\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                    break;
+                default:
+                    printLog("Open NS USB device\n  Returned:" + result, MsgType.FAIL);
             }
             close();
             return null;
@@ -152,55 +165,89 @@ class UsbCommunications extends Task<Void> {
         else
             printLog("Open NS USB device", MsgType.PASS);
 
+        printLog("Free device list", MsgType.INFO);
+        LibUsb.freeDeviceList(deviceList, true);
+
         // DO some stuff to connected NS
         // Check if this device uses kernel driver and detach if possible:
         boolean canDetach = LibUsb.hasCapability(LibUsb.CAP_SUPPORTS_DETACH_KERNEL_DRIVER); // if cant, it's windows ot old lib
         if (canDetach){
             int usedByKernel = LibUsb.kernelDriverActive(handlerNS, DEFAULT_INTERFACE);
-            switch (usedByKernel){
-                case 0:
-                    printLog("Can proceed with libusb driver", MsgType.PASS);
-                    break;  // we're good
-                case 1:     // used by kernel
-                    result = LibUsb.detachKernelDriver(handlerNS, DEFAULT_INTERFACE);
-                    printLog("Detach kernel required", MsgType.INFO);
-                    if (result != 0) {
-                        switch (result){
-                            case LibUsb.ERROR_NOT_FOUND:
-                                printLog("Detach kernel\n  Returned: ERROR_NOT_FOUND", MsgType.FAIL);
+                if (usedByKernel == LibUsb.SUCCESS){
+                    printLog("Can proceed with libusb driver", MsgType.PASS);   // we're good
+                }
+                else {
+                    switch (usedByKernel){
+                        case 1:     // used by kernel
+                            result = LibUsb.detachKernelDriver(handlerNS, DEFAULT_INTERFACE);
+                            printLog("Detach kernel required", MsgType.INFO);
+                            if (result != 0) {
+                                switch (result){
+                                    case LibUsb.ERROR_NOT_FOUND:
+                                        printLog("Detach kernel\n  Returned: ERROR_NOT_FOUND", MsgType.FAIL);
+                                        break;
+                                    case LibUsb.ERROR_INVALID_PARAM:
+                                        printLog("Detach kernel\n  Returned: ERROR_INVALID_PARAM", MsgType.FAIL);
+                                        break;
+                                    case LibUsb.ERROR_NO_DEVICE:
+                                        printLog("Detach kernel\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                                        break;
+                                    case LibUsb.ERROR_NOT_SUPPORTED:        // Should never appear only if libusb buggy
+                                        printLog("Detach kernel\n  Returned: ERROR_NOT_SUPPORTED", MsgType.FAIL);
+                                        break;
+                                    default:
+                                        printLog("Detach kernel\n  Returned: " + result, MsgType.FAIL);
+                                        break;
+                                }
+                                close();
+                                return null;
+                            }
+                            else {
+                                printLog("Detach kernel", MsgType.PASS);
                                 break;
-                            case LibUsb.ERROR_INVALID_PARAM:
-                                printLog("Detach kernel\n  Returned: ERROR_INVALID_PARAM", MsgType.FAIL);
-                                break;
-                            case LibUsb.ERROR_NO_DEVICE:
-                                printLog("Detach kernel\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
-                                break;
-                            case LibUsb.ERROR_NOT_SUPPORTED:        // Should never appear only if libusb buggy
-                                printLog("Detach kernel\n  Returned: ERROR_NOT_SUPPORTED", MsgType.FAIL);
-                                break;
-                            default:
-                                printLog("Detach kernel\n  Returned: " + result, MsgType.FAIL);
-                                break;
-                        }
-                        close();
-                        return null;
+                            }
+                        case LibUsb.ERROR_NO_DEVICE:
+                            printLog("Can't proceed with libusb driver\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                            break;
+                        case LibUsb.ERROR_NOT_SUPPORTED:
+                            printLog("Can't proceed with libusb driver\n  Returned: ERROR_NOT_SUPPORTED", MsgType.FAIL);
+                            break;
+                        default:
+                            printLog("Can't proceed with libusb driver\n  Returned: "+result, MsgType.FAIL);
                     }
-                    else {
-                        printLog("Detach kernel", MsgType.PASS);
-                        break;
-                    }
-                case LibUsb.ERROR_NO_DEVICE:
-                    printLog("Can't proceed with libusb driver\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
-                    break;
-                case LibUsb.ERROR_NOT_SUPPORTED:
-                    printLog("Can't proceed with libusb driver\n  Returned: ERROR_NOT_SUPPORTED", MsgType.FAIL);
-                    break;
-                default:
-                    printLog("Can't proceed with libusb driver\n  Returned: "+result, MsgType.FAIL);
-            }
+                }
         }
         else
             printLog("libusb doesn't supports function 'CAP_SUPPORTS_DETACH_KERNEL_DRIVER'. Proceeding.", MsgType.WARNING);
+
+        // Set configuration (soft reset if needed)
+        result = LibUsb.setConfiguration(handlerNS, 1);     // 1 - configuration all we need
+        if (result != LibUsb.SUCCESS){
+            switch (result){
+                case LibUsb.ERROR_NOT_FOUND:
+                    printLog("Set active configuration to device\n  Returned: ERROR_NOT_FOUND", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_BUSY:
+                    printLog("Set active configuration to device\n  Returned: ERROR_BUSY", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_NO_DEVICE:
+                    printLog("Set active configuration to device\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_INVALID_PARAM:
+                    printLog("Set active configuration to device\n  Returned: ERROR_INVALID_PARAM", MsgType.FAIL);
+                    break;
+                default:
+                    printLog("Set active configuration to device\n  Returned: "+result, MsgType.FAIL);
+                    break;
+            }
+            close();
+            return null;
+        }
+        else {
+            printLog("Set active configuration to device.", MsgType.PASS);
+        }
+
+
         // Claim interface
         result = LibUsb.claimInterface(handlerNS, DEFAULT_INTERFACE);
         if (result != LibUsb.SUCCESS) {
@@ -209,10 +256,13 @@ class UsbCommunications extends Task<Void> {
             return null;
         }
         else
-            printLog("Claim interface\n  Returned: "+result, MsgType.PASS);
+            printLog("Claim interface", MsgType.PASS);
+
+
+
         // Send list of NSP files:
         // Proceed "TUL0"
-        if (!writeToUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {
+        if (!writeToUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {  // new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x76, (byte) 0x30}
             printLog("Send list of files: handshake", MsgType.FAIL);
             close();
             return null;
@@ -471,11 +521,10 @@ class UsbCommunications extends Task<Void> {
     private boolean writeToUsb(byte[] message){
         ByteBuffer writeBuffer = ByteBuffer.allocateDirect(message.length);   //writeBuffer.order() equals BIG_ENDIAN;
         writeBuffer.put(message);
-        writeBuffer.rewind();        // well..
+                                                    // DONT EVEN THINK OF USING writeBuffer.rewind();        // well..
         IntBuffer writeBufTransferred = IntBuffer.allocate(1);
         int result;
         result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
-
         if (result != LibUsb.SUCCESS){
             switch (result){
                 case LibUsb.ERROR_TIMEOUT:
