@@ -6,7 +6,7 @@
 
     <groupId>loper</groupId>
     <artifactId>NS-USBloader</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <name>NS-USBloader</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
