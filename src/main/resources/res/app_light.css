@@ -2,58 +2,59 @@
     src: url("NotoMono-Regular.ttf");
 }
 .root{
-    -fx-background: #2d2d2d;
+    -fx-background: #ebebeb;
 }
 
 .button, .buttonUp, .buttonStop{
-    -fx-background-color: #4f4f4f;
-    -fx-border-color: #4f4f4f;
+    -fx-background-color: #fefefe;
+    -fx-border-color: #fefefe;
     -fx-border-radius: 3;
     -fx-border-width: 2;
-    -fx-text-fill: #f7fafa;
-    -fx-effect: none;
+    -fx-text-fill: #2c2c2c;
+    -fx-effect: dropshadow(three-pass-box, #b4b4b4, 2, 0, 0, 0);
+    
 }
 .button:hover, .buttonStop:hover, .buttonUp:hover, .choice-box:hover{
-    -fx-background-color: #4f4f4f;
+    -fx-background-color: #fefefe;
     -fx-border-color: #a4ffff;
     -fx-border-radius: 3;
     -fx-border-width: 2;
-    -fx-text-fill: #f7fafa;
+    -fx-text-fill: #2c2c2c;
 }
 .button:focused, .buttonStop:focused, .buttonUp:focused, .choice-box:focused{
-    -fx-background-color: #6a6a6a;
+    -fx-background-color: #cccccc;
 }
 
 .button:pressed{
-    -fx-background-color: #4f4f4f;
+    -fx-background-color: #fefefe;
     -fx-border-color: #289de8;
     -fx-border-radius: 3;
     -fx-border-width: 2;
-    -fx-text-fill: #f7fafa;
+    -fx-text-fill: #2c2c2c;
 }
 .buttonUp:pressed{
-    -fx-background-color: #4f4f4f;
+    -fx-background-color: #fefefe;
     -fx-border-color: #a2e019;
     -fx-border-radius: 3;
     -fx-border-width: 2;
-    -fx-text-fill: #f7fafa;
+    -fx-text-fill: #2c2c2c;
 }
 .buttonStop:pressed{
-    -fx-background-color: #4f4f4f;
+    -fx-background-color: #fefefe;
     -fx-border-color: #fb582c;
     -fx-border-radius: 3;
     -fx-border-width: 2;
-    -fx-text-fill: #f7fafa;
+    -fx-text-fill: #2c2c2c;
 }
 
 .text-area{
     -fx-background-color: transparent;
-    -fx-control-inner-background: #4f4f4f;
+    -fx-control-inner-background: #fefefe;
     -fx-font-family: "Noto Mono";
-    -fx-border-color: #00ffc9;
+    -fx-border-color: #06b9bb;
     -fx-border-radius: 3;
     -fx-border-width: 2;
-    -fx-text-fill: #f7fafa;
+    -fx-text-fill: #2c2c2c;
 }
 
 .progress-bar {
@@ -72,7 +73,7 @@
 }
 
 .dialog-pane {
-    -fx-background-color: #4f4f4f;
+    -fx-background-color: #fefefe;
 }
 .dialog-pane > .button-bar > .container{
     -fx-background-color: #2d2d2d;
@@ -87,36 +88,36 @@
 }
 
 .special-pane-as-border{
-    -fx-background-color: #f7fafa;
+    -fx-background-color: #2c2c2c;
     -fx-min-height: 1;
 }
 
 .choice-box {
-    -fx-background-color: #4f4f4f;
-    -fx-border-color: #4f4f4f;
+    -fx-background-color: #fefefe;
+    -fx-border-color: #fefefe;
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-mark-color: #eea11e;
-    -fx-effect: none;
+    -fx-effect: dropshadow(three-pass-box, #b4b4b4, 2, 0, 0, 0);
 }
 .choice-box > .label {
-    -fx-text-fill: #f7fafa;
+    -fx-text-fill: #2c2c2c;
 }
 
 .choice-box:pressed{
-    -fx-background-color: #4f4f4f;
+    -fx-background-color: #fefefe;
     -fx-border-color: #eea11e;
     -fx-border-radius: 3;
     -fx-border-width: 2;
-    -fx-text-fill: #f7fafa;
+    -fx-text-fill: #2c2c2c;
 }
 
 // Background color of the whole context menu
-.choice-box .context-menu { -fx-background-color: #2d2d2d; }
+.choice-box .context-menu { -fx-background-color: #fefefe; }
 // Focused item background color in the list
 .choice-box .menu-item:focused { -fx-background-color: #eea11e; }
 // Text color of non-focused items in the list
-.choice-box .menu-item > .label { -fx-text-fill: #f7fafa; }
+.choice-box .menu-item > .label { -fx-text-fill: #2c2c2c; }
 // Text color of focused item in the list
 .choice-box .menu-item:focused > .label { -fx-text-fill: #2d2d2d; }
 
@@ -135,9 +136,9 @@
     -fx-min-width: -size;
 }
 
-.regionLamp{
-    -fx-shape: "M12,2A7,7 0 0,1 19,9C19,11.38 17.81,13.47 16,14.74V17A1,1 0 0,1 15,18H9A1,1 0 0,1 8,17V14.74C6.19,13.47 5,11.38 5,9A7,7 0 0,1 12,2M9,21V20H15V21A1,1 0 0,1 14,22H10A1,1 0 0,1 9,21M12,4A5,5 0 0,0 7,9C7,11.05 8.23,12.81 10,13.58V16H14V13.58C15.77,12.81 17,11.05 17,9A5,5 0 0,0 12,4Z";
-    -fx-background-color: #f7fafa;
+.regionLamp {
+    -fx-shape: "M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z";
+    -fx-background-color: #2c2c2c;
     -size: 17.5;
     -fx-min-height: -size;
     -fx-min-width: 12.5;

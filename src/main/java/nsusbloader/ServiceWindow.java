@@ -11,7 +11,7 @@ public class ServiceWindow   {
      * Create window with notification
      * */
     /* // not used
-    static void getErrorNotification(String title, String body){
+    public static void getErrorNotification(String title, String body){
         Alert alertBox = new Alert(Alert.AlertType.ERROR);
         alertBox.setTitle(title);
         alertBox.setHeaderText(null);
@@ -27,7 +27,7 @@ public class ServiceWindow   {
     /**
      * Create notification window with confirm/deny
      * */
-    static boolean getConfirmationWindow(String title, String body){
+    public static boolean getConfirmationWindow(String title, String body){
         Alert alertBox = new Alert(Alert.AlertType.CONFIRMATION);
         alertBox.setTitle(title);
         alertBox.setHeaderText(null);

@@ -1,12 +1,14 @@
 # NS-USBloader
 
-NS-USBloader is a PC-side tinfoil NSP USB uploader. Replacement for default usb_install_pc.py
+NS-USBloader is a PC-side TinFoil/GoldLeaf NSP USB uploader. Replacement for default usb_install_pc.py and GoldTree.
 
 With GUI and cookies.
 
 Read more: https://developersu.blogspot.com/2019/02/ns-usbloader-en.html
 
-Here is the version of 'not perfect byt anyway' [tinfoil I use](https://cloud.mail.ru/public/DwbX/H8d2p3aYR).
+Here is the version of 'not perfect but anyway' [tinfoil I use](https://cloud.mail.ru/public/DwbX/H8d2p3aYR). 
+Ok, I'm almost sure that this version has bugs. I don't remember where I downloaded it. But it works for me somehow.. 
+Let's rephrase, if you have working version of TinFoil DO NOT use this one.  
 
 ## License
 
@@ -60,3 +62,7 @@ Set 'Security & Privacy' if needed.
 - [x] macOS QA by [Konstanin Kelemen](https://github.com/konstantin-kelemen). Appreciate assistance of [Vitaliy Natarov](https://github.com/SebastianUA). 
 - [x] Windows support
 - [ ] code refactoring
+- [ ] GoldLeaf support
+- [ ] XCI support
+- [ ] Settings
+- [ ] File order sort (non-critical)

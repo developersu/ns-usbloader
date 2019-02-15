@@ -1,10 +1,14 @@
 package nsusbloader;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 
@@ -28,8 +32,18 @@ public class NSLMainController implements Initializable {
     private Region btnUpStopImage;
     @FXML
     private ProgressBar progressBar;
+    @FXML
+    private ChoiceBox<String> choiceProtocol;
+    @FXML
+    private Button switchThemeBtn;
+    private Region btnSwitchImage;
+
+    @FXML
+    private Pane specialPane;
 
     private Thread usbThread;
+
+    private String previouslyOpenedPath;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -43,6 +57,8 @@ public class NSLMainController implements Initializable {
 
         MediatorControl.getInstance().registerController(this);
 
+        specialPane.getStyleClass().add("special-pane-as-border");  // UI hacks
+
         uploadStopBtn.setDisable(true);
         selectNspBtn.setOnAction(e->{ selectFilesBtnAction(); });
         uploadStopBtn.setOnAction(e->{ uploadBtnAction(); });
@@ -52,6 +68,29 @@ public class NSLMainController implements Initializable {
         //uploadStopBtn.getStyleClass().remove("button");
         uploadStopBtn.getStyleClass().add("buttonUp");
         uploadStopBtn.setGraphic(btnUpStopImage);
+
+        ObservableList<String> choiceProtocolList = FXCollections.observableArrayList();
+        choiceProtocolList.setAll("TinFoil", "GoldLeaf");
+        choiceProtocol.setItems(choiceProtocolList);
+        choiceProtocol.getSelectionModel().select(0);       // TODO: shared settings
+
+        this.previouslyOpenedPath = null;
+
+        this.btnSwitchImage = new Region();
+        btnSwitchImage.getStyleClass().add("regionLamp");
+        switchThemeBtn.setGraphic(btnSwitchImage);
+        this.switchThemeBtn.setOnAction(e->switchTheme());
+    }
+
+    private void switchTheme(){
+        if (switchThemeBtn.getScene().getStylesheets().get(0).equals("/res/app.css")) {
+            switchThemeBtn.getScene().getStylesheets().remove("/res/app.css");
+            switchThemeBtn.getScene().getStylesheets().add("/res/app_light.css");
+        }
+        else {
+            switchThemeBtn.getScene().getStylesheets().add("/res/app.css");
+            switchThemeBtn.getScene().getStylesheets().remove("/res/app_light.css");
+        }
     }
     /**
      * Functionality for selecting NSP button.
@@ -61,12 +100,22 @@ public class NSLMainController implements Initializable {
         List<File> filesList;
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(resourceBundle.getString("btnFileOpen"));
-        fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));         // TODO: read from prefs
+        if (previouslyOpenedPath == null)
+            fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));         // TODO: read from prefs
+        else {
+            File validator = new File(previouslyOpenedPath);
+            if (validator.exists())
+                fileChooser.setInitialDirectory(validator);         // TODO: read from prefs
+            else
+                fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));         // TODO: read from prefs
+        }
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NS ROM", "*.nsp"));
 
         filesList = fileChooser.showOpenMultipleDialog(logArea.getScene().getWindow());
-        if (filesList != null && !filesList.isEmpty())
+        if (filesList != null && !filesList.isEmpty()) {
             setReady(filesList);
+            previouslyOpenedPath = filesList.get(0).getParent();
+        }
         else
             setNotReady(resourceBundle.getString("logsNoFolderFileSelected"));
     }
@@ -87,7 +136,7 @@ public class NSLMainController implements Initializable {
      * */
     private void uploadBtnAction(){
         if (usbThread == null || !usbThread.isAlive()){
-            UsbCommunications usbCommunications = new UsbCommunications(logArea, progressBar, nspToUpload);  //todo: progress bar
+            UsbCommunications usbCommunications = new UsbCommunications(logArea, progressBar, nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
             usbThread = new Thread(usbCommunications);
             usbThread.start();
         }

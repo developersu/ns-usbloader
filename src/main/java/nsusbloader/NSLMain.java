@@ -19,7 +19,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
-    static final String appVersion = "v0.1";
+    static final String appVersion = "v0.2-DEVELOPMENT";
     @Override
     public void start(Stage primaryStage) throws Exception{
         ResourceBundle rb;

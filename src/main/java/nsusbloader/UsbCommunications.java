@@ -3,6 +3,7 @@ package nsusbloader;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
+import nsusbloader.PFS.PFSProvider;
 import org.usb4java.*;
 
 import java.io.*;
@@ -11,11 +12,15 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import static nsusbloader.RainbowHexDump.hexDumpUTF8;
 
 class UsbCommunications extends Task<Void> {
     private final int DEFAULT_INTERFACE = 0;
@@ -29,6 +34,8 @@ class UsbCommunications extends Task<Void> {
 
     private Context contextNS;
     private DeviceHandle handlerNS;
+
+    private String protocol;
     /*
     Ok, here is a story. We will pass to NS only file names, not full path. => see nspMap where 'key' is a file name.
     File name itself should not be greater then 512 bytes, but in real world it's limited by OS to something like 256 bytes.
@@ -40,7 +47,8 @@ class UsbCommunications extends Task<Void> {
     Since this application let user an ability (theoretically) to choose same files in different folders, the latest selected file will be added to the list and handled correctly.
     I have no idea why he/she will make a decision to do that. Just in case, we're good in this point.
      */
-    UsbCommunications(TextArea logArea, ProgressBar progressBar, List<File> nspList){
+    UsbCommunications(TextArea logArea, ProgressBar progressBar, List<File> nspList, String protocol){
+        this.protocol = protocol;
         this.nspMap = new HashMap<>();
         for (File f: nspList)
             nspMap.put(f.getName(), f);
@@ -258,51 +266,14 @@ class UsbCommunications extends Task<Void> {
         else
             printLog("Claim interface", MsgType.PASS);
 
-
-
-        // Send list of NSP files:
-        // Proceed "TUL0"
-        if (!writeToUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {  // new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x76, (byte) 0x30}
-            printLog("Send list of files: handshake", MsgType.FAIL);
-            close();
-            return null;
+        //--------------------------------------------------------------------------------------------------------------
+        if (protocol.equals("TinFoil")) {
+            if (!sendListOfNSP())
+                return null;
+            proceedCommands();
+        } else {
+            new GoldLeaf();
         }
-        else
-            printLog("Send list of files: handshake", MsgType.PASS);
-        //Collect file names
-        StringBuilder nspListNamesBuilder = new StringBuilder();    // Add every title to one stringBuilder
-        for(String nspFileName: nspMap.keySet())
-            nspListNamesBuilder.append(nspFileName+'\n');   // And here we come with java string default encoding (UTF-16)
-
-        byte[] nspListNames = nspListNamesBuilder.toString().getBytes(StandardCharsets.UTF_8);
-        ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);         // integer = 4 bytes; BTW Java is stored in big-endian format
-        byteBuffer.putInt(nspListNames.length);                                                             // This way we obtain length in int converted to byte array in correct Big-endian order. Trust me.
-        byte[] nspListSize = byteBuffer.array();                                                            // TODO: rewind? not sure..
-        //byteBuffer.reset();
-
-        // Sending NSP list
-        if (!writeToUsb(nspListSize)) {                                           // size of the list we're going to transfer goes...
-            printLog("Send list of files: send length.", MsgType.FAIL);
-            close();
-            return null;
-        } else
-            printLog("Send list of files: send length.", MsgType.PASS);
-        if (!writeToUsb(new byte[8])) {                                           // 8 zero bytes goes...
-            printLog("Send list of files: send padding.", MsgType.FAIL);
-            close();
-            return null;
-        }
-        else
-            printLog("Send list of files: send padding.", MsgType.PASS);
-        if (!writeToUsb(nspListNames)) {                                           // list of the names goes...
-            printLog("Send list of files: send list itself.", MsgType.FAIL);
-            close();
-            return null;
-        }
-        else
-            printLog("Send list of files: send list itself.", MsgType.PASS);
-
-        proceedCommands();
 
         close();
         printLog("\tEnd chain", MsgType.INFO);
@@ -331,6 +302,50 @@ class UsbCommunications extends Task<Void> {
             printLog("Requested context close", MsgType.INFO);
         }
         msgConsumer.interrupt();
+    }
+    private boolean sendListOfNSP(){
+        // Send list of NSP files:
+        // Proceed "TUL0"
+        if (!writeToUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {  // new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x76, (byte) 0x30}
+            printLog("Send list of files: handshake", MsgType.FAIL);
+            close();
+            return false;
+        }
+        else
+            printLog("Send list of files: handshake", MsgType.PASS);
+        //Collect file names
+        StringBuilder nspListNamesBuilder = new StringBuilder();    // Add every title to one stringBuilder
+        for(String nspFileName: nspMap.keySet())
+            nspListNamesBuilder.append(nspFileName+'\n');   // And here we come with java string default encoding (UTF-16)
+
+        byte[] nspListNames = nspListNamesBuilder.toString().getBytes(StandardCharsets.UTF_8);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);         // integer = 4 bytes; BTW Java is stored in big-endian format
+        byteBuffer.putInt(nspListNames.length);                                                             // This way we obtain length in int converted to byte array in correct Big-endian order. Trust me.
+        byte[] nspListSize = byteBuffer.array();                                                            // TODO: rewind? not sure..
+        //byteBuffer.reset();
+
+        // Sending NSP list
+        if (!writeToUsb(nspListSize)) {                                           // size of the list we're going to transfer goes...
+            printLog("Send list of files: send length.", MsgType.FAIL);
+            close();
+            return false;
+        } else
+            printLog("Send list of files: send length.", MsgType.PASS);
+        if (!writeToUsb(new byte[8])) {                                           // 8 zero bytes goes...
+            printLog("Send list of files: send padding.", MsgType.FAIL);
+            close();
+            return false;
+        }
+        else
+            printLog("Send list of files: send padding.", MsgType.PASS);
+        if (!writeToUsb(nspListNames)) {                                           // list of the names goes...
+            printLog("Send list of files: send list itself.", MsgType.FAIL);
+            close();
+            return false;
+        }
+        else
+            printLog("Send list of files: send list itself.", MsgType.PASS);
+        return true;
     }
     /**
      * After we sent commands to NS, this chain starts
@@ -444,7 +459,7 @@ class UsbCommunications extends Task<Void> {
                         else
                             progressQueue.put((currentOffset+readPice)/(receivedRangeSize/100.0) / 100.0);
                     }catch (InterruptedException ie){
-                        getException().printStackTrace();
+                        getException().printStackTrace();               // TODO: Do something with this
                     }
                 }
                 else {
@@ -471,6 +486,7 @@ class UsbCommunications extends Task<Void> {
                 }
 
             }
+            bufferedInStream.close();
         } catch (FileNotFoundException fnfe){
             printLog("FileNotFoundException:\n"+fnfe.getMessage(), MsgType.FAIL);
             return false;
@@ -596,6 +612,203 @@ class UsbCommunications extends Task<Void> {
             return receivedBytes;
         }
     }
+
+    private class GoldLeaf{
+        //                     CMD                                G     L     U     C     ID    0     0     0
+        private final byte[] CMD_ConnectionRequest =  new byte[]{0x47, 0x4c, 0x55, 0x43, 0x00, 0x00, 0x00, 0x00};    // Write-only command
+        private final byte[] CMD_NSPName =            new byte[]{0x47, 0x4c, 0x55, 0x43, 0x02, 0x00, 0x00, 0x00};    // Write-only command
+        private final byte[] CMD_NSPData =            new byte[]{0x47, 0x4c, 0x55, 0x43, 0x04, 0x00, 0x00, 0x00};    // Write-only command
+
+        private final byte[] CMD_ConnectionResponse = new byte[]{0x47, 0x4c, 0x55, 0x43, 0x01, 0x00, 0x00, 0x00};
+        private final byte[] CMD_Start =              new byte[]{0x47, 0x4c, 0x55, 0x43, 0x03, 0x00, 0x00, 0x00};
+        private final byte[] CMD_NSPContent =         new byte[]{0x47, 0x4c, 0x55, 0x43, 0x05, 0x00, 0x00, 0x00};
+        private final byte[] CMD_NSPTicket =          new byte[]{0x47, 0x4c, 0x55, 0x43, 0x06, 0x00, 0x00, 0x00};
+        private final byte[] CMD_Finish =             new byte[]{0x47, 0x4c, 0x55, 0x43, 0x07, 0x00, 0x00, 0x00};
+
+        GoldLeaf(){
+            List<PFSProvider> pfsList = new ArrayList<>();
+
+            StringBuilder allValidFiles = new StringBuilder();
+            StringBuilder nonValidFiles = new StringBuilder();
+            // Prepare data
+            for (File nspFile : nspMap.values()) {
+                PFSProvider pfsp = new PFSProvider(nspFile, msgQueue);
+                if (pfsp.init()) {
+                    pfsList.add(pfsp);
+                    allValidFiles.append(nspFile.getName());
+                    allValidFiles.append("\n");
+                }
+                else {
+                    nonValidFiles.append(nspFile.getName());
+                    nonValidFiles.append("\n");
+                }
+            }
+            if (pfsList.size() == 0){
+                printLog("All files provided have incorrect structure and won't be uploaded", MsgType.FAIL);
+                return;
+            }
+            printLog("===========================================================================", MsgType.INFO);
+            printLog("Verified files prepared for upload: \n  "+allValidFiles, MsgType.PASS);
+            if (!nonValidFiles.toString().isEmpty())
+                printLog("Files with incorrect structure that won't be uploaded: \n"+nonValidFiles, MsgType.INFO);
+            //--------------------------------------------------------------------------------------------------------------
+
+            // Go parse commands
+            byte[] readByte;
+
+            for(PFSProvider pfsElement: pfsList) {
+                // Go connect to GoldLeaf
+                if (writeToUsb(CMD_ConnectionRequest))
+                    printLog("Initiating GoldLeaf connection" + nonValidFiles, MsgType.PASS);
+                else {
+                    printLog("Initiating GoldLeaf connection" + nonValidFiles, MsgType.FAIL);
+                    return;
+                }
+                int a = 0;                                                                                                  // TODO:DEBUG
+                while (true) {
+                    System.out.println("In loop. Iter: "+a);                                                                 // TODO:DEBUG
+                    readByte = readFromUsb();
+                    if (readByte == null)
+                        return;
+                    hexDumpUTF8(readByte);                                                                 // TODO:DEBUG
+                    if (Arrays.equals(readByte, CMD_ConnectionResponse)) {
+                        if (!handleConnectionResponse(pfsElement))
+                            return;
+                        else
+                            continue;
+                    }
+                    if (Arrays.equals(readByte, CMD_Start)) {
+                        if (!handleStart(pfsElement))
+                            return;
+                        else
+                            continue;
+                    }
+                    if (Arrays.equals(readByte, CMD_NSPContent)) {
+                        if (!handleNSPContent(pfsElement, true))
+                            return;
+                        else
+                            continue;
+                    }
+                    if (Arrays.equals(readByte, CMD_NSPTicket)) {
+                        if (!handleNSPContent(pfsElement, false))
+                            return;
+                        else
+                            continue;
+                    }
+                    if (Arrays.equals(readByte, CMD_Finish)) {
+                        printLog("Closing GoldLeaf connection: Transfer successful", MsgType.PASS);
+                        break;                     // TODO: GO TO NEXT NSP
+                    }
+                }
+            }
+        }
+        /**
+         * ConnectionResponse command handler
+         * */
+        private boolean handleConnectionResponse(PFSProvider pfsElement){
+            if (!writeToUsb(CMD_NSPName))
+                return false;
+            if (!writeToUsb(pfsElement.getBytesNspFileNameLength()))
+                return false;
+            if (!writeToUsb(pfsElement.getBytesNspFileName()))
+                return false;
+            return true;
+        }
+        /**
+         * Start command handler
+         * */
+        private boolean handleStart(PFSProvider pfsElement){
+            if (!writeToUsb(CMD_NSPData))
+                return false;
+            if (!writeToUsb(pfsElement.getBytesCountOfNca()))
+                return false;
+            for (int i = 0; i < pfsElement.getIntCountOfNca(); i++){
+                if (!writeToUsb(pfsElement.getNca(i).getNcaFileNameLength()))
+                    return false;
+                if (!writeToUsb(pfsElement.getNca(i).getNcaFileName()))
+                    return false;
+                if (!writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getBodySize()+pfsElement.getNca(i).getNcaOffset()).array()))   // offset. real.
+                    return false;
+                if (!writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getNca(i).getNcaSize()).array()))  // size
+                    return false;
+            }
+            return true;
+        }
+        /**
+         * NSPContent command handler
+         * isItRawRequest - if True, just ask NS what's needed
+         *                - if False, send ticket
+         * */
+        private boolean handleNSPContent(PFSProvider pfsElement, boolean isItRawRequest){
+            int requestedNcaID;
+            boolean isProgessBarInitiated = false;
+            if (isItRawRequest) {
+                byte[] readByte = readFromUsb();
+                if (readByte == null || readByte.length != 4)
+                    return false;
+                requestedNcaID = ByteBuffer.wrap(readByte).order(ByteOrder.LITTLE_ENDIAN).getInt();
+            }
+            else {
+                requestedNcaID = pfsElement.getNcaTicketID();
+            }
+
+            long realNcaOffset = pfsElement.getNca(requestedNcaID).getNcaOffset()+pfsElement.getBodySize();
+            long realNcaSize = pfsElement.getNca(requestedNcaID).getNcaSize();
+
+            long readFrom = 0;
+
+            int readPice = 8388608; // 8mb NOTE: consider switching to 1mb 1048576
+            byte[] readBuf;
+            File nspFile = nspMap.get(pfsElement.getStringNspFileName());       // wuuuut ( >< )
+            try{
+                BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspFile));      // TODO: refactor?
+                if (bufferedInStream.skip(realNcaOffset) != realNcaOffset)
+                    return false;
+
+                while (readFrom < realNcaSize){
+
+                    if (Thread.currentThread().isInterrupted())     // Check if user interrupted process.
+                        return false;
+
+                    if (realNcaSize - readFrom < readPice)
+                        readPice = Math.toIntExact(realNcaSize - readFrom);    // it's safe, I guarantee
+                    readBuf = new byte[readPice];
+                    if (bufferedInStream.read(readBuf) != readPice)
+                        return false;
+
+                    if (!writeToUsb(readBuf))
+                        return false;
+                    /***********************************/
+                    if (isProgessBarInitiated){
+                        try {
+                            if (readFrom+readPice == realNcaSize){
+                                progressQueue.put(1.0);
+                                isProgessBarInitiated = false;
+                            }
+                            else
+                                progressQueue.put((readFrom+readPice)/(realNcaSize/100.0) / 100.0);
+                        }catch (InterruptedException ie){
+                            getException().printStackTrace();               // TODO: Do something with this
+                        }
+                    }
+                    else {
+                        if ((readPice == 8388608) && (readFrom == 0))
+                            isProgessBarInitiated = true;
+                    }
+                    /***********************************/
+                    readFrom += readPice;
+                }
+                bufferedInStream.close();
+            }
+            catch (IOException ioe){
+                ioe.printStackTrace();
+                return false;
+            }
+            return true;
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
     /**
      * This is what will print to textArea of the application.
      * */
@@ -622,19 +835,4 @@ class UsbCommunications extends Task<Void> {
         }
 
     }
-    /**
-     * Debug tool like hexdump <3
-     */
-    /*
-    private void hexDumpUTF8(byte[] byteArray){
-        for (int i=0; i < byteArray.length; i++)
-            System.out.print(String.format("%02d-", i%10));
-        System.out.println("\t[[COLUMNS LEN = "+byteArray.length+"]]");
-        for (byte b: byteArray)
-            System.out.print(String.format("%02x ", b));
-        System.out.print("\t\t\t"
-                + new String(byteArray, StandardCharsets.UTF_8)
-                + "\n");
-    }
-    */
 }
