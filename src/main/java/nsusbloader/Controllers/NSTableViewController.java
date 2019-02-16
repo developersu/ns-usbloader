@@ -27,20 +27,25 @@ public class NSTableViewController implements Initializable {
     private TableView<NSLRowModel> table;
     private ObservableList<NSLRowModel> rowsObsLst;
 
+    private String protocol;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         rowsObsLst = FXCollections.observableArrayList();
         table.setPlaceholder(new Label());
 
-        TableColumn<NSLRowModel, String> statusColumn = new TableColumn<>("Status");            // TODO: Localization
-        TableColumn<NSLRowModel, String> fileNameColumn = new TableColumn<>("File Name");            // TODO: Localization
-        TableColumn<NSLRowModel, Boolean> uploadColumn = new TableColumn<>("Upload?");            // TODO: Localization
+        TableColumn<NSLRowModel, String> statusColumn = new TableColumn<>(resourceBundle.getString("tableStatusLbl"));
+        TableColumn<NSLRowModel, String> fileNameColumn = new TableColumn<>(resourceBundle.getString("tableFileNameLbl"));
+        TableColumn<NSLRowModel, String> fileSizeColumn = new TableColumn<>(resourceBundle.getString("tableSizeLbl"));
+        TableColumn<NSLRowModel, Boolean> uploadColumn = new TableColumn<>(resourceBundle.getString("tableUploadLbl"));
         statusColumn.setMinWidth(70.0);
-        fileNameColumn.setMinWidth(270.0);
+        fileNameColumn.setMinWidth(250.0);
+        fileSizeColumn.setMinWidth(70.0);
         uploadColumn.setMinWidth(70.0);
 
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
         fileNameColumn.setCellValueFactory(new PropertyValueFactory<>("nspFileName"));
+        fileSizeColumn.setCellValueFactory(new PropertyValueFactory<>("nspFileSize"));
         // ><
         uploadColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<NSLRowModel, Boolean>, ObservableValue<Boolean>>() {
             @Override
@@ -53,7 +58,7 @@ public class NSTableViewController implements Initializable {
                     @Override
                     public void changed(ObservableValue<? extends Boolean> observableValue, Boolean oldValue, Boolean newValue) {
                         model.setMarkForUpload(newValue);
-                        // TODO: add reference to this general class method which will validate protocol and restict selection
+                        restrictSelection(model);
                     }
                 });
 
@@ -70,19 +75,33 @@ public class NSTableViewController implements Initializable {
         });
 
         table.setItems(rowsObsLst);
-        table.getColumns().addAll(statusColumn, fileNameColumn, uploadColumn);
-
-        rowsObsLst.add(new NSLRowModel(new File("/tmp/dump_file"), true));
-        rowsObsLst.add(new NSLRowModel(new File("/home/loper/тяжелые будни.mp4"), false));
-        rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи.txt"), false));
+        table.getColumns().addAll(statusColumn, fileNameColumn, fileSizeColumn, uploadColumn);
+        /* debug content
+        rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи_2"), true));
         rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи_2"), false));
-        rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи_1"), false));
+        rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи_2"), false));
+        rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи_2"), true));
+        */
+    }
+    /**
+     * See uploadColumn callback. In case of GoldLeaf we have to restrict selection
+     * */
+    private void restrictSelection(NSLRowModel modelChecked){
+        if (!protocol.equals("TinFoil") && rowsObsLst.size() > 1) {       // Tinfoil doesn't need any restrictions. If only one file in list, also useless
+            for (NSLRowModel model: rowsObsLst){
+                if (model != modelChecked)
+                    model.setMarkForUpload(false);
+            }table.refresh();
+        }
     }
     /**
      * Add files when user selected them
      * */
-    public void addFiles(List<File> files, String protocol){
-        rowsObsLst.clear();
+    public void setFiles(List<File> files){
+        rowsObsLst.clear();                 // TODO: consider table refresh
+        if (files == null) {
+            return;
+        }
         if (protocol.equals("TinFoil")){
             for (File nspFile: files){
                 rowsObsLst.add(new NSLRowModel(nspFile, true));
@@ -119,7 +138,7 @@ public class NSTableViewController implements Initializable {
     /**
      * Update files in case something is wrong. Requested from UsbCommunications _OR_ PFS
      * */
-    public void reportFileStatus(String fileName, FileStatus status){
+    public void setFileStatus(String fileName, FileStatus status){
         for (NSLRowModel model: rowsObsLst){
             if (model.getNspFileName().equals(fileName)){
                 model.setStatus(status);
@@ -129,10 +148,11 @@ public class NSTableViewController implements Initializable {
     /**
      * Called if selected different USB protocol
      * */
-    public void protocolChangeEvent(String protocol){
+    public void setNewProtocol(String newProtocol){
+        protocol = newProtocol;
         if (rowsObsLst.isEmpty())
             return;
-        if (protocol.equals("TinFoil")){
+        if (newProtocol.equals("TinFoil")){
             for (NSLRowModel model: rowsObsLst)
                 model.setMarkForUpload(true);
         }
@@ -143,4 +163,5 @@ public class NSTableViewController implements Initializable {
         }
         table.refresh();
     }
+
 }

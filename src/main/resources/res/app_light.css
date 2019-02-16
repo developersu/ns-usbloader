@@ -14,39 +14,40 @@
     -fx-effect: dropshadow(three-pass-box, #b4b4b4, 2, 0, 0, 0);
     
 }
-.button:hover, .buttonStop:hover, .buttonUp:hover, .choice-box:hover{
+.button:hover, .buttonStop:hover, .buttonUp:hover, .choice-box:hover, .button:focused:hover, .buttonStop:focused:hover, .buttonUp:focused:hover, .choice-box:focused:hover{
     -fx-background-color: #fefefe;
-    -fx-border-color: #a4ffff;
+    -fx-border-color: #00caca;
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
 }
 .button:focused, .buttonStop:focused, .buttonUp:focused, .choice-box:focused{
     -fx-background-color: #cccccc;
+    -fx-border-color: #cccccc;
 }
 
-.button:pressed{
+.button:pressed, .button:pressed:hover{
     -fx-background-color: #fefefe;
     -fx-border-color: #289de8;
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
 }
-.buttonUp:pressed{
+.buttonUp:pressed, .buttonUp:pressed:hover{
     -fx-background-color: #fefefe;
     -fx-border-color: #a2e019;
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
 }
-.buttonStop:pressed{
+.buttonStop:pressed, .buttonStop:pressed:hover{
     -fx-background-color: #fefefe;
     -fx-border-color: #fb582c;
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
 }
-
+// -========================+ TextArea =====================-
 .text-area{
     -fx-background-color: transparent;
     -fx-control-inner-background: #fefefe;
@@ -104,7 +105,7 @@
     -fx-text-fill: #2c2c2c;
 }
 
-.choice-box:pressed{
+.choice-box:pressed, .choice-box:pressed:hover{
     -fx-background-color: #fefefe;
     -fx-border-color: #eea11e;
     -fx-border-radius: 3;
@@ -121,23 +122,51 @@
 // Text color of focused item in the list
 .choice-box .menu-item:focused > .label { -fx-text-fill: #2d2d2d; }
 
+// -======================== TAB PANE =========================-
 .tab-pane .tab SVGPath{
-    -fx-fill: #2c2c2c;
-
+    -fx-fill: #2c2c2c;                                      // OK
+}
+.tab-pane .tab:selected SVGPath{
+    -fx-fill: #289de8;                                      // OK
 }
 .tab-pane .tab{
-    -fx-background-color: #fefefe;
+    -fx-background-color: #fefefe;                          //ok
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-border-radius: 0 0 0 0;
+    -fx-border-width: 3 0 0 0;
+    -fx-border-color: #fefefe;                               //OK
 }
 
 .tab-pane .tab:selected{
-    -fx-background-color: #ebebeb;
+    -fx-background-color: #ebebeb;                          // OK
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-border-radius: 0 0 0 0;
+    -fx-border-width: 3 0 0 0;
+    -fx-border-color: #289de8;                              // OK
 }
+
+.tab-pane > .tab-header-area {
+    -fx-background-insets: 0.0;
+    -fx-padding: 5 5 5 5;
+}
+
+.tab-pane > .tab-header-area > .tab-header-background
+{
+   -fx-background-color: #fefefe;                       // OK
+
+}
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-padding: 10;
+}
+// -=========================== TABLE ======================-
 .table-view {
     -fx-background-color: #fefefe;
     -fx-background-image: url(app_logo.png);
     -fx-background-position: center;
     -fx-background-repeat: no-repeat;
-    -fx-border-color: #00ffc9;
+    -fx-border-color: #06b9bb;
     -fx-border-radius: 3;
     -fx-border-width: 2;
 }
@@ -146,22 +175,34 @@
 }
 .table-view .column-header-background .label{
     -fx-background-color: transparent;
-    -fx-text-fill: white;
+    -fx-text-fill: #2c2c2c;
 }
 .table-view .column-header-background, .table-view .filler{
     -fx-background-color: #fefefe;
 }
-// Remove visible selection 1
-.table-row-cell:filled:selected {
-  -fx-background: -fx-control-inner-background ;
-  -fx-background-color: -fx-table-cell-border-color, -fx-background ;
-  -fx-background-insets: 0, 0 0 1 0 ;
-  -fx-table-cell-border-color: derive(-fx-color, 5%);
+
+.table-view .table-cell{
+    -fx-text-fill: #2c2c2c;
 }
-// Remove visible selection 2
-.table-row-cell:odd:filled:selected {
-  -fx-background: -fx-control-inner-background-alt ;
+.table-row-cell, .table-row-cell:filled:selected, .table-row-cell:selected{
+    -fx-background-color: -fx-table-cell-border-color, #d3fffd;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em; /* 0 */
+    -fx-table-cell-border-color: #2c2c2c;
 }
+
+.table-row-cell:odd, .table-row-cell:odd:filled:selected, .table-row-cell:odd:selected{
+    -fx-background-color: -fx-table-cell-border-color, #fefefe;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em; /* 0 */
+    -fx-table-cell-border-color: #2c2c2c;
+}
+
+
+
+
+
+
 .regionUpload{
     -fx-shape: "M8,21V19H16V21H8M8,17V15H16V17H8M8,13V11H16V13H8M19,9H5L12,2L19,9Z";
     -fx-background-color: #a2e019;

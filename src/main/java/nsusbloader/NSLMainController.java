@@ -2,7 +2,6 @@ package nsusbloader;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -13,14 +12,13 @@ import nsusbloader.Controllers.NSTableViewController;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class NSLMainController implements Initializable {
 
     private ResourceBundle resourceBundle;
-
-    private List<File> nspToUpload;
 
     @FXML
     private TextArea logArea;
@@ -73,7 +71,8 @@ public class NSLMainController implements Initializable {
         ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "GoldLeaf");
         choiceProtocol.setItems(choiceProtocolList);
         choiceProtocol.getSelectionModel().select(0);                               // TODO: shared settings
-        choiceProtocol.setOnAction(e->tableFilesListController.protocolChangeEvent(choiceProtocol.getSelectionModel().getSelectedItem()));
+        choiceProtocol.setOnAction(e->tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem()));  // Add listener to notify tableView controller
+        tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem());   // Notify tableView controller
 
         this.previouslyOpenedPath = null;
 
@@ -117,29 +116,29 @@ public class NSLMainController implements Initializable {
 
         filesList = fileChooser.showOpenMultipleDialog(logArea.getScene().getWindow());
         if (filesList != null && !filesList.isEmpty()) {
-            setReady(filesList);
+            tableFilesListController.setFiles(filesList);
+            uploadStopBtn.setDisable(false);
             previouslyOpenedPath = filesList.get(0).getParent();
         }
-        else
-            setNotReady(resourceBundle.getString("logsNoFolderFileSelected"));
-    }
-    private void setReady(List<File> filesList){
-        logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
-        for (File item: filesList)
-            logArea.appendText("  "+item.getAbsolutePath()+"\n");
-        nspToUpload = filesList;
-        uploadStopBtn.setDisable(false);
-    }
-    private void setNotReady(String whyNotReady){
-        logArea.setText(whyNotReady);
-        nspToUpload = null;
-        uploadStopBtn.setDisable(true);
+        else{
+            tableFilesListController.setFiles(null);
+            uploadStopBtn.setDisable(true);
+        }
     }
     /**
      * It's button listener when no transmission executes
      * */
     private void uploadBtnAction(){
         if (usbThread == null || !usbThread.isAlive()){
+            List<File> nspToUpload;
+            if ((nspToUpload = tableFilesListController.getFiles()) == null) {
+                resourceBundle.getString("logsNoFolderFileSelected");
+                return;
+            }else {
+                logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
+                for (File item: nspToUpload)
+                    logArea.appendText("  "+item.getAbsolutePath()+"\n");
+            }
             UsbCommunications usbCommunications = new UsbCommunications(logArea, progressBar, nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
             usbThread = new Thread(usbCommunications);
             usbThread.start();
