@@ -1,5 +1,6 @@
 package nsusbloader.PFS;
 
+import nsusbloader.NSLDataTypes.MsgType;
 import nsusbloader.ServiceWindow;
 
 import java.io.*;
@@ -18,7 +19,6 @@ public class PFSProvider {
     private static final byte[] PFS0 = new byte[]{(byte)0x50, (byte)0x46, (byte)0x53, (byte)0x30};  // PFS0, and what did you think?
 
     private BlockingQueue<String> msgQueue;
-    private enum MsgType {PASS, FAIL, INFO, WARNING}
     private ResourceBundle rb;
 
     private RandomAccessFile randAccessFile;
@@ -106,7 +106,6 @@ public class PFSProvider {
             for (int i=0; i<filesCount; i++){
                 if (randAccessFile.read(ncaInfoArr) == 24) {
                     printLog("Read NCA inside NSP: " + i, MsgType.PASS);
-                    //hexDumpUTF8(ncaInfoArr);                                   // TODO: DEBUG
                 }
                 else {
                     printLog("Read NCA inside NSP: "+i, MsgType.FAIL);
@@ -149,7 +148,6 @@ public class PFSProvider {
                 printLog("Final padding check", MsgType.PASS);
             else
                 printLog("Final padding check", MsgType.WARNING);
-            //hexDumpUTF8(bufForInt);                                   // TODO: DEBUG
 
             // Calculate position including header for body size offset
             bodySize = randAccessFile.getFilePointer()+header;
@@ -174,7 +172,6 @@ public class PFSProvider {
                 if (new String(exchangeTempArray, StandardCharsets.UTF_8).toLowerCase().endsWith(".tik"))
                     this.ticketID = i;
                 this.ncaFiles[i].setNcaFileName(Arrays.copyOf(exchangeTempArray, exchangeTempArray.length));
-                //hexDumpUTF8(exchangeTempArray);                                   // TODO: DEBUG
             }
             randAccessFile.close();
         }
@@ -256,7 +253,7 @@ public class PFSProvider {
                     msgQueue.put(message);
             }
         }catch (InterruptedException ie){
-            ie.printStackTrace();
+            ie.printStackTrace();                                                  //TODO: INFORM
         }
 
     }

@@ -1,5 +1,5 @@
 /**
- Name: NSL-USBFoil
+ Name: NS-USBloader
  @author Dmitry Isaenko
  License: GNU GPL v.3
  @see https://github.com/developersu/

@@ -3,6 +3,7 @@ package nsusbloader;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
+import nsusbloader.NSLDataTypes.MsgType;
 import nsusbloader.PFS.PFSProvider;
 import org.usb4java.*;
 
@@ -18,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import static nsusbloader.RainbowHexDump.hexDumpUTF8;
 
@@ -26,8 +26,7 @@ class UsbCommunications extends Task<Void> {
     private final int DEFAULT_INTERFACE = 0;
 
     private BlockingQueue<String> msgQueue;
-    private BlockingQueue<Double> progressQueue ;
-    private enum MsgType {PASS, FAIL, INFO, WARNING}
+    private BlockingQueue<Double> progressQueue;
     private MessagesConsumer msgConsumer;
 
     private HashMap<String, File> nspMap;
@@ -268,9 +267,7 @@ class UsbCommunications extends Task<Void> {
 
         //--------------------------------------------------------------------------------------------------------------
         if (protocol.equals("TinFoil")) {
-            if (!sendListOfNSP())
-                return null;
-            proceedCommands();
+            new TinFoil();
         } else {
             new GoldLeaf();
         }
@@ -280,339 +277,247 @@ class UsbCommunications extends Task<Void> {
         return null;
     }
     /**
-     * Correct exit
+     * Tinfoil processing
      * */
-    private void close(){
-        // close handler in the end
-        if (handlerNS != null) {
-            // Try to release interface
-            int result = LibUsb.releaseInterface(handlerNS, DEFAULT_INTERFACE);
-
-            if (result != LibUsb.SUCCESS)
-                printLog("Release interface\n  Returned: "+result+" (sometimes it's not an issue)", MsgType.WARNING);
+    private class TinFoil{
+        TinFoil(){
+            if (!sendListOfNSP())
+                return;
+            proceedCommands();
+        }
+        /**
+         * Send what NSP will be transferred
+         * */
+        private boolean sendListOfNSP(){
+            // Send list of NSP files:
+            // Proceed "TUL0"
+            if (!writeToUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {  // new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x76, (byte) 0x30}
+                printLog("Send list of files: handshake", MsgType.FAIL);
+                close();
+                return false;
+            }
             else
-                printLog("Release interface", MsgType.PASS);
+                printLog("Send list of files: handshake", MsgType.PASS);
+            //Collect file names
+            StringBuilder nspListNamesBuilder = new StringBuilder();    // Add every title to one stringBuilder
+            for(String nspFileName: nspMap.keySet())
+                nspListNamesBuilder.append(nspFileName+'\n');   // And here we come with java string default encoding (UTF-16)
 
-            LibUsb.close(handlerNS);
-            printLog("Requested handler close", MsgType.INFO);
-        }
-        // close context in the end
-        if (contextNS != null) {
-            LibUsb.exit(contextNS);
-            printLog("Requested context close", MsgType.INFO);
-        }
-        msgConsumer.interrupt();
-    }
-    private boolean sendListOfNSP(){
-        // Send list of NSP files:
-        // Proceed "TUL0"
-        if (!writeToUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {  // new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x76, (byte) 0x30}
-            printLog("Send list of files: handshake", MsgType.FAIL);
-            close();
-            return false;
-        }
-        else
-            printLog("Send list of files: handshake", MsgType.PASS);
-        //Collect file names
-        StringBuilder nspListNamesBuilder = new StringBuilder();    // Add every title to one stringBuilder
-        for(String nspFileName: nspMap.keySet())
-            nspListNamesBuilder.append(nspFileName+'\n');   // And here we come with java string default encoding (UTF-16)
+            byte[] nspListNames = nspListNamesBuilder.toString().getBytes(StandardCharsets.UTF_8);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);         // integer = 4 bytes; BTW Java is stored in big-endian format
+            byteBuffer.putInt(nspListNames.length);                                                             // This way we obtain length in int converted to byte array in correct Big-endian order. Trust me.
+            byte[] nspListSize = byteBuffer.array();                                                            // TODO: rewind? not sure..
+            //byteBuffer.reset();
 
-        byte[] nspListNames = nspListNamesBuilder.toString().getBytes(StandardCharsets.UTF_8);
-        ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);         // integer = 4 bytes; BTW Java is stored in big-endian format
-        byteBuffer.putInt(nspListNames.length);                                                             // This way we obtain length in int converted to byte array in correct Big-endian order. Trust me.
-        byte[] nspListSize = byteBuffer.array();                                                            // TODO: rewind? not sure..
-        //byteBuffer.reset();
-
-        // Sending NSP list
-        if (!writeToUsb(nspListSize)) {                                           // size of the list we're going to transfer goes...
-            printLog("Send list of files: send length.", MsgType.FAIL);
-            close();
-            return false;
-        } else
-            printLog("Send list of files: send length.", MsgType.PASS);
-        if (!writeToUsb(new byte[8])) {                                           // 8 zero bytes goes...
-            printLog("Send list of files: send padding.", MsgType.FAIL);
-            close();
-            return false;
+            // Sending NSP list
+            if (!writeToUsb(nspListSize)) {                                           // size of the list we're going to transfer goes...
+                printLog("Send list of files: send length.", MsgType.FAIL);
+                close();
+                return false;
+            } else
+                printLog("Send list of files: send length.", MsgType.PASS);
+            if (!writeToUsb(new byte[8])) {                                           // 8 zero bytes goes...
+                printLog("Send list of files: send padding.", MsgType.FAIL);
+                close();
+                return false;
+            }
+            else
+                printLog("Send list of files: send padding.", MsgType.PASS);
+            if (!writeToUsb(nspListNames)) {                                           // list of the names goes...
+                printLog("Send list of files: send list itself.", MsgType.FAIL);
+                close();
+                return false;
+            }
+            else
+                printLog("Send list of files: send list itself.", MsgType.PASS);
+            return true;
         }
-        else
-            printLog("Send list of files: send padding.", MsgType.PASS);
-        if (!writeToUsb(nspListNames)) {                                           // list of the names goes...
-            printLog("Send list of files: send list itself.", MsgType.FAIL);
-            close();
-            return false;
-        }
-        else
-            printLog("Send list of files: send list itself.", MsgType.PASS);
-        return true;
-    }
-    /**
-     * After we sent commands to NS, this chain starts
-     * */
-    private void proceedCommands(){
-        printLog("Awaiting for NS commands.", MsgType.INFO);
+        /**
+         * After we sent commands to NS, this chain starts
+         * */
+        private void proceedCommands(){
+            printLog("Awaiting for NS commands.", MsgType.INFO);
 
         /*  byte[] magic = new byte[4];
             ByteBuffer bb = StandardCharsets.UTF_8.encode("TUC0").rewind().get(magic);
         // Let's rephrase this 'string'  */
-        final byte[] magic = new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30};  // eq. 'TUC0' @ UTF-8 (actually ASCII lol, u know what I mean)
+            final byte[] magic = new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30};  // eq. 'TUC0' @ UTF-8 (actually ASCII lol, u know what I mean)
 
-        byte[] receivedArray;
+            byte[] receivedArray;
 
-        while (true){
-            if (Thread.currentThread().isInterrupted())     // Check if user interrupted process.
-                return;
-            receivedArray = readFromUsb();
-            if (receivedArray == null)
-                return;             // catches exception
+            while (true){
+                if (Thread.currentThread().isInterrupted())     // Check if user interrupted process.
+                    return;
+                receivedArray = readFromUsb();
+                if (receivedArray == null)
+                    return;             // catches exception
 
-            if (!Arrays.equals(Arrays.copyOfRange(receivedArray, 0,4), magic))      // Bytes from 0 to 3 should contain 'magic' TUC0, so must be verified like this
-                continue;
+                if (!Arrays.equals(Arrays.copyOfRange(receivedArray, 0,4), magic))      // Bytes from 0 to 3 should contain 'magic' TUC0, so must be verified like this
+                    continue;
 
-            // 8th to 12th(explicits) bytes in returned data stands for command ID as unsigned integer (Little-endian). Actually, we have to compare arrays here, but in real world it can't be greater then 0/1/2, thus:
-            // BTW also protocol specifies 4th byte to be 0x00 kinda indicating that that this command is valid. But, as you may see, never happens other situation when it's not = 0.
-            if (receivedArray[8] == 0x00){                           //0x00 - exit
-                printLog("Received EXIT command. Terminating.", MsgType.PASS);
-                return;                     // All interaction with USB device should be ended (expected);
-            }
-            else if ((receivedArray[8] == 0x01) || (receivedArray[8] == 0x02)){           //0x01 - file range; 0x02 unknown bug on backend side (dirty hack).
-                printLog("Received FILE_RANGE command. Proceeding: [0x0"+receivedArray[8]+"]", MsgType.PASS);
+                // 8th to 12th(explicits) bytes in returned data stands for command ID as unsigned integer (Little-endian). Actually, we have to compare arrays here, but in real world it can't be greater then 0/1/2, thus:
+                // BTW also protocol specifies 4th byte to be 0x00 kinda indicating that that this command is valid. But, as you may see, never happens other situation when it's not = 0.
+                if (receivedArray[8] == 0x00){                           //0x00 - exit
+                    printLog("Received EXIT command. Terminating.", MsgType.PASS);
+                    return;                     // All interaction with USB device should be ended (expected);
+                }
+                else if ((receivedArray[8] == 0x01) || (receivedArray[8] == 0x02)){           //0x01 - file range; 0x02 unknown bug on backend side (dirty hack).
+                    printLog("Received FILE_RANGE command. Proceeding: [0x0"+receivedArray[8]+"]", MsgType.PASS);
                 /*// We can get in this pocket a length of file name (+32). Why +32? I dunno man.. Do we need this? Definitely not. This app can live without it.
                 long receivedSize = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 12,20)).order(ByteOrder.LITTLE_ENDIAN).getLong();
                 logsArea.appendText("[V] Received FILE_RANGE command. Size: "+Long.toUnsignedString(receivedSize)+"\n");            // this shit returns string that will be chosen next '+32'. And, BTW, can't be greater then 512
                 */
-                if (!fileRangeCmd()) {
-                    return;      // catches exception
+                    if (!fileRangeCmd()) {
+                        return;      // catches exception
+                    }
                 }
             }
         }
-    }
-    /**
-     * This is what returns requested file (files)
-     * Executes multiple times
-     * @return 'true' if everything is ok
-     *          'false' is error/exception occurs
-     * */
-    private boolean fileRangeCmd(){
-        boolean isProgessBarInitiated = false;
+        /**
+         * This is what returns requested file (files)
+         * Executes multiple times
+         * @return 'true' if everything is ok
+         *          'false' is error/exception occurs
+         * */
+        private boolean fileRangeCmd(){
+            boolean isProgessBarInitiated = false;
 
-        byte[] receivedArray;
-        // Here we take information of what other side wants
-        receivedArray = readFromUsb();
-        if (receivedArray == null)
-            return false;
+            byte[] receivedArray;
+            // Here we take information of what other side wants
+            receivedArray = readFromUsb();
+            if (receivedArray == null)
+                return false;
 
-        // range_offset of the requested file. In the begining it will be 0x10.
-        long receivedRangeSize = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 0,8)).order(ByteOrder.LITTLE_ENDIAN).getLong();          // Note - it could be unsigned long. Unfortunately, this app won't support files greater then 8796093022208 Gb
-        byte[] receivedRangeSizeRAW = Arrays.copyOfRange(receivedArray, 0,8);                                                               // used (only) when we use sendResponse(). It's just simply.
-        long receivedRangeOffset = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 8,16)).order(ByteOrder.LITTLE_ENDIAN).getLong();      // Note - it could be unsigned long. Unfortunately, this app won't support files greater then 8796093022208 Gb
+            // range_offset of the requested file. In the begining it will be 0x10.
+            long receivedRangeSize = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 0,8)).order(ByteOrder.LITTLE_ENDIAN).getLong();          // Note - it could be unsigned long. Unfortunately, this app won't support files greater then 8796093022208 Gb
+            byte[] receivedRangeSizeRAW = Arrays.copyOfRange(receivedArray, 0,8);                                                               // used (only) when we use sendResponse(). It's just simply.
+            long receivedRangeOffset = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 8,16)).order(ByteOrder.LITTLE_ENDIAN).getLong();      // Note - it could be unsigned long. Unfortunately, this app won't support files greater then 8796093022208 Gb
         /* Below, it's REAL NSP file name length that we sent before among others (WITHOUT +32 byes). It can't be greater then... see what is written in the beginning of this code.
         We don't need this since in next pocket we'll get name itself UTF-8 encoded. Could be used to double-checks or something like that.
         long receivedNspNameLen = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 16,24)).order(ByteOrder.LITTLE_ENDIAN).getLong(); */
 
-        // Requesting UTF-8 file name required:
-        receivedArray = readFromUsb();
-        if (receivedArray == null)
-            return false;
-
-        String receivedRequestedNSP = new String(receivedArray, StandardCharsets.UTF_8);
-        printLog("Reply to requested file: "+receivedRequestedNSP
-                +"\n  Range Size: "+receivedRangeSize
-                +"\n  Range Offset: "+receivedRangeOffset, MsgType.INFO);
-
-        // Sending response header
-        if (!sendResponse(receivedRangeSizeRAW))   // Get receivedRangeSize in 'RAW' format exactly as it has been received. It's simply.
-            return false;
-
-        // Read file starting:
-        //                  from Range Offset (receivedRangeOffset)
-        //                  to Range Size (receivedRangeSize)   like end: receivedRangeOffset+receivedRangeSize
-
-        try {
-
-            BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspMap.get(receivedRequestedNSP)));      // TODO: refactor?
-            byte[] bufferCurrent ;//= new byte[1048576];        // eq. Allocate 1mb
-            int bufferLength;
-            if (bufferedInStream.skip(receivedRangeOffset) != receivedRangeOffset){
-                printLog("Requested skip is out of File size. Nothing to transmit.", MsgType.FAIL);
+            // Requesting UTF-8 file name required:
+            receivedArray = readFromUsb();
+            if (receivedArray == null)
                 return false;
-            }
 
-            long currentOffset = 0;
-            // 'End Offset' equal to receivedRangeSize.
-            int readPice = 8388608;                     // = 8Mb
+            String receivedRequestedNSP = new String(receivedArray, StandardCharsets.UTF_8);
+            printLog("Reply to requested file: "+receivedRequestedNSP
+                    +"\n  Range Size: "+receivedRangeSize
+                    +"\n  Range Offset: "+receivedRangeOffset, MsgType.INFO);
 
-            while (currentOffset < receivedRangeSize){
-                if (Thread.currentThread().isInterrupted())     // Check if user interrupted process.
-                    return true;
-                if ((currentOffset + readPice) >= receivedRangeSize )
-                    readPice = Math.toIntExact(receivedRangeSize - currentOffset);
-                //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // TODO: NOTE: -----------------------DEBUG-----------------
-                // updating progress bar (if a lot of data requested) START BLOCK
-                if (isProgessBarInitiated){
-                    try {
-                        if (currentOffset+readPice == receivedRangeOffset){
-                            progressQueue.put(1.0);
-                            isProgessBarInitiated = false;
-                        }
-                        else
-                            progressQueue.put((currentOffset+readPice)/(receivedRangeSize/100.0) / 100.0);
-                    }catch (InterruptedException ie){
-                        getException().printStackTrace();               // TODO: Do something with this
-                    }
-                }
-                else {
-                    if ((readPice == 8388608) && (currentOffset == 0))
-                        isProgessBarInitiated = true;
-                }
-                // updating progress bar if needed END BLOCK
+            // Sending response header
+            if (!sendResponse(receivedRangeSizeRAW))   // Get receivedRangeSize in 'RAW' format exactly as it has been received. It's simply.
+                return false;
 
-                bufferCurrent = new byte[readPice];                                                         // TODO: not perfect moment, consider refactoring.
+            // Read file starting:
+            //                  from Range Offset (receivedRangeOffset)
+            //                  to Range Size (receivedRangeSize)   like end: receivedRangeOffset+receivedRangeSize
 
-                bufferLength = bufferedInStream.read(bufferCurrent);
+            try {
 
-                if (bufferLength != -1){
-                    //write to USB
-                    if (!writeToUsb(bufferCurrent)) {
-                        printLog("Failure during NSP transmission.", MsgType.FAIL);
-                        return false;
-                    }
-                    currentOffset += readPice;
-                }
-                else {
-                    printLog("Unexpected reading of stream ended.", MsgType.WARNING);
+                BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspMap.get(receivedRequestedNSP)));      // TODO: refactor?
+                byte[] bufferCurrent ;//= new byte[1048576];        // eq. Allocate 1mb
+                int bufferLength;
+                if (bufferedInStream.skip(receivedRangeOffset) != receivedRangeOffset){
+                    printLog("Requested skip is out of File size. Nothing to transmit.", MsgType.FAIL);
                     return false;
                 }
 
-            }
-            bufferedInStream.close();
-        } catch (FileNotFoundException fnfe){
-            printLog("FileNotFoundException:\n"+fnfe.getMessage(), MsgType.FAIL);
-            return false;
-        } catch (IOException ioe){
-            printLog("IOException:\n"+ioe.getMessage(), MsgType.FAIL);
-            return false;
-        } catch (ArithmeticException ae){
-            printLog("ArithmeticException (can't cast end offset minus current to 'integer'):\n"+ae.getMessage(), MsgType.FAIL);
-            return false;
-        }
+                long currentOffset = 0;
+                // 'End Offset' equal to receivedRangeSize.
+                int readPice = 8388608;                     // = 8Mb
 
-        return true;
-    }
-    /**
-     * Send response header.
-     * @return true if everything OK
-     *         false if failed
-     * */
-    private boolean sendResponse(byte[] rangeSize){                                 // This method as separate function itself for application needed as a cookie in the middle of desert.
-        printLog("Sending response", MsgType.INFO);
-        if (!writeToUsb(new byte[] { (byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30,    // 'TUC0'
-                                (byte) 0x01,                                                // CMD_TYPE_RESPONSE = 1
-                                (byte) 0x00, (byte) 0x00, (byte) 0x00,                      // kinda padding. Guys, didn't you want to use integer value for CMD semantic?
-                                (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00} )       // Send integer value of '1' in Little-endian format.
-        ){
-            printLog("[1/3]", MsgType.FAIL);
-            return false;
-        }
-        printLog("[1/3]", MsgType.PASS);
-        if(!writeToUsb(rangeSize)) {                                                          // Send EXACTLY what has been received
-            printLog("[2/3]", MsgType.FAIL);
-            return false;
-        }
-        printLog("[2/3]", MsgType.PASS);
-        if(!writeToUsb(new byte[12])) {                                                       // kinda another one padding
-            printLog("[3/3]", MsgType.FAIL);
-            return false;
-        }
-        printLog("[3/3]", MsgType.PASS);
-        return true;
-    }
+                while (currentOffset < receivedRangeSize){
+                    if (Thread.currentThread().isInterrupted())     // Check if user interrupted process.
+                        return true;
+                    if ((currentOffset + readPice) >= receivedRangeSize )
+                        readPice = Math.toIntExact(receivedRangeSize - currentOffset);
+                    //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // TODO: NOTE: -----------------------DEBUG-----------------
+                    // updating progress bar (if a lot of data requested) START BLOCK
+                    if (isProgessBarInitiated){
+                        try {
+                            if (currentOffset+readPice == receivedRangeOffset){
+                                progressQueue.put(1.0);
+                                isProgessBarInitiated = false;
+                            }
+                            else
+                                progressQueue.put((currentOffset+readPice)/(receivedRangeSize/100.0) / 100.0);
+                        }catch (InterruptedException ie){
+                            getException().printStackTrace();               // TODO: Do something with this
+                        }
+                    }
+                    else {
+                        if ((readPice == 8388608) && (currentOffset == 0))
+                            isProgessBarInitiated = true;
+                    }
+                    // updating progress bar if needed END BLOCK
 
-    /**
-     * Sending any byte array to USB device
-     * @return 'true' if no issues
-     *          'false' if errors happened
-     * */
-    private boolean writeToUsb(byte[] message){
-        ByteBuffer writeBuffer = ByteBuffer.allocateDirect(message.length);   //writeBuffer.order() equals BIG_ENDIAN;
-        writeBuffer.put(message);
-                                                    // DONT EVEN THINK OF USING writeBuffer.rewind();        // well..
-        IntBuffer writeBufTransferred = IntBuffer.allocate(1);
-        int result;
-        result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
-        if (result != LibUsb.SUCCESS){
-            switch (result){
-                case LibUsb.ERROR_TIMEOUT:
-                    printLog("Data transfer (write) issue\n  Returned: ERROR_TIMEOUT", MsgType.FAIL);
-                    break;
-                case LibUsb.ERROR_PIPE:             //WUT?? I dunno man looks overkill in here..
-                    printLog("Data transfer (write) issue\n  Returned: ERROR_PIPE", MsgType.FAIL);
-                    break;
-                case LibUsb.ERROR_OVERFLOW:
-                    printLog("Data transfer (write) issue\n  Returned: ERROR_OVERFLOW", MsgType.FAIL);
-                    break;
-                case LibUsb.ERROR_NO_DEVICE:
-                    printLog("Data transfer (write) issue\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
-                    break;
-                default:
-                    printLog("Data transfer (write) issue\n    Returned: "+result, MsgType.FAIL);
-            }
-            printLog("Execution stopped", MsgType.FAIL);
-            return false;
-        }else {
-            if (writeBufTransferred.get() != message.length){
-                printLog("Data transfer (write) issue\n  Requested: "+message.length+"\n  Transferred: "+writeBufTransferred.get(), MsgType.FAIL);
+                    bufferCurrent = new byte[readPice];                                                         // TODO: not perfect moment, consider refactoring.
+
+                    bufferLength = bufferedInStream.read(bufferCurrent);
+
+                    if (bufferLength != -1){
+                        //write to USB
+                        if (!writeToUsb(bufferCurrent)) {
+                            printLog("Failure during NSP transmission.", MsgType.FAIL);
+                            return false;
+                        }
+                        currentOffset += readPice;
+                    }
+                    else {
+                        printLog("Unexpected reading of stream ended.", MsgType.WARNING);
+                        return false;
+                    }
+
+                }
+                bufferedInStream.close();
+            } catch (FileNotFoundException fnfe){
+                printLog("FileNotFoundException:\n"+fnfe.getMessage(), MsgType.FAIL);
+                return false;
+            } catch (IOException ioe){
+                printLog("IOException:\n"+ioe.getMessage(), MsgType.FAIL);
+                return false;
+            } catch (ArithmeticException ae){
+                printLog("ArithmeticException (can't cast end offset minus current to 'integer'):\n"+ae.getMessage(), MsgType.FAIL);
                 return false;
             }
-            else {
-                return true;
-            }
+
+            return true;
         }
+        /**
+         * Send response header.
+         * @return true if everything OK
+         *         false if failed
+         * */
+        private boolean sendResponse(byte[] rangeSize){                                 // This method as separate function itself for application needed as a cookie in the middle of desert.
+            printLog("Sending response", MsgType.INFO);
+            if (!writeToUsb(new byte[] { (byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30,    // 'TUC0'
+                    (byte) 0x01,                                                // CMD_TYPE_RESPONSE = 1
+                    (byte) 0x00, (byte) 0x00, (byte) 0x00,                      // kinda padding. Guys, didn't you want to use integer value for CMD semantic?
+                    (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00} )       // Send integer value of '1' in Little-endian format.
+            ){
+                printLog("[1/3]", MsgType.FAIL);
+                return false;
+            }
+            printLog("[1/3]", MsgType.PASS);
+            if(!writeToUsb(rangeSize)) {                                                          // Send EXACTLY what has been received
+                printLog("[2/3]", MsgType.FAIL);
+                return false;
+            }
+            printLog("[2/3]", MsgType.PASS);
+            if(!writeToUsb(new byte[12])) {                                                       // kinda another one padding
+                printLog("[3/3]", MsgType.FAIL);
+                return false;
+            }
+            printLog("[3/3]", MsgType.PASS);
+            return true;
+        }
+
     }
     /**
-     * Reading what USB device responded.
-     * @return byte array if data read successful
-     *          'null' if read failed
+     * Tinfoil processing
      * */
-    private byte[] readFromUsb(){
-        ByteBuffer readBuffer = ByteBuffer.allocateDirect(512);//      //readBuffer.order() equals BIG_ENDIAN; DON'T TOUCH. And we will always allocate readBuffer for max-size endpoint supports (512 bytes)
-                                                                    // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
-        IntBuffer readBufTransferred = IntBuffer.allocate(1);
-
-        int result;
-        result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
-
-        if (result != LibUsb.SUCCESS){
-            switch (result){
-                case LibUsb.ERROR_TIMEOUT:
-                    printLog("Data transfer (read) issue\n  Returned: ERROR_TIMEOUT", MsgType.FAIL);
-                    break;
-                case LibUsb.ERROR_PIPE:             //WUT?? I dunno man looks overkill in here..
-                    printLog("Data transfer (read) issue\n  Returned: ERROR_PIPE", MsgType.FAIL);
-                    break;
-                case LibUsb.ERROR_OVERFLOW:
-                    printLog("Data transfer (read) issue\n  Returned: ERROR_OVERFLOW", MsgType.FAIL);
-                    break;
-                case LibUsb.ERROR_NO_DEVICE:
-                    printLog("Data transfer (read) issue\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
-                    break;
-                default:
-                    printLog("Data transfer (read) issue\n  Returned: "+result, MsgType.FAIL);
-            }
-            printLog("Execution stopped", MsgType.FAIL);
-            return null;
-        } else {
-            int trans = readBufTransferred.get();
-            byte[] receivedBytes = new byte[trans];
-            readBuffer.get(receivedBytes);
-            /* DEBUG START----------------------------------------------------------------------------------------------*
-            hexDumpUTF8(receivedBytes);
-            // DEBUG END----------------------------------------------------------------------------------------------*/
-            return receivedBytes;
-        }
-    }
-
     private class GoldLeaf{
         //                     CMD                                G     L     U     C     ID    0     0     0
         private final byte[] CMD_ConnectionRequest =  new byte[]{0x47, 0x4c, 0x55, 0x43, 0x00, 0x00, 0x00, 0x00};    // Write-only command
@@ -807,8 +712,118 @@ class UsbCommunications extends Task<Void> {
             return true;
         }
     }
-
     //------------------------------------------------------------------------------------------------------------------
+    /**
+     * Correct exit
+     * */
+    private void close(){
+        // close handler in the end
+        if (handlerNS != null) {
+            // Try to release interface
+            int result = LibUsb.releaseInterface(handlerNS, DEFAULT_INTERFACE);
+
+            if (result != LibUsb.SUCCESS)
+                printLog("Release interface\n  Returned: "+result+" (sometimes it's not an issue)", MsgType.WARNING);
+            else
+                printLog("Release interface", MsgType.PASS);
+
+            LibUsb.close(handlerNS);
+            printLog("Requested handler close", MsgType.INFO);
+        }
+        // close context in the end
+        if (contextNS != null) {
+            LibUsb.exit(contextNS);
+            printLog("Requested context close", MsgType.INFO);
+        }
+        msgConsumer.interrupt();
+    }
+    /**
+     * Sending any byte array to USB device
+     * @return 'true' if no issues
+     *          'false' if errors happened
+     * */
+    private boolean writeToUsb(byte[] message){
+        ByteBuffer writeBuffer = ByteBuffer.allocateDirect(message.length);   //writeBuffer.order() equals BIG_ENDIAN;
+        writeBuffer.put(message);
+                                                    // DONT EVEN THINK OF USING writeBuffer.rewind();        // well..
+        IntBuffer writeBufTransferred = IntBuffer.allocate(1);
+        int result;
+        result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
+        if (result != LibUsb.SUCCESS){
+            switch (result){
+                case LibUsb.ERROR_TIMEOUT:
+                    printLog("Data transfer (write) issue\n  Returned: ERROR_TIMEOUT", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_PIPE:             //WUT?? I dunno man looks overkill in here..
+                    printLog("Data transfer (write) issue\n  Returned: ERROR_PIPE", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_OVERFLOW:
+                    printLog("Data transfer (write) issue\n  Returned: ERROR_OVERFLOW", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_NO_DEVICE:
+                    printLog("Data transfer (write) issue\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                    break;
+                default:
+                    printLog("Data transfer (write) issue\n    Returned: "+result, MsgType.FAIL);
+            }
+            printLog("Execution stopped", MsgType.FAIL);
+            return false;
+        }else {
+            if (writeBufTransferred.get() != message.length){
+                printLog("Data transfer (write) issue\n  Requested: "+message.length+"\n  Transferred: "+writeBufTransferred.get(), MsgType.FAIL);
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+    }
+    /**
+     * Reading what USB device responded.
+     * @return byte array if data read successful
+     *          'null' if read failed
+     * */
+    private byte[] readFromUsb(){
+        ByteBuffer readBuffer = ByteBuffer.allocateDirect(512);//      //readBuffer.order() equals BIG_ENDIAN; DON'T TOUCH. And we will always allocate readBuffer for max-size endpoint supports (512 bytes)
+                                                                    // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
+        IntBuffer readBufTransferred = IntBuffer.allocate(1);
+
+        int result;
+        result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+
+        if (result != LibUsb.SUCCESS){
+            switch (result){
+                case LibUsb.ERROR_TIMEOUT:
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_TIMEOUT", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_PIPE:             //WUT?? I dunno man looks overkill in here..
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_PIPE", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_OVERFLOW:
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_OVERFLOW", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_NO_DEVICE:
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                    break;
+                case LibUsb.ERROR_IO:
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_IO", MsgType.FAIL);
+                    break;
+                default:
+                    printLog("Data transfer (read) issue\n  Returned: "+result, MsgType.FAIL);
+            }
+            printLog("Execution stopped", MsgType.FAIL);
+            return null;
+        } else {
+            int trans = readBufTransferred.get();
+            byte[] receivedBytes = new byte[trans];
+            readBuffer.get(receivedBytes);
+            /* DEBUG START----------------------------------------------------------------------------------------------*
+            hexDumpUTF8(receivedBytes);
+            // DEBUG END----------------------------------------------------------------------------------------------*/
+            return receivedBytes;
+        }
+    }
+
     /**
      * This is what will print to textArea of the application.
      * */

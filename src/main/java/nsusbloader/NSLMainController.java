@@ -2,15 +2,14 @@ package nsusbloader;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
+import nsusbloader.Controllers.NSTableViewController;
 
 import java.io.File;
 import java.net.URL;
@@ -36,10 +35,12 @@ public class NSLMainController implements Initializable {
     private ChoiceBox<String> choiceProtocol;
     @FXML
     private Button switchThemeBtn;
-    private Region btnSwitchImage;
 
     @FXML
     private Pane specialPane;
+
+    @FXML
+    private NSTableViewController tableFilesListController;
 
     private Thread usbThread;
 
@@ -69,19 +70,22 @@ public class NSLMainController implements Initializable {
         uploadStopBtn.getStyleClass().add("buttonUp");
         uploadStopBtn.setGraphic(btnUpStopImage);
 
-        ObservableList<String> choiceProtocolList = FXCollections.observableArrayList();
-        choiceProtocolList.setAll("TinFoil", "GoldLeaf");
+        ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "GoldLeaf");
         choiceProtocol.setItems(choiceProtocolList);
-        choiceProtocol.getSelectionModel().select(0);       // TODO: shared settings
+        choiceProtocol.getSelectionModel().select(0);                               // TODO: shared settings
+        choiceProtocol.setOnAction(e->tableFilesListController.protocolChangeEvent(choiceProtocol.getSelectionModel().getSelectedItem()));
 
         this.previouslyOpenedPath = null;
 
-        this.btnSwitchImage = new Region();
+        Region btnSwitchImage = new Region();
         btnSwitchImage.getStyleClass().add("regionLamp");
         switchThemeBtn.setGraphic(btnSwitchImage);
         this.switchThemeBtn.setOnAction(e->switchTheme());
-    }
 
+    }
+    /**
+     * Changes UI theme on the go
+     * */
     private void switchTheme(){
         if (switchThemeBtn.getScene().getStylesheets().get(0).equals("/res/app.css")) {
             switchThemeBtn.getScene().getStylesheets().remove("/res/app.css");

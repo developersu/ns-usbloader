@@ -121,6 +121,47 @@
 // Text color of focused item in the list
 .choice-box .menu-item:focused > .label { -fx-text-fill: #2d2d2d; }
 
+.tab-pane .tab SVGPath{
+    -fx-fill: #2c2c2c;
+
+}
+.tab-pane .tab{
+    -fx-background-color: #fefefe;
+}
+
+.tab-pane .tab:selected{
+    -fx-background-color: #ebebeb;
+}
+.table-view {
+    -fx-background-color: #fefefe;
+    -fx-background-image: url(app_logo.png);
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-border-color: #00ffc9;
+    -fx-border-radius: 3;
+    -fx-border-width: 2;
+}
+.table-view .column-header {
+    -fx-background-color: transparent;
+}
+.table-view .column-header-background .label{
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+}
+.table-view .column-header-background, .table-view .filler{
+    -fx-background-color: #fefefe;
+}
+// Remove visible selection 1
+.table-row-cell:filled:selected {
+  -fx-background: -fx-control-inner-background ;
+  -fx-background-color: -fx-table-cell-border-color, -fx-background ;
+  -fx-background-insets: 0, 0 0 1 0 ;
+  -fx-table-cell-border-color: derive(-fx-color, 5%);
+}
+// Remove visible selection 2
+.table-row-cell:odd:filled:selected {
+  -fx-background: -fx-control-inner-background-alt ;
+}
 .regionUpload{
     -fx-shape: "M8,21V19H16V21H8M8,17V15H16V17H8M8,13V11H16V13H8M19,9H5L12,2L19,9Z";
     -fx-background-color: #a2e019;
@@ -128,6 +169,7 @@
     -fx-min-height: -size;
     -fx-min-width: 20;
 }
+
 .regionStop{
     -fx-shape: "M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z";
     -fx-background-color: #fb582c;
