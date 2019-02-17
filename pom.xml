@@ -5,12 +5,50 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>loper</groupId>
-    <artifactId>NS-USBloader</artifactId>
-    <version>0.2-SNAPSHOT</version>
     <name>NS-USBloader</name>
+
+    <artifactId>ns-usbloader</artifactId>
+    <version>0.2-SNAPSHOT</version>
+
+    <url>https://github.com/developersu/ns-usbloader/</url>
+    <description>
+        NSP USB loader for TinFoil and GoldLeaf
+    </description>
+    <inceptionYear>2019</inceptionYear>
+    <organization>
+        <name>Dmitry Isaenko</name>
+        <url>https://developersu.blogspot.com/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>GPLv3</name>
+            <url>LICENSE</url>
+            <distribution>manual</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>developer.su</id>
+            <name>Dmitry Isaenko</name>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>+3</timezone>
+            <url>https://developersu.blogspot.com/</url>
+        </developer>
+    </developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/developer_su/${project.artifactId}/issues</url>
+    </issueManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.openjfx</groupId>

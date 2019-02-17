@@ -1,12 +1,12 @@
 package nsusbloader.Controllers;
 
-import nsusbloader.NSLDataTypes.FileStatus;
+import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.io.File;
 
 public class NSLRowModel {
 
-    private String status;       // 0 = unknown, 1 = uploaded, 2 = bad file
+    private String status;
     private File nspFile;
     private String nspFileName;
     private String nspFileSize;
@@ -35,24 +35,20 @@ public class NSLRowModel {
     public void setMarkForUpload(boolean value){
         markForUpload = value;
     }
-
-    public void setStatus(FileStatus status){                               // TODO: Localization
+    public File getNspFile(){ return nspFile; }
+    public void setStatus(EFileStatus status){                               // TODO: Localization
         switch (status){
-            case FAILED:
-                this.status = "Upload failed";
-                break;
             case UPLOADED:
                 this.status = "Uploaded";
                 markForUpload = false;
                 break;
-            case INCORRECT:
+            case FAILED:
+                this.status = "Upload failed";
+                break;
+            case INCORRECT_FILE_FAILED:
                 this.status = "File incorrect";
                 markForUpload = false;
                 break;
         }
-
-    }
-    public File getNspFile(){
-        return nspFile;
     }
 }

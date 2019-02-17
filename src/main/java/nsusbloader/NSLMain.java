@@ -1,11 +1,3 @@
-/**
- Name: NS-USBloader
- @author Dmitry Isaenko
- License: GNU GPL v.3
- @see https://github.com/developersu/
- @see https://developersu.blogspot.com/
- 2019, Russia
- */
 package nsusbloader;
 
 import javafx.application.Application;

@@ -1,9 +1,8 @@
 package nsusbloader;
 
 import javafx.concurrent.Task;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextArea;
-import nsusbloader.NSLDataTypes.MsgType;
+import nsusbloader.NSLDataTypes.EFileStatus;
+import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.PFS.PFSProvider;
 import org.usb4java.*;
 
@@ -13,20 +12,19 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static nsusbloader.RainbowHexDump.hexDumpUTF8;
-
 class UsbCommunications extends Task<Void> {
     private final int DEFAULT_INTERFACE = 0;
 
     private BlockingQueue<String> msgQueue;
     private BlockingQueue<Double> progressQueue;
+    private HashMap<String, EFileStatus> statusMap;      // BlockingQueue for literally one object. TODO: read more books ; replace to hashMap
+
     private MessagesConsumer msgConsumer;
 
     private HashMap<String, File> nspMap;
@@ -46,14 +44,15 @@ class UsbCommunications extends Task<Void> {
     Since this application let user an ability (theoretically) to choose same files in different folders, the latest selected file will be added to the list and handled correctly.
     I have no idea why he/she will make a decision to do that. Just in case, we're good in this point.
      */
-    UsbCommunications(TextArea logArea, ProgressBar progressBar, List<File> nspList, String protocol){
+    UsbCommunications(List<File> nspList, String protocol){
         this.protocol = protocol;
         this.nspMap = new HashMap<>();
         for (File f: nspList)
             nspMap.put(f.getName(), f);
         this.msgQueue = new LinkedBlockingQueue<>();
         this.progressQueue = new LinkedBlockingQueue<>();
-        this.msgConsumer = new MessagesConsumer(this.msgQueue, logArea, this.progressQueue, progressBar);
+        this.statusMap =  new HashMap<>();
+        this.msgConsumer = new MessagesConsumer(this.msgQueue, this.progressQueue, this.statusMap);
     }
 
     @Override
@@ -61,28 +60,28 @@ class UsbCommunications extends Task<Void> {
         this.msgConsumer.start();
         int result = -9999;
 
-        printLog("\tStart chain", MsgType.INFO);
+        printLog("\tStart chain", EMsgType.INFO);
         // Creating Context required by libusb. Optional. TODO: Consider removing.
         contextNS = new Context();
         result = LibUsb.init(contextNS);
         if (result != LibUsb.SUCCESS) {
-            printLog("libusb initialization\n  Returned: "+result, MsgType.FAIL);
+            printLog("libusb initialization\n  Returned: "+result, EMsgType.FAIL);
             close();
             return null;
         }
         else
-            printLog("libusb initialization", MsgType.PASS);
+            printLog("libusb initialization", EMsgType.PASS);
 
         // Searching for NS in devices: obtain list of all devices
         DeviceList deviceList = new DeviceList();
         result = LibUsb.getDeviceList(contextNS, deviceList);
         if (result < 0) {
-            printLog("Get device list\n  Returned: "+result, MsgType.FAIL);
+            printLog("Get device list\n  Returned: "+result, EMsgType.FAIL);
             close();
             return null;
         }
         else {
-            printLog("Get device list", MsgType.PASS);
+            printLog("Get device list", EMsgType.PASS);
         }
         // Searching for NS in devices: looking for NS
         DeviceDescriptor descriptor;
@@ -91,14 +90,14 @@ class UsbCommunications extends Task<Void> {
             descriptor = new DeviceDescriptor();                // mmm.. leave it as is.
             result = LibUsb.getDeviceDescriptor(device, descriptor);
             if (result != LibUsb.SUCCESS){
-                printLog("Read file descriptors for USB devices\n  Returned: "+result, MsgType.FAIL);
+                printLog("Read file descriptors for USB devices\n  Returned: "+result, EMsgType.FAIL);
                 LibUsb.freeDeviceList(deviceList, true);
                 close();
                 return null;
             }
             if ((descriptor.idVendor() == 0x057E) && descriptor.idProduct() == 0x3000){
                 deviceNS = device;
-                printLog("Read file descriptors for USB devices", MsgType.PASS);
+                printLog("Read file descriptors for USB devices", EMsgType.PASS);
                 break;
             }
         }
@@ -141,10 +140,10 @@ class UsbCommunications extends Task<Void> {
         ////////////////////////////////////////// DEBUG INFORMATION END /////////////////////////////////////////////
 
         if (deviceNS != null){
-            printLog("NS in connected USB devices found", MsgType.PASS);
+            printLog("NS in connected USB devices found", EMsgType.PASS);
         }
         else {
-            printLog("NS in connected USB devices not found\n  Returned: "+result, MsgType.FAIL);
+            printLog("NS in connected USB devices not found", EMsgType.FAIL);
             close();
             return null;
         }
@@ -154,25 +153,25 @@ class UsbCommunications extends Task<Void> {
         if (result != LibUsb.SUCCESS) {
             switch (result){
                 case LibUsb.ERROR_ACCESS:
-                    printLog("Open NS USB device\n  Returned: ERROR_ACCESS", MsgType.FAIL);
-                    printLog("Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!",MsgType.INFO);
+                    printLog("Open NS USB device\n  Returned: ERROR_ACCESS", EMsgType.FAIL);
+                    printLog("Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!", EMsgType.INFO);
                     break;
                 case LibUsb.ERROR_NO_MEM:
-                    printLog("Open NS USB device\n  Returned: ERROR_NO_MEM", MsgType.FAIL);
+                    printLog("Open NS USB device\n  Returned: ERROR_NO_MEM", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_NO_DEVICE:
-                    printLog("Open NS USB device\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                    printLog("Open NS USB device\n  Returned: ERROR_NO_DEVICE", EMsgType.FAIL);
                     break;
                 default:
-                    printLog("Open NS USB device\n  Returned:" + result, MsgType.FAIL);
+                    printLog("Open NS USB device\n  Returned:" + result, EMsgType.FAIL);
             }
             close();
             return null;
         }
         else
-            printLog("Open NS USB device", MsgType.PASS);
+            printLog("Open NS USB device", EMsgType.PASS);
 
-        printLog("Free device list", MsgType.INFO);
+        printLog("Free device list", EMsgType.INFO);
         LibUsb.freeDeviceList(deviceList, true);
 
         // DO some stuff to connected NS
@@ -181,89 +180,89 @@ class UsbCommunications extends Task<Void> {
         if (canDetach){
             int usedByKernel = LibUsb.kernelDriverActive(handlerNS, DEFAULT_INTERFACE);
                 if (usedByKernel == LibUsb.SUCCESS){
-                    printLog("Can proceed with libusb driver", MsgType.PASS);   // we're good
+                    printLog("Can proceed with libusb driver", EMsgType.PASS);   // we're good
                 }
                 else {
                     switch (usedByKernel){
                         case 1:     // used by kernel
                             result = LibUsb.detachKernelDriver(handlerNS, DEFAULT_INTERFACE);
-                            printLog("Detach kernel required", MsgType.INFO);
+                            printLog("Detach kernel required", EMsgType.INFO);
                             if (result != 0) {
                                 switch (result){
                                     case LibUsb.ERROR_NOT_FOUND:
-                                        printLog("Detach kernel\n  Returned: ERROR_NOT_FOUND", MsgType.FAIL);
+                                        printLog("Detach kernel\n  Returned: ERROR_NOT_FOUND", EMsgType.FAIL);
                                         break;
                                     case LibUsb.ERROR_INVALID_PARAM:
-                                        printLog("Detach kernel\n  Returned: ERROR_INVALID_PARAM", MsgType.FAIL);
+                                        printLog("Detach kernel\n  Returned: ERROR_INVALID_PARAM", EMsgType.FAIL);
                                         break;
                                     case LibUsb.ERROR_NO_DEVICE:
-                                        printLog("Detach kernel\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                                        printLog("Detach kernel\n  Returned: ERROR_NO_DEVICE", EMsgType.FAIL);
                                         break;
                                     case LibUsb.ERROR_NOT_SUPPORTED:        // Should never appear only if libusb buggy
-                                        printLog("Detach kernel\n  Returned: ERROR_NOT_SUPPORTED", MsgType.FAIL);
+                                        printLog("Detach kernel\n  Returned: ERROR_NOT_SUPPORTED", EMsgType.FAIL);
                                         break;
                                     default:
-                                        printLog("Detach kernel\n  Returned: " + result, MsgType.FAIL);
+                                        printLog("Detach kernel\n  Returned: " + result, EMsgType.FAIL);
                                         break;
                                 }
                                 close();
                                 return null;
                             }
                             else {
-                                printLog("Detach kernel", MsgType.PASS);
+                                printLog("Detach kernel", EMsgType.PASS);
                                 break;
                             }
                         case LibUsb.ERROR_NO_DEVICE:
-                            printLog("Can't proceed with libusb driver\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                            printLog("Can't proceed with libusb driver\n  Returned: ERROR_NO_DEVICE", EMsgType.FAIL);
                             break;
                         case LibUsb.ERROR_NOT_SUPPORTED:
-                            printLog("Can't proceed with libusb driver\n  Returned: ERROR_NOT_SUPPORTED", MsgType.FAIL);
+                            printLog("Can't proceed with libusb driver\n  Returned: ERROR_NOT_SUPPORTED", EMsgType.FAIL);
                             break;
                         default:
-                            printLog("Can't proceed with libusb driver\n  Returned: "+result, MsgType.FAIL);
+                            printLog("Can't proceed with libusb driver\n  Returned: "+result, EMsgType.FAIL);
                     }
                 }
         }
         else
-            printLog("libusb doesn't supports function 'CAP_SUPPORTS_DETACH_KERNEL_DRIVER'. Proceeding.", MsgType.WARNING);
+            printLog("libusb doesn't supports function 'CAP_SUPPORTS_DETACH_KERNEL_DRIVER'. Proceeding.", EMsgType.WARNING);
 
         // Set configuration (soft reset if needed)
         result = LibUsb.setConfiguration(handlerNS, 1);     // 1 - configuration all we need
         if (result != LibUsb.SUCCESS){
             switch (result){
                 case LibUsb.ERROR_NOT_FOUND:
-                    printLog("Set active configuration to device\n  Returned: ERROR_NOT_FOUND", MsgType.FAIL);
+                    printLog("Set active configuration to device\n  Returned: ERROR_NOT_FOUND", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_BUSY:
-                    printLog("Set active configuration to device\n  Returned: ERROR_BUSY", MsgType.FAIL);
+                    printLog("Set active configuration to device\n  Returned: ERROR_BUSY", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_NO_DEVICE:
-                    printLog("Set active configuration to device\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                    printLog("Set active configuration to device\n  Returned: ERROR_NO_DEVICE", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_INVALID_PARAM:
-                    printLog("Set active configuration to device\n  Returned: ERROR_INVALID_PARAM", MsgType.FAIL);
+                    printLog("Set active configuration to device\n  Returned: ERROR_INVALID_PARAM", EMsgType.FAIL);
                     break;
                 default:
-                    printLog("Set active configuration to device\n  Returned: "+result, MsgType.FAIL);
+                    printLog("Set active configuration to device\n  Returned: "+result, EMsgType.FAIL);
                     break;
             }
             close();
             return null;
         }
         else {
-            printLog("Set active configuration to device.", MsgType.PASS);
+            printLog("Set active configuration to device.", EMsgType.PASS);
         }
 
 
         // Claim interface
         result = LibUsb.claimInterface(handlerNS, DEFAULT_INTERFACE);
         if (result != LibUsb.SUCCESS) {
-            printLog("Claim interface\n  Returned: "+result, MsgType.FAIL);
+            printLog("Claim interface\n  Returned: "+result, EMsgType.FAIL);
             close();
             return null;
         }
         else
-            printLog("Claim interface", MsgType.PASS);
+            printLog("Claim interface", EMsgType.PASS);
 
         //--------------------------------------------------------------------------------------------------------------
         if (protocol.equals("TinFoil")) {
@@ -273,17 +272,31 @@ class UsbCommunications extends Task<Void> {
         }
 
         close();
-        printLog("\tEnd chain", MsgType.INFO);
+        printLog("\tEnd chain", EMsgType.INFO);
         return null;
+    }
+    /**
+     * Report transfer status
+     * */
+    private void reportTransferStatus(EFileStatus status){
+        for (String fileName: nspMap.keySet())
+            statusMap.put(fileName, status);
     }
     /**
      * Tinfoil processing
      * */
     private class TinFoil{
         TinFoil(){
-            if (!sendListOfNSP())
+
+            if (!sendListOfNSP()) {
+                reportTransferStatus(EFileStatus.FAILED);
                 return;
-            proceedCommands();
+            }
+
+            if (proceedCommands())                              // REPORT SUCCESS
+                reportTransferStatus(EFileStatus.UPLOADED);
+            else                                                // REPORT FAILURE
+                reportTransferStatus(EFileStatus.FAILED);
         }
         /**
          * Send what NSP will be transferred
@@ -292,16 +305,17 @@ class UsbCommunications extends Task<Void> {
             // Send list of NSP files:
             // Proceed "TUL0"
             if (!writeToUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {  // new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x76, (byte) 0x30}
-                printLog("Send list of files: handshake", MsgType.FAIL);
-                close();
+                printLog("TF Send list of files: handshake", EMsgType.FAIL);
                 return false;
             }
             else
-                printLog("Send list of files: handshake", MsgType.PASS);
+                printLog("TF Send list of files: handshake", EMsgType.PASS);
             //Collect file names
             StringBuilder nspListNamesBuilder = new StringBuilder();    // Add every title to one stringBuilder
-            for(String nspFileName: nspMap.keySet())
-                nspListNamesBuilder.append(nspFileName+'\n');   // And here we come with java string default encoding (UTF-16)
+            for(String nspFileName: nspMap.keySet()) {
+                nspListNamesBuilder.append(nspFileName);   // And here we come with java string default encoding (UTF-16)
+                nspListNamesBuilder.append('\n');
+            }
 
             byte[] nspListNames = nspListNamesBuilder.toString().getBytes(StandardCharsets.UTF_8);
             ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);         // integer = 4 bytes; BTW Java is stored in big-endian format
@@ -310,47 +324,46 @@ class UsbCommunications extends Task<Void> {
             //byteBuffer.reset();
 
             // Sending NSP list
+            printLog("TF Send list of files", EMsgType.INFO);
             if (!writeToUsb(nspListSize)) {                                           // size of the list we're going to transfer goes...
-                printLog("Send list of files: send length.", MsgType.FAIL);
-                close();
+                printLog("  [send list length]", EMsgType.FAIL);
                 return false;
-            } else
-                printLog("Send list of files: send length.", MsgType.PASS);
+            }
+            printLog("  [send list length]", EMsgType.PASS);
+
             if (!writeToUsb(new byte[8])) {                                           // 8 zero bytes goes...
-                printLog("Send list of files: send padding.", MsgType.FAIL);
-                close();
+                printLog("  [send padding]", EMsgType.FAIL);
                 return false;
             }
-            else
-                printLog("Send list of files: send padding.", MsgType.PASS);
+            printLog("  [send padding]", EMsgType.PASS);
+
             if (!writeToUsb(nspListNames)) {                                           // list of the names goes...
-                printLog("Send list of files: send list itself.", MsgType.FAIL);
-                close();
+                printLog("  [send list itself]", EMsgType.FAIL);
                 return false;
             }
-            else
-                printLog("Send list of files: send list itself.", MsgType.PASS);
+            printLog("  [send list itself]", EMsgType.PASS);
+
             return true;
         }
         /**
          * After we sent commands to NS, this chain starts
          * */
-        private void proceedCommands(){
-            printLog("Awaiting for NS commands.", MsgType.INFO);
+        private boolean proceedCommands(){
+            printLog("TF Awaiting for NS commands.", EMsgType.INFO);
 
-        /*  byte[] magic = new byte[4];
-            ByteBuffer bb = StandardCharsets.UTF_8.encode("TUC0").rewind().get(magic);
-        // Let's rephrase this 'string'  */
+            /*  byte[] magic = new byte[4];
+                ByteBuffer bb = StandardCharsets.UTF_8.encode("TUC0").rewind().get(magic);
+            // Let's rephrase this 'string'  */
             final byte[] magic = new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30};  // eq. 'TUC0' @ UTF-8 (actually ASCII lol, u know what I mean)
 
             byte[] receivedArray;
 
             while (true){
                 if (Thread.currentThread().isInterrupted())     // Check if user interrupted process.
-                    return;
+                    return false;
                 receivedArray = readFromUsb();
                 if (receivedArray == null)
-                    return;             // catches exception
+                    return false;             // catches exception
 
                 if (!Arrays.equals(Arrays.copyOfRange(receivedArray, 0,4), magic))      // Bytes from 0 to 3 should contain 'magic' TUC0, so must be verified like this
                     continue;
@@ -358,17 +371,17 @@ class UsbCommunications extends Task<Void> {
                 // 8th to 12th(explicits) bytes in returned data stands for command ID as unsigned integer (Little-endian). Actually, we have to compare arrays here, but in real world it can't be greater then 0/1/2, thus:
                 // BTW also protocol specifies 4th byte to be 0x00 kinda indicating that that this command is valid. But, as you may see, never happens other situation when it's not = 0.
                 if (receivedArray[8] == 0x00){                           //0x00 - exit
-                    printLog("Received EXIT command. Terminating.", MsgType.PASS);
-                    return;                     // All interaction with USB device should be ended (expected);
+                    printLog("TF Received EXIT command. Terminating.", EMsgType.PASS);
+                    return true;                     // All interaction with USB device should be ended (expected);
                 }
                 else if ((receivedArray[8] == 0x01) || (receivedArray[8] == 0x02)){           //0x01 - file range; 0x02 unknown bug on backend side (dirty hack).
-                    printLog("Received FILE_RANGE command. Proceeding: [0x0"+receivedArray[8]+"]", MsgType.PASS);
+                    printLog("TF Received FILE_RANGE command. Proceeding: [0x0"+receivedArray[8]+"]", EMsgType.PASS);
                 /*// We can get in this pocket a length of file name (+32). Why +32? I dunno man.. Do we need this? Definitely not. This app can live without it.
                 long receivedSize = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 12,20)).order(ByteOrder.LITTLE_ENDIAN).getLong();
                 logsArea.appendText("[V] Received FILE_RANGE command. Size: "+Long.toUnsignedString(receivedSize)+"\n");            // this shit returns string that will be chosen next '+32'. And, BTW, can't be greater then 512
                 */
                     if (!fileRangeCmd()) {
-                        return;      // catches exception
+                        return false;      // catches exception
                     }
                 }
             }
@@ -392,9 +405,9 @@ class UsbCommunications extends Task<Void> {
             long receivedRangeSize = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 0,8)).order(ByteOrder.LITTLE_ENDIAN).getLong();          // Note - it could be unsigned long. Unfortunately, this app won't support files greater then 8796093022208 Gb
             byte[] receivedRangeSizeRAW = Arrays.copyOfRange(receivedArray, 0,8);                                                               // used (only) when we use sendResponse(). It's just simply.
             long receivedRangeOffset = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 8,16)).order(ByteOrder.LITTLE_ENDIAN).getLong();      // Note - it could be unsigned long. Unfortunately, this app won't support files greater then 8796093022208 Gb
-        /* Below, it's REAL NSP file name length that we sent before among others (WITHOUT +32 byes). It can't be greater then... see what is written in the beginning of this code.
-        We don't need this since in next pocket we'll get name itself UTF-8 encoded. Could be used to double-checks or something like that.
-        long receivedNspNameLen = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 16,24)).order(ByteOrder.LITTLE_ENDIAN).getLong(); */
+            /* Below, it's REAL NSP file name length that we sent before among others (WITHOUT +32 byes). It can't be greater then... see what is written in the beginning of this code.
+            We don't need this since in next pocket we'll get name itself UTF-8 encoded. Could be used to double-checks or something like that.
+            long receivedNspNameLen = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 16,24)).order(ByteOrder.LITTLE_ENDIAN).getLong(); */
 
             // Requesting UTF-8 file name required:
             receivedArray = readFromUsb();
@@ -402,17 +415,13 @@ class UsbCommunications extends Task<Void> {
                 return false;
 
             String receivedRequestedNSP = new String(receivedArray, StandardCharsets.UTF_8);
-            printLog("Reply to requested file: "+receivedRequestedNSP
+            printLog("TF Reply to requested file: "+receivedRequestedNSP
                     +"\n  Range Size: "+receivedRangeSize
-                    +"\n  Range Offset: "+receivedRangeOffset, MsgType.INFO);
+                    +"\n  Range Offset: "+receivedRangeOffset, EMsgType.INFO);
 
             // Sending response header
             if (!sendResponse(receivedRangeSizeRAW))   // Get receivedRangeSize in 'RAW' format exactly as it has been received. It's simply.
                 return false;
-
-            // Read file starting:
-            //                  from Range Offset (receivedRangeOffset)
-            //                  to Range Size (receivedRangeSize)   like end: receivedRangeOffset+receivedRangeSize
 
             try {
 
@@ -420,7 +429,7 @@ class UsbCommunications extends Task<Void> {
                 byte[] bufferCurrent ;//= new byte[1048576];        // eq. Allocate 1mb
                 int bufferLength;
                 if (bufferedInStream.skip(receivedRangeOffset) != receivedRangeOffset){
-                    printLog("Requested skip is out of File size. Nothing to transmit.", MsgType.FAIL);
+                    printLog("TF Requested skip is out of file size. Nothing to transmit.", EMsgType.FAIL);
                     return false;
                 }
 
@@ -433,7 +442,7 @@ class UsbCommunications extends Task<Void> {
                         return true;
                     if ((currentOffset + readPice) >= receivedRangeSize )
                         readPice = Math.toIntExact(receivedRangeSize - currentOffset);
-                    //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // TODO: NOTE: -----------------------DEBUG-----------------
+                    //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // TODO: NOTE: DEBUG
                     // updating progress bar (if a lot of data requested) START BLOCK
                     if (isProgessBarInitiated){
                         try {
@@ -460,26 +469,29 @@ class UsbCommunications extends Task<Void> {
                     if (bufferLength != -1){
                         //write to USB
                         if (!writeToUsb(bufferCurrent)) {
-                            printLog("Failure during NSP transmission.", MsgType.FAIL);
+                            printLog("TF Failure during NSP transmission.", EMsgType.FAIL);
                             return false;
                         }
                         currentOffset += readPice;
                     }
                     else {
-                        printLog("Unexpected reading of stream ended.", MsgType.WARNING);
+                        printLog("TF Reading of stream suddenly ended.", EMsgType.WARNING);
                         return false;
                     }
 
                 }
                 bufferedInStream.close();
             } catch (FileNotFoundException fnfe){
-                printLog("FileNotFoundException:\n"+fnfe.getMessage(), MsgType.FAIL);
+                printLog("TF FileNotFoundException:\n  "+fnfe.getMessage(), EMsgType.FAIL);
+                fnfe.printStackTrace();
                 return false;
             } catch (IOException ioe){
-                printLog("IOException:\n"+ioe.getMessage(), MsgType.FAIL);
+                printLog("TF IOException:\n  "+ioe.getMessage(), EMsgType.FAIL);
+                ioe.printStackTrace();
                 return false;
             } catch (ArithmeticException ae){
-                printLog("ArithmeticException (can't cast end offset minus current to 'integer'):\n"+ae.getMessage(), MsgType.FAIL);
+                printLog("TF ArithmeticException (can't cast end offset minus current to 'integer'):\n  "+ae.getMessage(), EMsgType.FAIL);
+                ae.printStackTrace();
                 return false;
             }
 
@@ -491,32 +503,32 @@ class UsbCommunications extends Task<Void> {
          *         false if failed
          * */
         private boolean sendResponse(byte[] rangeSize){                                 // This method as separate function itself for application needed as a cookie in the middle of desert.
-            printLog("Sending response", MsgType.INFO);
+            printLog("TF Sending response", EMsgType.INFO);
             if (!writeToUsb(new byte[] { (byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30,    // 'TUC0'
                     (byte) 0x01,                                                // CMD_TYPE_RESPONSE = 1
                     (byte) 0x00, (byte) 0x00, (byte) 0x00,                      // kinda padding. Guys, didn't you want to use integer value for CMD semantic?
                     (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00} )       // Send integer value of '1' in Little-endian format.
             ){
-                printLog("[1/3]", MsgType.FAIL);
+                printLog("  [1/3]", EMsgType.FAIL);
                 return false;
             }
-            printLog("[1/3]", MsgType.PASS);
+            printLog("  [1/3]", EMsgType.PASS);
             if(!writeToUsb(rangeSize)) {                                                          // Send EXACTLY what has been received
-                printLog("[2/3]", MsgType.FAIL);
+                printLog("  [2/3]", EMsgType.FAIL);
                 return false;
             }
-            printLog("[2/3]", MsgType.PASS);
+            printLog("  [2/3]", EMsgType.PASS);
             if(!writeToUsb(new byte[12])) {                                                       // kinda another one padding
-                printLog("[3/3]", MsgType.FAIL);
+                printLog("  [3/3]", EMsgType.FAIL);
                 return false;
             }
-            printLog("[3/3]", MsgType.PASS);
+            printLog("  [3/3]", EMsgType.PASS);
             return true;
         }
 
     }
     /**
-     * Tinfoil processing
+     * GoldLeaf processing
      * */
     private class GoldLeaf{
         //                     CMD                                G     L     U     C     ID    0     0     0
@@ -531,111 +543,132 @@ class UsbCommunications extends Task<Void> {
         private final byte[] CMD_Finish =             new byte[]{0x47, 0x4c, 0x55, 0x43, 0x07, 0x00, 0x00, 0x00};
 
         GoldLeaf(){
-            List<PFSProvider> pfsList = new ArrayList<>();
-
-            StringBuilder allValidFiles = new StringBuilder();
-            StringBuilder nonValidFiles = new StringBuilder();
-            // Prepare data
-            for (File nspFile : nspMap.values()) {
-                PFSProvider pfsp = new PFSProvider(nspFile, msgQueue);
-                if (pfsp.init()) {
-                    pfsList.add(pfsp);
-                    allValidFiles.append(nspFile.getName());
-                    allValidFiles.append("\n");
-                }
-                else {
-                    nonValidFiles.append(nspFile.getName());
-                    nonValidFiles.append("\n");
-                }
-            }
-            if (pfsList.size() == 0){
-                printLog("All files provided have incorrect structure and won't be uploaded", MsgType.FAIL);
+            printLog("===========================================================================", EMsgType.INFO);
+            PFSProvider pfsElement = new PFSProvider(nspMap.get(nspMap.keySet().toArray()[0]), msgQueue);
+            if (!pfsElement.init()) {
+                printLog("GL File provided have incorrect structure and won't be uploaded", EMsgType.FAIL);
+                reportTransferStatus(EFileStatus.INCORRECT_FILE_FAILED);
                 return;
             }
-            printLog("===========================================================================", MsgType.INFO);
-            printLog("Verified files prepared for upload: \n  "+allValidFiles, MsgType.PASS);
-            if (!nonValidFiles.toString().isEmpty())
-                printLog("Files with incorrect structure that won't be uploaded: \n"+nonValidFiles, MsgType.INFO);
-            //--------------------------------------------------------------------------------------------------------------
+            printLog("GL File structure validated and it will be uploaded", EMsgType.PASS);
 
+            if (initGoldLeafProtocol(pfsElement))
+                reportTransferStatus(EFileStatus.UPLOADED);
+            else
+                reportTransferStatus(EFileStatus.FAILED);
+        }
+        private boolean initGoldLeafProtocol(PFSProvider pfsElement){
             // Go parse commands
             byte[] readByte;
 
-            for(PFSProvider pfsElement: pfsList) {
-                // Go connect to GoldLeaf
-                if (writeToUsb(CMD_ConnectionRequest))
-                    printLog("Initiating GoldLeaf connection" + nonValidFiles, MsgType.PASS);
-                else {
-                    printLog("Initiating GoldLeaf connection" + nonValidFiles, MsgType.FAIL);
-                    return;
+            // Go connect to GoldLeaf
+            if (writeToUsb(CMD_ConnectionRequest))
+                printLog("GL Initiating GoldLeaf connection", EMsgType.PASS);
+            else {
+                printLog("GL Initiating GoldLeaf connection", EMsgType.FAIL);
+                return false;
+            }
+            while (true) {
+                readByte = readFromUsb();
+                if (readByte == null)
+                    return false;
+                if (Arrays.equals(readByte, CMD_ConnectionResponse)) {
+                    if (!handleConnectionResponse(pfsElement))
+                        return false;
+                    else
+                        continue;
                 }
-                int a = 0;                                                                                                  // TODO:DEBUG
-                while (true) {
-                    System.out.println("In loop. Iter: "+a);                                                                 // TODO:DEBUG
-                    readByte = readFromUsb();
-                    if (readByte == null)
-                        return;
-                    hexDumpUTF8(readByte);                                                                 // TODO:DEBUG
-                    if (Arrays.equals(readByte, CMD_ConnectionResponse)) {
-                        if (!handleConnectionResponse(pfsElement))
-                            return;
-                        else
-                            continue;
-                    }
-                    if (Arrays.equals(readByte, CMD_Start)) {
-                        if (!handleStart(pfsElement))
-                            return;
-                        else
-                            continue;
-                    }
-                    if (Arrays.equals(readByte, CMD_NSPContent)) {
-                        if (!handleNSPContent(pfsElement, true))
-                            return;
-                        else
-                            continue;
-                    }
-                    if (Arrays.equals(readByte, CMD_NSPTicket)) {
-                        if (!handleNSPContent(pfsElement, false))
-                            return;
-                        else
-                            continue;
-                    }
-                    if (Arrays.equals(readByte, CMD_Finish)) {
-                        printLog("Closing GoldLeaf connection: Transfer successful", MsgType.PASS);
-                        break;                     // TODO: GO TO NEXT NSP
-                    }
+                if (Arrays.equals(readByte, CMD_Start)) {
+                    if (!handleStart(pfsElement))
+                        return false;
+                    else
+                        continue;
+                }
+                if (Arrays.equals(readByte, CMD_NSPContent)) {
+                    if (!handleNSPContent(pfsElement, true))
+                        return false;
+                    else
+                        continue;
+                }
+                if (Arrays.equals(readByte, CMD_NSPTicket)) {
+                    if (!handleNSPContent(pfsElement, false))
+                        return false;
+                    else
+                        continue;
+                }
+                if (Arrays.equals(readByte, CMD_Finish)) {
+                    printLog("GL Closing GoldLeaf connection: Transfer successful.", EMsgType.PASS);
+                    break;
                 }
             }
+            return true;
         }
         /**
          * ConnectionResponse command handler
          * */
         private boolean handleConnectionResponse(PFSProvider pfsElement){
-            if (!writeToUsb(CMD_NSPName))
+            printLog("GL 'ConnectionResonse' command:", EMsgType.INFO);
+            if (!writeToUsb(CMD_NSPName)) {
+                printLog("  [1/3]", EMsgType.FAIL);
                 return false;
-            if (!writeToUsb(pfsElement.getBytesNspFileNameLength()))
+            }
+            printLog("  [1/3]", EMsgType.PASS);
+
+            if (!writeToUsb(pfsElement.getBytesNspFileNameLength())) {
+                printLog("  [2/3]", EMsgType.FAIL);
                 return false;
-            if (!writeToUsb(pfsElement.getBytesNspFileName()))
+            }
+            printLog("  [2/3]", EMsgType.PASS);
+
+            if (!writeToUsb(pfsElement.getBytesNspFileName())) {
+                printLog("  [3/3]", EMsgType.FAIL);
                 return false;
+            }
+            printLog("  [3/3]", EMsgType.PASS);
+
             return true;
         }
         /**
          * Start command handler
          * */
         private boolean handleStart(PFSProvider pfsElement){
-            if (!writeToUsb(CMD_NSPData))
+            printLog("GL Handle 'Start' command:", EMsgType.INFO);
+            if (!writeToUsb(CMD_NSPData)) {
+                printLog("  [Send command]", EMsgType.FAIL);
                 return false;
-            if (!writeToUsb(pfsElement.getBytesCountOfNca()))
+            }
+            printLog("  [Send command]", EMsgType.PASS);
+
+            if (!writeToUsb(pfsElement.getBytesCountOfNca())) {
+                printLog("  [Send length]", EMsgType.FAIL);
                 return false;
-            for (int i = 0; i < pfsElement.getIntCountOfNca(); i++){
-                if (!writeToUsb(pfsElement.getNca(i).getNcaFileNameLength()))
+            }
+            printLog("  [Send length]", EMsgType.PASS);
+
+            int ncaCount = pfsElement.getIntCountOfNca();
+            printLog("  [Send information for "+ncaCount+" files]", EMsgType.INFO);
+            for (int i = 0; i < ncaCount; i++){
+                if (!writeToUsb(pfsElement.getNca(i).getNcaFileNameLength())) {
+                    printLog("    [1/4] File #"+i, EMsgType.FAIL);
                     return false;
-                if (!writeToUsb(pfsElement.getNca(i).getNcaFileName()))
+                }
+                printLog("    [1/4] File #"+i, EMsgType.PASS);
+
+                if (!writeToUsb(pfsElement.getNca(i).getNcaFileName())) {
+                    printLog("    [2/4] File #"+i, EMsgType.FAIL);
                     return false;
-                if (!writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getBodySize()+pfsElement.getNca(i).getNcaOffset()).array()))   // offset. real.
+                }
+                printLog("    [2/4] File #"+i, EMsgType.PASS);
+                if (!writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getBodySize()+pfsElement.getNca(i).getNcaOffset()).array())) {   // offset. real.
+                    printLog("    [2/4] File #"+i, EMsgType.FAIL);
                     return false;
-                if (!writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getNca(i).getNcaSize()).array()))  // size
+                }
+                printLog("    [3/4] File #"+i, EMsgType.PASS);
+                if (!writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getNca(i).getNcaSize()).array())) {  // size
+                    printLog("    [4/4] File #"+i, EMsgType.FAIL);
                     return false;
+                }
+                printLog("    [4/4] File #"+i, EMsgType.PASS);
             }
             return true;
         }
@@ -648,13 +681,18 @@ class UsbCommunications extends Task<Void> {
             int requestedNcaID;
             boolean isProgessBarInitiated = false;
             if (isItRawRequest) {
+                printLog("GL Handle 'Content' command", EMsgType.INFO);
                 byte[] readByte = readFromUsb();
-                if (readByte == null || readByte.length != 4)
+                if (readByte == null || readByte.length != 4) {
+                    printLog("  [Read requested ID]", EMsgType.FAIL);
                     return false;
+                }
                 requestedNcaID = ByteBuffer.wrap(readByte).order(ByteOrder.LITTLE_ENDIAN).getInt();
+                printLog("  [Read requested ID = "+requestedNcaID+" ]", EMsgType.PASS);
             }
             else {
                 requestedNcaID = pfsElement.getNcaTicketID();
+                printLog("GL Handle 'Ticket' command (ID = "+requestedNcaID+" )", EMsgType.INFO);
             }
 
             long realNcaOffset = pfsElement.getNca(requestedNcaID).getNcaOffset()+pfsElement.getBodySize();
@@ -683,7 +721,7 @@ class UsbCommunications extends Task<Void> {
 
                     if (!writeToUsb(readBuf))
                         return false;
-                    /***********************************/
+                    //-----------------------------------------/
                     if (isProgessBarInitiated){
                         try {
                             if (readFrom+readPice == realNcaSize){
@@ -700,12 +738,13 @@ class UsbCommunications extends Task<Void> {
                         if ((readPice == 8388608) && (readFrom == 0))
                             isProgessBarInitiated = true;
                     }
-                    /***********************************/
+                    //-----------------------------------------/
                     readFrom += readPice;
                 }
                 bufferedInStream.close();
             }
             catch (IOException ioe){
+                printLog("  Failed to read NCA ID "+requestedNcaID+". IO Exception:\n  "+ioe.getMessage(), EMsgType.FAIL);
                 ioe.printStackTrace();
                 return false;
             }
@@ -723,17 +762,17 @@ class UsbCommunications extends Task<Void> {
             int result = LibUsb.releaseInterface(handlerNS, DEFAULT_INTERFACE);
 
             if (result != LibUsb.SUCCESS)
-                printLog("Release interface\n  Returned: "+result+" (sometimes it's not an issue)", MsgType.WARNING);
+                printLog("Release interface\n  Returned: "+result+" (sometimes it's not an issue)", EMsgType.WARNING);
             else
-                printLog("Release interface", MsgType.PASS);
+                printLog("Release interface", EMsgType.PASS);
 
             LibUsb.close(handlerNS);
-            printLog("Requested handler close", MsgType.INFO);
+            printLog("Requested handler close", EMsgType.INFO);
         }
         // close context in the end
         if (contextNS != null) {
             LibUsb.exit(contextNS);
-            printLog("Requested context close", MsgType.INFO);
+            printLog("Requested context close", EMsgType.INFO);
         }
         msgConsumer.interrupt();
     }
@@ -752,25 +791,25 @@ class UsbCommunications extends Task<Void> {
         if (result != LibUsb.SUCCESS){
             switch (result){
                 case LibUsb.ERROR_TIMEOUT:
-                    printLog("Data transfer (write) issue\n  Returned: ERROR_TIMEOUT", MsgType.FAIL);
+                    printLog("Data transfer (write) issue\n  Returned: ERROR_TIMEOUT", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_PIPE:             //WUT?? I dunno man looks overkill in here..
-                    printLog("Data transfer (write) issue\n  Returned: ERROR_PIPE", MsgType.FAIL);
+                    printLog("Data transfer (write) issue\n  Returned: ERROR_PIPE", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_OVERFLOW:
-                    printLog("Data transfer (write) issue\n  Returned: ERROR_OVERFLOW", MsgType.FAIL);
+                    printLog("Data transfer (write) issue\n  Returned: ERROR_OVERFLOW", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_NO_DEVICE:
-                    printLog("Data transfer (write) issue\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                    printLog("Data transfer (write) issue\n  Returned: ERROR_NO_DEVICE", EMsgType.FAIL);
                     break;
                 default:
-                    printLog("Data transfer (write) issue\n    Returned: "+result, MsgType.FAIL);
+                    printLog("Data transfer (write) issue\n    Returned: "+result, EMsgType.FAIL);
             }
-            printLog("Execution stopped", MsgType.FAIL);
+            printLog("Execution stopped", EMsgType.FAIL);
             return false;
         }else {
             if (writeBufTransferred.get() != message.length){
-                printLog("Data transfer (write) issue\n  Requested: "+message.length+"\n  Transferred: "+writeBufTransferred.get(), MsgType.FAIL);
+                printLog("Data transfer (write) issue\n  Requested: "+message.length+"\n  Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
                 return false;
             }
             else {
@@ -781,7 +820,7 @@ class UsbCommunications extends Task<Void> {
     /**
      * Reading what USB device responded.
      * @return byte array if data read successful
-     *          'null' if read failed
+     *         'null' if read failed
      * */
     private byte[] readFromUsb(){
         ByteBuffer readBuffer = ByteBuffer.allocateDirect(512);//      //readBuffer.order() equals BIG_ENDIAN; DON'T TOUCH. And we will always allocate readBuffer for max-size endpoint supports (512 bytes)
@@ -794,24 +833,24 @@ class UsbCommunications extends Task<Void> {
         if (result != LibUsb.SUCCESS){
             switch (result){
                 case LibUsb.ERROR_TIMEOUT:
-                    printLog("Data transfer (read) issue\n  Returned: ERROR_TIMEOUT", MsgType.FAIL);
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_TIMEOUT", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_PIPE:             //WUT?? I dunno man looks overkill in here..
-                    printLog("Data transfer (read) issue\n  Returned: ERROR_PIPE", MsgType.FAIL);
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_PIPE", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_OVERFLOW:
-                    printLog("Data transfer (read) issue\n  Returned: ERROR_OVERFLOW", MsgType.FAIL);
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_OVERFLOW", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_NO_DEVICE:
-                    printLog("Data transfer (read) issue\n  Returned: ERROR_NO_DEVICE", MsgType.FAIL);
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_NO_DEVICE", EMsgType.FAIL);
                     break;
                 case LibUsb.ERROR_IO:
-                    printLog("Data transfer (read) issue\n  Returned: ERROR_IO", MsgType.FAIL);
+                    printLog("Data transfer (read) issue\n  Returned: ERROR_IO", EMsgType.FAIL);
                     break;
                 default:
-                    printLog("Data transfer (read) issue\n  Returned: "+result, MsgType.FAIL);
+                    printLog("Data transfer (read) issue\n  Returned: "+result, EMsgType.FAIL);
             }
-            printLog("Execution stopped", MsgType.FAIL);
+            printLog("Execution stopped", EMsgType.FAIL);
             return null;
         } else {
             int trans = readBufTransferred.get();
@@ -827,7 +866,7 @@ class UsbCommunications extends Task<Void> {
     /**
      * This is what will print to textArea of the application.
      * */
-    private void printLog(String message, MsgType type){
+    private void printLog(String message, EMsgType type){
         try {
             switch (type){
                 case PASS:
@@ -848,6 +887,5 @@ class UsbCommunications extends Task<Void> {
         }catch (InterruptedException ie){
             ie.printStackTrace();
         }
-
     }
 }

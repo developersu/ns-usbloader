@@ -58,6 +58,10 @@ Set 'Security & Privacy' if needed.
 ## Known bugs
 * Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't selected anything on NS).
 
+## NOTES
+Table 'Status' = 'Uploaded' does not means that file installed. It means that it has been sent to NS without any issues! That's what this app about. 
+Handling successful/failed installation is a purpose of the other side application (TinFoil/GoldLeaf). (And they don't provide any feedback interfaces so I can't detect success/failure.)
+
 ## TODO:
 - [x] macOS QA by [Konstanin Kelemen](https://github.com/konstantin-kelemen). Appreciate assistance of [Vitaliy Natarov](https://github.com/SebastianUA). 
 - [x] Windows support

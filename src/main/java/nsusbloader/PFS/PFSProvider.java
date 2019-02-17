@@ -1,6 +1,6 @@
 package nsusbloader.PFS;
 
-import nsusbloader.NSLDataTypes.MsgType;
+import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.ServiceWindow;
 
 import java.io.*;
@@ -9,8 +9,6 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
-
-import static nsusbloader.RainbowHexDump.hexDumpUTF8;
 
 /**
  * Used in GoldLeaf USB protocol
@@ -34,7 +32,7 @@ public class PFSProvider {
             nspFileName = nspFile.getName();
         }
         catch (FileNotFoundException fnfe){
-            printLog("File not founnd: \n  "+fnfe.getMessage(), MsgType.FAIL);
+            printLog("PFS File not founnd: \n  "+fnfe.getMessage(), EMsgType.FAIL);
             nspFileName = null;
         }
         if (Locale.getDefault().getISO3Language().equals("rus"))
@@ -50,22 +48,22 @@ public class PFSProvider {
         int filesCount;
         int header;
 
-        printLog("Start NSP file analyze for ["+nspFileName+"]", MsgType.INFO);
+        printLog("PFS Start NSP file analyze for ["+nspFileName+"]", EMsgType.INFO);
         try {
             byte[] fileStartingBytes = new byte[12];
             // Read PFS0, files count, header, padding (4 zero bytes)
             if (randAccessFile.read(fileStartingBytes) == 12)
-                printLog("Read file starting bytes", MsgType.PASS);
+                printLog("PFS Read file starting bytes.", EMsgType.PASS);
             else {
-                printLog("Read file starting bytes", MsgType.FAIL);
+                printLog("PFS Read file starting bytes.", EMsgType.FAIL);
                 randAccessFile.close();
                 return false;
             }
             // Check PFS0
             if (Arrays.equals(PFS0, Arrays.copyOfRange(fileStartingBytes, 0, 4)))
-                printLog("Read PFS0", MsgType.PASS);
+                printLog("PFS Read 'PFS0'.", EMsgType.PASS);
             else {
-                printLog("Read PFS0", MsgType.WARNING);
+                printLog("PFS Read 'PFS0'.", EMsgType.WARNING);
                 if (!ServiceWindow.getConfirmationWindow(nspFileName+"\n"+rb.getString("windowTitleConfirmWrongPFS0"), rb.getString("windowBodyConfirmWrongPFS0"))) {
                     randAccessFile.close();
                     return false;
@@ -74,19 +72,19 @@ public class PFSProvider {
             // Get files count
             filesCount = ByteBuffer.wrap(Arrays.copyOfRange(fileStartingBytes, 4, 8)).order(ByteOrder.LITTLE_ENDIAN).getInt();
             if (filesCount > 0 ) {
-                printLog("Read files count [" + filesCount + "]", MsgType.PASS);
+                printLog("PFS Read files count [" + filesCount + "]", EMsgType.PASS);
             }
             else {
-                printLog("Read files count", MsgType.FAIL);
+                printLog("PFS Read files count", EMsgType.FAIL);
                 randAccessFile.close();
                 return false;
             }
             // Get header
             header = ByteBuffer.wrap(Arrays.copyOfRange(fileStartingBytes, 8, 12)).order(ByteOrder.LITTLE_ENDIAN).getInt();
             if (header > 0 )
-                printLog("Read header ["+header+"]", MsgType.PASS);
+                printLog("PFS Read header ["+header+"]", EMsgType.PASS);
             else {
-                printLog("Read header ", MsgType.FAIL);
+                printLog("PFS Read header ", EMsgType.FAIL);
                 randAccessFile.close();
                 return false;
             }
@@ -105,10 +103,10 @@ public class PFSProvider {
 
             for (int i=0; i<filesCount; i++){
                 if (randAccessFile.read(ncaInfoArr) == 24) {
-                    printLog("Read NCA inside NSP: " + i, MsgType.PASS);
+                    printLog("PFS Read NCA inside NSP: " + i, EMsgType.PASS);
                 }
                 else {
-                    printLog("Read NCA inside NSP: "+i, MsgType.FAIL);
+                    printLog("PFS Read NCA inside NSP: "+i, EMsgType.FAIL);
                     randAccessFile.close();
                     return false;
                 }
@@ -117,23 +115,10 @@ public class PFSProvider {
                 nca_size = ByteBuffer.wrap(Arrays.copyOfRange(ncaInfoArr, 12, 20)).order(ByteOrder.LITTLE_ENDIAN).getLong();
                 nca_name_offset = ByteBuffer.wrap(Arrays.copyOfRange(ncaInfoArr, 20, 24)).order(ByteOrder.LITTLE_ENDIAN).getInt(); // yes, cast from int to long.
 
-                if (offset == 0)                                                    // TODO: add consitancy of class checker or reuse with ternary operator
-                    printLog("  Padding check", MsgType.PASS);
-                else
-                    printLog("  Padding check", MsgType.WARNING);
-                if (nca_offset >= 0)
-                    printLog("  NCA offset check "+nca_offset, MsgType.PASS);
-                else
-                    printLog("  NCA offset check "+nca_offset, MsgType.WARNING);
-                if (nca_size >= 0)
-                    printLog("  NCA size check: "+nca_size, MsgType.PASS);
-                else
-                    printLog("  NCA size check "+nca_size, MsgType.WARNING);
-                if (nca_name_offset >= 0)
-                    printLog("  NCA name offset check "+nca_name_offset, MsgType.PASS);
-                else
-                    printLog("  NCA name offset check "+nca_name_offset, MsgType.WARNING);
-
+                printLog("  Padding check", offset == 0?EMsgType.PASS:EMsgType.WARNING);
+                printLog("  NCA offset check "+nca_offset, nca_offset >= 0?EMsgType.PASS:EMsgType.WARNING);
+                printLog("  NCA size check: "+nca_size, nca_size >= 0?EMsgType.PASS: EMsgType.WARNING);
+                printLog("  NCA name offset check "+nca_name_offset, nca_name_offset >= 0?EMsgType.PASS:EMsgType.WARNING);
 
                 NCAFile ncaFile = new NCAFile();
                 ncaFile.setNcaOffset(nca_offset);
@@ -145,15 +130,15 @@ public class PFSProvider {
             // Final offset
             byte[] bufForInt = new byte[4];
             if ((randAccessFile.read(bufForInt) == 4) && (Arrays.equals(bufForInt, new byte[4])))
-                printLog("Final padding check", MsgType.PASS);
+                printLog("PFS Final padding check", EMsgType.PASS);
             else
-                printLog("Final padding check", MsgType.WARNING);
+                printLog("PFS Final padding check", EMsgType.WARNING);
 
             // Calculate position including header for body size offset
             bodySize = randAccessFile.getFilePointer()+header;
             //*********************************************************************************************
             // Collect file names from NCAs
-            printLog("Collecting file names", MsgType.INFO);
+            printLog("PFS Collecting file names", EMsgType.INFO);
             List<Byte> ncaFN;                 // Temporary
             byte[] b = new byte[1];                 // Temporary
             for (int i=0; i<filesCount; i++){
@@ -176,9 +161,10 @@ public class PFSProvider {
             randAccessFile.close();
         }
         catch (IOException ioe){
-            ioe.printStackTrace();                                                  //TODO: INFORM
+            printLog("PFS Failed NSP file analyze for ["+nspFileName+"]\n  "+ioe.getMessage(), EMsgType.FAIL);
+            ioe.printStackTrace();
         }
-        printLog("Finish NSP file analyze for ["+nspFileName+"]", MsgType.PASS);
+        printLog("PFS Finish NSP file analyze for ["+nspFileName+"]", EMsgType.PASS);
 
         return true;
     }
@@ -234,7 +220,7 @@ public class PFSProvider {
     /**
      * This is what will print to textArea of the application.
      **/
-    private void printLog(String message, MsgType type){
+    private void printLog(String message, EMsgType type){
         try {
             switch (type){
                 case PASS:
@@ -249,12 +235,9 @@ public class PFSProvider {
                 case WARNING:
                     msgQueue.put("[ WARN ] "+message+"\n");
                     break;
-                default:
-                    msgQueue.put(message);
             }
         }catch (InterruptedException ie){
-            ie.printStackTrace();                                                  //TODO: INFORM
+            ie.printStackTrace();                                                  //TODO:  ???
         }
-
     }
 }

@@ -5,7 +5,7 @@
     -fx-background: #ebebeb;
 }
 
-.button, .buttonUp, .buttonStop{
+.button, .buttonUp, .buttonStop, .buttonSelect{
     -fx-background-color: #fefefe;
     -fx-border-color: #fefefe;
     -fx-border-radius: 3;
@@ -14,19 +14,26 @@
     -fx-effect: dropshadow(three-pass-box, #b4b4b4, 2, 0, 0, 0);
     
 }
-.button:hover, .buttonStop:hover, .buttonUp:hover, .choice-box:hover, .button:focused:hover, .buttonStop:focused:hover, .buttonUp:focused:hover, .choice-box:focused:hover{
+.button:hover, .buttonStop:hover, .buttonUp:hover, .choice-box:hover, .button:focused:hover, .buttonStop:focused:hover, .buttonUp:focused:hover, .buttonSelect:focused:hover .choice-box:focused:hover{
     -fx-background-color: #fefefe;
     -fx-border-color: #00caca;
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
 }
-.button:focused, .buttonStop:focused, .buttonUp:focused, .choice-box:focused{
+.button:focused, .buttonStop:focused, .buttonUp:focused, .buttonSelect:focused, .choice-box:focused{
     -fx-background-color: #cccccc;
     -fx-border-color: #cccccc;
 }
 
 .button:pressed, .button:pressed:hover{
+    -fx-background-color: #fefefe;
+    -fx-border-color: #e82382;
+    -fx-border-radius: 3;
+    -fx-border-width: 2;
+    -fx-text-fill: #2c2c2c;
+}
+.buttonSelect:pressed, .buttonSelect:pressed:hover{
     -fx-background-color: #fefefe;
     -fx-border-color: #289de8;
     -fx-border-radius: 3;
@@ -197,7 +204,18 @@
     -fx-padding: 0.0em; /* 0 */
     -fx-table-cell-border-color: #2c2c2c;
 }
-
+// -========================== Context menu =====================-
+.context-menu {
+  -fx-background-color: #fefefe;
+  -fx-text-fill: white;
+  -fx-cursor: hand;
+}
+.context-menu .menu-item .label {
+  -fx-text-fill: #2c2c2c;
+}
+.context-menu .menu-item:focused .label {
+  -fx-text-fill: #2c2c2c;
+}
 
 
 

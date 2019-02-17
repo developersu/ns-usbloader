@@ -12,7 +12,6 @@ import nsusbloader.Controllers.NSTableViewController;
 
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -21,14 +20,14 @@ public class NSLMainController implements Initializable {
     private ResourceBundle resourceBundle;
 
     @FXML
-    private TextArea logArea;
+    public TextArea logArea;            // Accessible from Mediator
     @FXML
     private Button selectNspBtn;
     @FXML
     private Button uploadStopBtn;
     private Region btnUpStopImage;
     @FXML
-    private ProgressBar progressBar;
+    public ProgressBar progressBar;            // Accessible from Mediator
     @FXML
     private ChoiceBox<String> choiceProtocol;
     @FXML
@@ -38,7 +37,7 @@ public class NSLMainController implements Initializable {
     private Pane specialPane;
 
     @FXML
-    private NSTableViewController tableFilesListController;
+    public NSTableViewController tableFilesListController;            // Accessible from Mediator
 
     private Thread usbThread;
 
@@ -54,13 +53,15 @@ public class NSLMainController implements Initializable {
 
         logArea.appendText(rb.getString("logsGreetingsMessage2")+"\n");
 
-        MediatorControl.getInstance().registerController(this);
+        MediatorControl.getInstance().setController(this);
 
         specialPane.getStyleClass().add("special-pane-as-border");  // UI hacks
 
         uploadStopBtn.setDisable(true);
         selectNspBtn.setOnAction(e->{ selectFilesBtnAction(); });
         uploadStopBtn.setOnAction(e->{ uploadBtnAction(); });
+
+        selectNspBtn.getStyleClass().add("buttonSelect");
 
         this.btnUpStopImage = new Region();
         btnUpStopImage.getStyleClass().add("regionUpload");
@@ -80,7 +81,6 @@ public class NSLMainController implements Initializable {
         btnSwitchImage.getStyleClass().add("regionLamp");
         switchThemeBtn.setGraphic(btnSwitchImage);
         this.switchThemeBtn.setOnAction(e->switchTheme());
-
     }
     /**
      * Changes UI theme on the go
@@ -139,7 +139,7 @@ public class NSLMainController implements Initializable {
                 for (File item: nspToUpload)
                     logArea.appendText("  "+item.getAbsolutePath()+"\n");
             }
-            UsbCommunications usbCommunications = new UsbCommunications(logArea, progressBar, nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
+            UsbCommunications usbCommunications = new UsbCommunications(nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
             usbThread = new Thread(usbCommunications);
             usbThread.start();
         }

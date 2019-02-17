@@ -14,7 +14,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.Callback;
-import nsusbloader.NSLDataTypes.FileStatus;
+import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.io.File;
 import java.net.URL;
@@ -91,7 +91,8 @@ public class NSTableViewController implements Initializable {
             for (NSLRowModel model: rowsObsLst){
                 if (model != modelChecked)
                     model.setMarkForUpload(false);
-            }table.refresh();
+            }
+            table.refresh();
         }
     }
     /**
@@ -136,9 +137,9 @@ public class NSTableViewController implements Initializable {
         }
     }
     /**
-     * Update files in case something is wrong. Requested from UsbCommunications _OR_ PFS
+     * Update files in case something is wrong. Requested from UsbCommunications
      * */
-    public void setFileStatus(String fileName, FileStatus status){
+    public void setFileStatus(String fileName, EFileStatus status){
         for (NSLRowModel model: rowsObsLst){
             if (model.getNspFileName().equals(fileName)){
                 model.setStatus(status);
