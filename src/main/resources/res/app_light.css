@@ -14,7 +14,7 @@
     -fx-effect: dropshadow(three-pass-box, #b4b4b4, 2, 0, 0, 0);
     
 }
-.button:hover, .buttonStop:hover, .buttonUp:hover, .choice-box:hover, .button:focused:hover, .buttonStop:focused:hover, .buttonUp:focused:hover, .buttonSelect:focused:hover .choice-box:focused:hover{
+.button:hover, .buttonStop:hover, .buttonUp:hover, .choice-box:hover, .button:focused:hover, .buttonStop:focused:hover, .buttonUp:focused:hover, .buttonSelect:focused:hover, .choice-box:focused:hover{
     -fx-background-color: #fefefe;
     -fx-border-color: #00caca;
     -fx-border-radius: 3;
