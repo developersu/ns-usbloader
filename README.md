@@ -1,12 +1,14 @@
 # NS-USBloader
 
-NS-USBloader is a PC-side tinfoil NSP USB uploader. Replacement for default usb_install_pc.py
+NS-USBloader is a PC-side TinFoil/GoldLeaf NSP USB uploader. Replacement for default usb_install_pc.py and GoldTree.
 
 With GUI and cookies.
 
 Read more: https://developersu.blogspot.com/2019/02/ns-usbloader-en.html
 
-Here is the version of 'not perfect byt anyway' [tinfoil I use](https://cloud.mail.ru/public/DwbX/H8d2p3aYR).
+Here is the version of 'not perfect but anyway' [tinfoil I use](https://cloud.mail.ru/public/DwbX/H8d2p3aYR). 
+Ok, I'm almost sure that this version has bugs. I don't remember where I downloaded it. But it works for me somehow.. 
+Let's rephrase, if you have working version of TinFoil DO NOT use this one.  
 
 ## License
 
@@ -32,7 +34,7 @@ Install JRE/JDK 8 or higher (openJDK is good. Oracle's one is also good). JavaFX
 
 See 'Linux' section.
 
-Set 'Security & Privacy' if needed.
+Set 'Security & Privacy' settings if needed.
 
 ### Windows: 
 
@@ -56,7 +58,22 @@ Set 'Security & Privacy' if needed.
 ## Known bugs
 * Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't selected anything on NS).
 
+## NOTES
+Table 'Status' = 'Uploaded' does not means that file installed. It means that it has been sent to NS without any issues! That's what this app about. 
+Handling successful/failed installation is a purpose of the other side application (TinFoil/GoldLeaf). (And they don't provide any feedback interfaces so I can't detect success/failure.)
+
 ## TODO:
-- [x] macOS QA by [Konstanin Kelemen](https://github.com/konstantin-kelemen). Appreciate assistance of [Vitaliy Natarov](https://github.com/SebastianUA). 
+- [x] macOS QA v0.1
+- [ ] macOS QA v0.2 (partly)
 - [x] Windows support
-- [ ] code refactoring
+- [ ] code refactoring (almost. todo: printLog() )
+- [x] GoldLeaf support
+- [ ] XCI support
+- [ ] File order sort (non-critical)
+
+## Thanks
+Appreciate assistance and support of both Vitaliy and Konstantin. Without you all this magic would not have happened.
+
+[Konstanin Kelemen](https://github.com/konstantin-kelemen)
+ 
+[Vitaliy Natarov](https://github.com/SebastianUA) 

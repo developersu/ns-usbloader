@@ -1,11 +1,3 @@
-/**
- Name: NSL-USBFoil
- @author Dmitry Isaenko
- License: GNU GPL v.3
- @see https://github.com/developersu/
- @see https://developersu.blogspot.com/
- 2019, Russia
- */
 package nsusbloader;
 
 import javafx.application.Application;
@@ -14,21 +6,23 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import nsusbloader.Controllers.NSLMainController;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
-    static final String appVersion = "v0.1";
+    public static final String appVersion = "v0.2";
     @Override
     public void start(Stage primaryStage) throws Exception{
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/NSLMain.fxml"));
+
         ResourceBundle rb;
         if (Locale.getDefault().getISO3Language().equals("rus"))
             rb = ResourceBundle.getBundle("locale", new Locale("ru"));
         else
             rb = ResourceBundle.getBundle("locale", new Locale("en"));
-
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/NSLMain.fxml"));
 
         loader.setResources(rb);
         Parent root = loader.load();
@@ -44,7 +38,9 @@ public class NSLMain extends Application {
         primaryStage.setMinWidth(600);
         primaryStage.setMinHeight(375);
         Scene mainScene = new Scene(root, 800, 400);
-        mainScene.getStylesheets().add("/res/app.css");
+
+        mainScene.getStylesheets().add(AppPreferences.getInstance().getTheme());
+
         primaryStage.setScene(mainScene);
         primaryStage.show();
 
@@ -53,6 +49,9 @@ public class NSLMain extends Application {
                 if(! ServiceWindow.getConfirmationWindow(rb.getString("windowTitleConfirmExit"), rb.getString("windowBodyConfirmExit")))
                     e.consume();
         });
+
+        NSLMainController controller = loader.getController();
+        primaryStage.setOnHidden(e-> controller.exit());
     }
 
     public static void main(String[] args) {

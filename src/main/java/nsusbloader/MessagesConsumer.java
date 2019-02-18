@@ -3,8 +3,11 @@ package nsusbloader;
 import javafx.animation.AnimationTimer;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
+import nsusbloader.Controllers.NSTableViewController;
+import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
 public class MessagesConsumer extends AnimationTimer {
@@ -13,18 +16,24 @@ public class MessagesConsumer extends AnimationTimer {
 
     private final BlockingQueue<Double> progressQueue;
     private final ProgressBar progressBar;
+    private final HashMap<String, EFileStatus> statusMap;
+    private final NSTableViewController tableViewController;
 
     private boolean isInterrupted;
 
-    MessagesConsumer(BlockingQueue<String> msgQueue, TextArea logsArea, BlockingQueue<Double> progressQueue, ProgressBar progressBar){
-        this.msgQueue = msgQueue;
-        this.logsArea = logsArea;
+    MessagesConsumer(BlockingQueue<String> msgQueue, BlockingQueue<Double> progressQueue, HashMap<String, EFileStatus> statusMap){
+        this.isInterrupted = false;
 
-        this.progressBar = progressBar;
+        this.msgQueue = msgQueue;
+        this.logsArea = MediatorControl.getInstance().getContoller().logArea;
+
         this.progressQueue = progressQueue;
+        this.progressBar = MediatorControl.getInstance().getContoller().progressBar;
+
+        this.statusMap = statusMap;
+        this.tableViewController = MediatorControl.getInstance().getContoller().tableFilesListController;
 
         progressBar.setProgress(0.0);
-        this.isInterrupted = false;
         MediatorControl.getInstance().setTransferActive(true);
     }
 
@@ -40,12 +49,15 @@ public class MessagesConsumer extends AnimationTimer {
         if (progressRecieved > 0)
             progress.forEach(prg -> progressBar.setProgress(prg));
 
-        if (isInterrupted) {
+        if (isInterrupted) {                                                // It's safe 'cuz it's could't be interrupted while HashMap populating
             MediatorControl.getInstance().setTransferActive(false);
             progressBar.setProgress(0.0);
+
+            if (statusMap.size() > 0)
+                for (String key : statusMap.keySet())
+                    tableViewController.setFileStatus(key, statusMap.get(key));
             this.stop();
         }
-        //TODO
     }
 
     void interrupt(){
