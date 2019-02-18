@@ -39,14 +39,14 @@ public class NSLRowModel {
     public void setStatus(EFileStatus status){                               // TODO: Localization
         switch (status){
             case UPLOADED:
-                this.status = "Uploaded";
+                this.status = "Success";
                 markForUpload = false;
                 break;
             case FAILED:
-                this.status = "Upload failed";
+                this.status = "Failed";
                 break;
             case INCORRECT_FILE_FAILED:
-                this.status = "File incorrect";
+                this.status = "Failed: Incorrect file";
                 markForUpload = false;
                 break;
         }

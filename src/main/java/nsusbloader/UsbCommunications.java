@@ -18,12 +18,13 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-class UsbCommunications extends Task<Void> {
+public class UsbCommunications extends Task<Void> {
     private final int DEFAULT_INTERFACE = 0;
 
     private BlockingQueue<String> msgQueue;
     private BlockingQueue<Double> progressQueue;
     private HashMap<String, EFileStatus> statusMap;      // BlockingQueue for literally one object. TODO: read more books ; replace to hashMap
+    private EFileStatus status = EFileStatus.FAILED;
 
     private MessagesConsumer msgConsumer;
 
@@ -44,7 +45,7 @@ class UsbCommunications extends Task<Void> {
     Since this application let user an ability (theoretically) to choose same files in different folders, the latest selected file will be added to the list and handled correctly.
     I have no idea why he/she will make a decision to do that. Just in case, we're good in this point.
      */
-    UsbCommunications(List<File> nspList, String protocol){
+    public UsbCommunications(List<File> nspList, String protocol){
         this.protocol = protocol;
         this.nspMap = new HashMap<>();
         for (File f: nspList)
@@ -276,27 +277,16 @@ class UsbCommunications extends Task<Void> {
         return null;
     }
     /**
-     * Report transfer status
-     * */
-    private void reportTransferStatus(EFileStatus status){
-        for (String fileName: nspMap.keySet())
-            statusMap.put(fileName, status);
-    }
-    /**
      * Tinfoil processing
      * */
     private class TinFoil{
         TinFoil(){
 
-            if (!sendListOfNSP()) {
-                reportTransferStatus(EFileStatus.FAILED);
+            if (!sendListOfNSP())
                 return;
-            }
 
             if (proceedCommands())                              // REPORT SUCCESS
-                reportTransferStatus(EFileStatus.UPLOADED);
-            else                                                // REPORT FAILURE
-                reportTransferStatus(EFileStatus.FAILED);
+                status = EFileStatus.UPLOADED;     // Don't change status that is already set to FAILED
         }
         /**
          * Send what NSP will be transferred
@@ -547,15 +537,14 @@ class UsbCommunications extends Task<Void> {
             PFSProvider pfsElement = new PFSProvider(nspMap.get(nspMap.keySet().toArray()[0]), msgQueue);
             if (!pfsElement.init()) {
                 printLog("GL File provided have incorrect structure and won't be uploaded", EMsgType.FAIL);
-                reportTransferStatus(EFileStatus.INCORRECT_FILE_FAILED);
+                status = EFileStatus.INCORRECT_FILE_FAILED;
                 return;
             }
             printLog("GL File structure validated and it will be uploaded", EMsgType.PASS);
 
             if (initGoldLeafProtocol(pfsElement))
-                reportTransferStatus(EFileStatus.UPLOADED);
-            else
-                reportTransferStatus(EFileStatus.FAILED);
+                status = EFileStatus.UPLOADED;
+            // else - no change status that is already set to FAILED
         }
         private boolean initGoldLeafProtocol(PFSProvider pfsElement){
             // Go parse commands
@@ -774,6 +763,11 @@ class UsbCommunications extends Task<Void> {
             LibUsb.exit(contextNS);
             printLog("Requested context close", EMsgType.INFO);
         }
+
+        // Report status
+        for (String fileName: nspMap.keySet())
+            statusMap.put(fileName, status);
+
         msgConsumer.interrupt();
     }
     /**

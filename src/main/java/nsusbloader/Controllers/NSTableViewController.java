@@ -33,15 +33,29 @@ public class NSTableViewController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         rowsObsLst = FXCollections.observableArrayList();
         table.setPlaceholder(new Label());
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<NSLRowModel, String> statusColumn = new TableColumn<>(resourceBundle.getString("tableStatusLbl"));
         TableColumn<NSLRowModel, String> fileNameColumn = new TableColumn<>(resourceBundle.getString("tableFileNameLbl"));
         TableColumn<NSLRowModel, String> fileSizeColumn = new TableColumn<>(resourceBundle.getString("tableSizeLbl"));
         TableColumn<NSLRowModel, Boolean> uploadColumn = new TableColumn<>(resourceBundle.getString("tableUploadLbl"));
-        statusColumn.setMinWidth(70.0);
-        fileNameColumn.setMinWidth(250.0);
-        fileSizeColumn.setMinWidth(70.0);
-        uploadColumn.setMinWidth(70.0);
+        // See https://bugs.openjdk.java.net/browse/JDK-8157687
+        statusColumn.setMinWidth(100.0);
+        statusColumn.setPrefWidth(100.0);
+        statusColumn.setMaxWidth(100.0);
+        statusColumn.setResizable(false);
+
+        fileNameColumn.setMinWidth(25.0);
+
+        fileSizeColumn.setMinWidth(120.0);
+        fileSizeColumn.setPrefWidth(120.0);
+        fileSizeColumn.setMaxWidth(120.0);
+        fileSizeColumn.setResizable(false);
+
+        uploadColumn.setMinWidth(100.0);
+        uploadColumn.setPrefWidth(100.0);
+        uploadColumn.setMaxWidth(100.0);
+        uploadColumn.setResizable(false);
 
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
         fileNameColumn.setCellValueFactory(new PropertyValueFactory<>("nspFileName"));
@@ -76,12 +90,6 @@ public class NSTableViewController implements Initializable {
 
         table.setItems(rowsObsLst);
         table.getColumns().addAll(statusColumn, fileNameColumn, fileSizeColumn, uploadColumn);
-        /* debug content
-        rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи_2"), true));
-        rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи_2"), false));
-        rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи_2"), false));
-        rowsObsLst.add(new NSLRowModel(new File("/home/loper/стихи_2"), true));
-        */
     }
     /**
      * See uploadColumn callback. In case of GoldLeaf we have to restrict selection
@@ -145,6 +153,7 @@ public class NSTableViewController implements Initializable {
                 model.setStatus(status);
             }
         }
+        table.refresh();
     }
     /**
      * Called if selected different USB protocol

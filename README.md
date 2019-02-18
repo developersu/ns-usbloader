@@ -34,7 +34,7 @@ Install JRE/JDK 8 or higher (openJDK is good. Oracle's one is also good). JavaFX
 
 See 'Linux' section.
 
-Set 'Security & Privacy' if needed.
+Set 'Security & Privacy' settings if needed.
 
 ### Windows: 
 
@@ -63,10 +63,18 @@ Table 'Status' = 'Uploaded' does not means that file installed. It means that it
 Handling successful/failed installation is a purpose of the other side application (TinFoil/GoldLeaf). (And they don't provide any feedback interfaces so I can't detect success/failure.)
 
 ## TODO:
-- [x] macOS QA by [Konstanin Kelemen](https://github.com/konstantin-kelemen). Appreciate assistance of [Vitaliy Natarov](https://github.com/SebastianUA). 
+- [x] macOS QA
+   -[x] v0.1
+   -[ ] v0.2 (partly)
 - [x] Windows support
-- [ ] code refactoring
-- [ ] GoldLeaf support
+- [ ] code refactoring (almost. todo: printLog() )
+- [x] GoldLeaf support
 - [ ] XCI support
-- [ ] Settings
 - [ ] File order sort (non-critical)
+
+## Thanks
+Appreciate assistance and support of both Vitaliy and Konstantin. Without you all this magic would not have happened.
+
+[Konstanin Kelemen](https://github.com/konstantin-kelemen)
+ 
+[Vitaliy Natarov](https://github.com/SebastianUA) 

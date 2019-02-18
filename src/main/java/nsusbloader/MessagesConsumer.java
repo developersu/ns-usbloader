@@ -49,16 +49,15 @@ public class MessagesConsumer extends AnimationTimer {
         if (progressRecieved > 0)
             progress.forEach(prg -> progressBar.setProgress(prg));
 
-        if (isInterrupted) {
+        if (isInterrupted) {                                                // It's safe 'cuz it's could't be interrupted while HashMap populating
             MediatorControl.getInstance().setTransferActive(false);
             progressBar.setProgress(0.0);
 
-            if (statusMap.size() > 0)                                                // It's safe 'cuz it's could't be interrupted while HashMap populating
+            if (statusMap.size() > 0)
                 for (String key : statusMap.keySet())
                     tableViewController.setFileStatus(key, statusMap.get(key));
             this.stop();
         }
-        //TODO
     }
 
     void interrupt(){

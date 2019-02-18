@@ -98,7 +98,7 @@
     -fx-background-color: #f7fafa;
     -fx-min-height: 1;
 }
-
+// -======================== Choice box =========================-
 .choice-box {
     -fx-background-color: #4f4f4f;
     -fx-border-color: #4f4f4f;
@@ -120,13 +120,19 @@
 }
 
 // Background color of the whole context menu
-.choice-box .context-menu { -fx-background-color: #2d2d2d; }
+.choice-box .context-menu {
+    -fx-background-color: #2d2d2d;
+}
+
 // Focused item background color in the list
-.choice-box .menu-item:focused { -fx-background-color: #eea11e; }
-// Text color of non-focused items in the list
-.choice-box .menu-item > .label { -fx-text-fill: #f7fafa; }
-// Text color of focused item in the list
-.choice-box .menu-item:focused > .label { -fx-text-fill: #2d2d2d; }
+.choice-box .context-menu .menu-item:focused {
+    -fx-background-color: #eea11e;
+
+}
+.choice-box .context-menu .menu-item:focused .label {
+    -fx-text-fill: #2c2c2c;
+}
+
 
 // -======================== TAB PANE =========================-
 .tab-pane .tab SVGPath{
@@ -176,12 +182,18 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
 }
+.table-view .arrow {
+   -fx-mark-color: #08f3ff ;
+}
 .table-view .column-header {
     -fx-background-color: transparent;
+    -fx-border-width: 0 1 2 0;
+    -fx-border-color: #6d8484;
 }
 .table-view .column-header-background .label{
     -fx-background-color: transparent;
     -fx-text-fill: #08f3ff;
+
 }
 .table-view .column-header-background, .table-view .filler{
     -fx-background-color: #4f4f4f;
@@ -194,14 +206,14 @@
     -fx-background-color: -fx-table-cell-border-color, #424242;
     -fx-background-insets: 0, 0 0 1 0;
     -fx-padding: 0.0em; /* 0 */
-    -fx-table-cell-border-color: #f7fafa;
+    -fx-table-cell-border-color: #6d8484;
 }
 
 .table-row-cell:odd, .table-row-cell:odd:filled:selected, .table-row-cell:odd:selected{
     -fx-background-color: -fx-table-cell-border-color, #4f4f4f;
     -fx-background-insets: 0, 0 0 1 0;
     -fx-padding: 0.0em; /* 0 */
-    -fx-table-cell-border-color: #f7fafa;
+    -fx-table-cell-border-color: #6d8484;
 }
 // -========================== Context menu =====================-
 .context-menu {

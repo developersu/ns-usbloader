@@ -35,12 +35,9 @@ public class ServiceWindow   {
         alertBox.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
         alertBox.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alertBox.setResizable(true);        // Java bug workaround for JDR11/OpenJFX. TODO: nothing. really.
-        alertBox.getDialogPane().getStylesheets().add("/res/app.css");
+        alertBox.getDialogPane().getStylesheets().add(AppPreferences.getInstance().getTheme());
         Optional<ButtonType> result = alertBox.showAndWait();
-        if (result.get() == ButtonType.OK)
-            return true;
-        else
-            return false;
 
+        return (result.isPresent() && result.get() == ButtonType.OK);
     }
 }

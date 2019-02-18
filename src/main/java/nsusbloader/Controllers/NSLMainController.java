@@ -1,4 +1,4 @@
-package nsusbloader;
+package nsusbloader.Controllers;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -8,7 +8,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
-import nsusbloader.Controllers.NSTableViewController;
+import nsusbloader.AppPreferences;
+import nsusbloader.MediatorControl;
+import nsusbloader.NSLMain;
+import nsusbloader.UsbCommunications;
 
 import java.io.File;
 import java.net.URL;
@@ -46,7 +49,7 @@ public class NSLMainController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         this.resourceBundle = rb;
-        logArea.setText(rb.getString("logsGreetingsMessage")+" "+NSLMain.appVersion+"!\n");
+        logArea.setText(rb.getString("logsGreetingsMessage")+" "+ NSLMain.appVersion+"!\n");
         if (System.getProperty("os.name").toLowerCase().startsWith("lin"))
             if (!System.getProperty("user.name").equals("root"))
                 logArea.appendText(rb.getString("logsEnteredAsMsg1")+System.getProperty("user.name")+"\n"+rb.getString("logsEnteredAsMsg2") + "\n");
@@ -81,18 +84,20 @@ public class NSLMainController implements Initializable {
         btnSwitchImage.getStyleClass().add("regionLamp");
         switchThemeBtn.setGraphic(btnSwitchImage);
         this.switchThemeBtn.setOnAction(e->switchTheme());
+
+        previouslyOpenedPath = AppPreferences.getInstance().getRecent();
     }
     /**
      * Changes UI theme on the go
      * */
     private void switchTheme(){
-        if (switchThemeBtn.getScene().getStylesheets().get(0).equals("/res/app.css")) {
-            switchThemeBtn.getScene().getStylesheets().remove("/res/app.css");
+        if (switchThemeBtn.getScene().getStylesheets().get(0).equals("/res/app_dark.css")) {
+            switchThemeBtn.getScene().getStylesheets().remove("/res/app_dark.css");
             switchThemeBtn.getScene().getStylesheets().add("/res/app_light.css");
         }
         else {
-            switchThemeBtn.getScene().getStylesheets().add("/res/app.css");
             switchThemeBtn.getScene().getStylesheets().remove("/res/app_light.css");
+            switchThemeBtn.getScene().getStylesheets().add("/res/app_dark.css");
         }
     }
     /**
@@ -103,16 +108,14 @@ public class NSLMainController implements Initializable {
         List<File> filesList;
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(resourceBundle.getString("btnFileOpen"));
-        if (previouslyOpenedPath == null)
+
+        File validator = new File(previouslyOpenedPath);
+        if (validator.exists())
+            fileChooser.setInitialDirectory(validator);         // TODO: read from prefs
+        else
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));         // TODO: read from prefs
-        else {
-            File validator = new File(previouslyOpenedPath);
-            if (validator.exists())
-                fileChooser.setInitialDirectory(validator);         // TODO: read from prefs
-            else
-                fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));         // TODO: read from prefs
-        }
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NS ROM", "*.nsp"));
+
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
 
         filesList = fileChooser.showOpenMultipleDialog(logArea.getScene().getWindow());
         if (filesList != null && !filesList.isEmpty()) {
@@ -156,7 +159,7 @@ public class NSLMainController implements Initializable {
      * This thing modify UI for reusing 'Upload to NS' button and make functionality set for "Stop transmission"
      * Called from mediator
      * */
-    void notifyTransmissionStarted(boolean isTransmissionStarted){
+    public void notifyTransmissionStarted(boolean isTransmissionStarted){
         if (isTransmissionStarted) {
             selectNspBtn.setDisable(true);
             uploadStopBtn.setOnAction(e->{ stopBtnAction(); });
@@ -181,5 +184,12 @@ public class NSLMainController implements Initializable {
             uploadStopBtn.getStyleClass().remove("buttonStop");
             uploadStopBtn.getStyleClass().add("buttonUp");
         }
+    }
+    /**
+     * Save preferences before exit
+     * */
+    public void exit(){
+        AppPreferences.getInstance().setTheme(switchThemeBtn.getScene().getStylesheets().get(0));
+        AppPreferences.getInstance().setRecent(previouslyOpenedPath);
     }
 }
