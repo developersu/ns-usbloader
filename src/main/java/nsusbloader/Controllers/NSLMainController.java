@@ -42,6 +42,7 @@ public class NSLMainController implements Initializable {
     @FXML
     public NSTableViewController tableFilesListController;            // Accessible from Mediator
 
+    private UsbCommunications usbCommunications;
     private Thread usbThread;
 
     private String previouslyOpenedPath;
@@ -74,7 +75,7 @@ public class NSLMainController implements Initializable {
 
         ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "GoldLeaf");
         choiceProtocol.setItems(choiceProtocolList);
-        choiceProtocol.getSelectionModel().select(0);                               // TODO: shared settings
+        choiceProtocol.getSelectionModel().select(AppPreferences.getInstance().getProtocol());                               // TODO: shared settings
         choiceProtocol.setOnAction(e->tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem()));  // Add listener to notify tableView controller
         tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem());   // Notify tableView controller
 
@@ -99,6 +100,7 @@ public class NSLMainController implements Initializable {
             switchThemeBtn.getScene().getStylesheets().remove("/res/app_light.css");
             switchThemeBtn.getScene().getStylesheets().add("/res/app_dark.css");
         }
+        AppPreferences.getInstance().setTheme(switchThemeBtn.getScene().getStylesheets().get(0));
     }
     /**
      * Functionality for selecting NSP button.
@@ -142,8 +144,9 @@ public class NSLMainController implements Initializable {
                 for (File item: nspToUpload)
                     logArea.appendText("  "+item.getAbsolutePath()+"\n");
             }
-            UsbCommunications usbCommunications = new UsbCommunications(nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
+            usbCommunications = new UsbCommunications(nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
             usbThread = new Thread(usbCommunications);
+            usbThread.setDaemon(true);
             usbThread.start();
         }
     }
@@ -152,7 +155,7 @@ public class NSLMainController implements Initializable {
      * */
     private void stopBtnAction(){
         if (usbThread != null && usbThread.isAlive()){
-            usbThread.interrupt();
+            usbCommunications.cancel(false);
         }
     }
     /**
@@ -189,7 +192,7 @@ public class NSLMainController implements Initializable {
      * Save preferences before exit
      * */
     public void exit(){
-        AppPreferences.getInstance().setTheme(switchThemeBtn.getScene().getStylesheets().get(0));
+        AppPreferences.getInstance().setProtocol(choiceProtocol.getSelectionModel().getSelectedItem());
         AppPreferences.getInstance().setRecent(previouslyOpenedPath);
     }
 }

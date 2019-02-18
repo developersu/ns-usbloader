@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static nsusbloader.RainbowHexDump.hexDumpUTF8;
+
 public class UsbCommunications extends Task<Void> {
     private final int DEFAULT_INTERFACE = 0;
 
@@ -349,7 +351,7 @@ public class UsbCommunications extends Task<Void> {
             byte[] receivedArray;
 
             while (true){
-                if (Thread.currentThread().isInterrupted())     // Check if user interrupted process.
+                if (isCancelled())     // Check if user interrupted process.
                     return false;
                 receivedArray = readFromUsb();
                 if (receivedArray == null)
@@ -428,7 +430,7 @@ public class UsbCommunications extends Task<Void> {
                 int readPice = 8388608;                     // = 8Mb
 
                 while (currentOffset < receivedRangeSize){
-                    if (Thread.currentThread().isInterrupted())     // Check if user interrupted process.
+                    if (isCancelled())     // Check if user interrupted process.
                         return true;
                     if ((currentOffset + readPice) >= receivedRangeSize )
                         readPice = Math.toIntExact(receivedRangeSize - currentOffset);
@@ -561,6 +563,7 @@ public class UsbCommunications extends Task<Void> {
                 readByte = readFromUsb();
                 if (readByte == null)
                     return false;
+
                 if (Arrays.equals(readByte, CMD_ConnectionResponse)) {
                     if (!handleConnectionResponse(pfsElement))
                         return false;
@@ -699,7 +702,7 @@ public class UsbCommunications extends Task<Void> {
 
                 while (readFrom < realNcaSize){
 
-                    if (Thread.currentThread().isInterrupted())     // Check if user interrupted process.
+                    if (isCancelled())     // Check if user interrupted process.
                         return false;
 
                     if (realNcaSize - readFrom < readPice)
@@ -707,7 +710,7 @@ public class UsbCommunications extends Task<Void> {
                     readBuf = new byte[readPice];
                     if (bufferedInStream.read(readBuf) != readPice)
                         return false;
-
+                    //System.out.println("S: "+readFrom+" T: "+realNcaSize+" P: "+readPice);    //  DEBUG
                     if (!writeToUsb(readBuf))
                         return false;
                     //-----------------------------------------/

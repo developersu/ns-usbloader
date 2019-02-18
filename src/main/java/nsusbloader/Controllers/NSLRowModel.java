@@ -45,6 +45,9 @@ public class NSLRowModel {
             case FAILED:
                 this.status = "Failed";
                 break;
+            case UNKNOWN:
+                this.status = "...";
+                break;
             case INCORRECT_FILE_FAILED:
                 this.status = "Failed: Incorrect file";
                 markForUpload = false;

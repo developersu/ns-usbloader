@@ -125,7 +125,7 @@ public class NSTableViewController implements Initializable {
         }
     }
     /**
-     * Return files ready for upload. Requested from NSLMainController only
+     * Return files ready for upload. Requested from NSLMainController only -> uploadBtnAction()                            //TODO: set undefined
      * @return null if no files marked for upload
      *         List<File> if there are files
      * */
@@ -135,11 +135,15 @@ public class NSTableViewController implements Initializable {
             return null;
         else {
             for (NSLRowModel model: rowsObsLst){
-                if (model.isMarkForUpload())
+                if (model.isMarkForUpload()){
                     files.add(model.getNspFile());
+                    model.setStatus(EFileStatus.UNKNOWN);
+                }
             }
-            if (!files.isEmpty())
+            if (!files.isEmpty()) {
+                table.refresh();
                 return files;
+            }
             else
                 return null;
         }

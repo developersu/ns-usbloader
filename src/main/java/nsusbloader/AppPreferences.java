@@ -16,7 +16,15 @@ public class AppPreferences {
             theme = "/res/app_dark.css";
         return theme;
     }
+    public String getProtocol(){
+        String protocol = preferences.get("PROTOCOL", "TinFoil");           // Don't let user to change settings manually
+        if (!protocol.matches("(^TinFoil$)|(^GoldLeaf$)"))
+            protocol = "TinFoil";
+        return protocol;
+    }
     public void setTheme(String theme){ preferences.put("THEME", theme); }
+    public void setProtocol(String protocol){ preferences.put("PROTOCOL", protocol); }
+
 
     public String getRecent(){ return preferences.get("RECENT", System.getProperty("user.home")); }
     public void setRecent(String path){ preferences.put("RECENT", path); }
