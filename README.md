@@ -63,9 +63,8 @@ Table 'Status' = 'Uploaded' does not means that file installed. It means that it
 Handling successful/failed installation is a purpose of the other side application (TinFoil/GoldLeaf). (And they don't provide any feedback interfaces so I can't detect success/failure.)
 
 ## TODO:
-- [x] macOS QA
-   -[x] v0.1
-   -[ ] v0.2 (partly)
+- [x] macOS QA v0.1
+- [ ] macOS QA v0.2 (partly)
 - [x] Windows support
 - [ ] code refactoring (almost. todo: printLog() )
 - [x] GoldLeaf support
