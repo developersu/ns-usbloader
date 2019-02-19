@@ -2,6 +2,7 @@ package nsusbloader;
 
 import javafx.animation.AnimationTimer;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextArea;
 import nsusbloader.Controllers.NSTableViewController;
 import nsusbloader.NSLDataTypes.EFileStatus;
@@ -34,6 +35,8 @@ public class MessagesConsumer extends AnimationTimer {
         this.tableViewController = MediatorControl.getInstance().getContoller().tableFilesListController;
 
         progressBar.setProgress(0.0);
+
+        progressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
         MediatorControl.getInstance().setTransferActive(true);
     }
 
@@ -46,8 +49,14 @@ public class MessagesConsumer extends AnimationTimer {
 
         ArrayList<Double> progress = new ArrayList<>();
         int progressRecieved = progressQueue.drainTo(progress);
-        if (progressRecieved > 0)
-            progress.forEach(prg -> progressBar.setProgress(prg));
+        if (progressRecieved > 0) {
+            progress.forEach(prg -> {
+                if (prg != 1.0)
+                    progressBar.setProgress(prg);
+                else
+                    progressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+            });
+        }
 
         if (isInterrupted) {                                                // It's safe 'cuz it's could't be interrupted while HashMap populating
             MediatorControl.getInstance().setTransferActive(false);
