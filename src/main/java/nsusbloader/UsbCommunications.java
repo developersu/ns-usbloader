@@ -545,8 +545,7 @@ public class UsbCommunications extends Task<Void> {
             printLog("GL File structure validated and it will be uploaded", EMsgType.PASS);
 
             if (initGoldLeafProtocol(pfsElement))
-                status = EFileStatus.UPLOADED;
-            // else - no change status that is already set to FAILED
+                status = EFileStatus.UPLOADED;            // else - no change status that is already set to FAILED
         }
         private boolean initGoldLeafProtocol(PFSProvider pfsElement){
             // Go parse commands

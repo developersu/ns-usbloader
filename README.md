@@ -11,6 +11,8 @@ Ok, I'm almost sure that this version has bugs. I don't remember where I downloa
 
 Let's rephrase, if you have working version of TinFoil DO NOT use this one.  
 
+![Screenshot](https://farm8.staticflickr.com/7834/47133893471_37fd9689c4_o.png)
+
 ## License
 
 Source code spreads under the GNU General Public License v.3. You can find it in LICENSE file.

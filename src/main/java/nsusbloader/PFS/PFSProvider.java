@@ -116,9 +116,9 @@ public class PFSProvider {
                 nca_name_offset = ByteBuffer.wrap(Arrays.copyOfRange(ncaInfoArr, 20, 24)).order(ByteOrder.LITTLE_ENDIAN).getInt(); // yes, cast from int to long.
 
                 printLog("  Padding check", offset == 0?EMsgType.PASS:EMsgType.WARNING);
-                printLog("  NCA offset check "+nca_offset, nca_offset >= 0?EMsgType.PASS:EMsgType.WARNING);
+                printLog("  NCA offset check: "+nca_offset, nca_offset >= 0?EMsgType.PASS:EMsgType.WARNING);
                 printLog("  NCA size check: "+nca_size, nca_size >= 0?EMsgType.PASS: EMsgType.WARNING);
-                printLog("  NCA name offset check "+nca_name_offset, nca_name_offset >= 0?EMsgType.PASS:EMsgType.WARNING);
+                printLog("  NCA name offset check: "+nca_name_offset, nca_name_offset >= 0?EMsgType.PASS:EMsgType.WARNING);
 
                 NCAFile ncaFile = new NCAFile();
                 ncaFile.setNcaOffset(nca_offset);
