@@ -24,12 +24,12 @@ Source code spreads under the GNU General Public License v.3. You can find it in
 
 ## Requirements
 
-JRE 8 or higher. See below.
+JRE 8u60 or higher. See below.
 
 ## Usage
 ### Linux:
 
-1. Install JRE/JDK 8 or higher (openJDK is good. Oracle's one is also good). JavaFX not needed, if you're interested (it's embedded).
+1. Install JRE/JDK 8u60 or higher (openJDK is good. Oracle's one is also good). JavaFX not needed, if you're interested (it's embedded).
 
 2. `root # java -jar /path/to/NS-USBloader.jar`
 
