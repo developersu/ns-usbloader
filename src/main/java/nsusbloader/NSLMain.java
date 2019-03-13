@@ -34,7 +34,7 @@ public class NSLMain extends Application {
                 new Image(getClass().getResourceAsStream("/res/app_icon128x128.png"))
         );
 
-        primaryStage.setTitle("NS-USBloader");
+        primaryStage.setTitle("NS-USBloader "+appVersion);
         primaryStage.setMinWidth(600);
         primaryStage.setMinHeight(375);
         Scene mainScene = new Scene(root, 800, 400);
