@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
-    public static final String appVersion = "v0.2.3_DEVELOPMENT";
+    public static final String appVersion = "v0.2.3_DEV";
     @Override
     public void start(Stage primaryStage) throws Exception{
 

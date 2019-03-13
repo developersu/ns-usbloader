@@ -114,19 +114,17 @@ public class UsbCommunications extends Task<Void> {
 
         switch (result){
             case 0:
-                System.out.println("SUCCES");
-                System.out.println("\n"+configDescriptor.dump());
+                printLog("DBG: getActiveConfigDescriptor\n"+configDescriptor.dump(), EMsgType.PASS);
                 break;
             case LibUsb.ERROR_NOT_FOUND:
-                System.out.println("ERROR_NOT_FOUND "+result);
+                printLog("DBG: getActiveConfigDescriptor: ERROR_NOT_FOUND", EMsgType.FAIL);
                 break;
             default:
-                System.out.println("UNKNOWN "+result);
+                printLog("DBG: getActiveConfigDescriptor: "+result, EMsgType.FAIL);
                 break;
         }
-        System.out.println();
 
-        //LibUsb.freeConfigDescriptor(configDescriptor);
+        LibUsb.freeConfigDescriptor(configDescriptor);
         //*/
         /*
          * So what did we learn?
@@ -228,6 +226,7 @@ public class UsbCommunications extends Task<Void> {
         }
         else
             printLog("libusb doesn't supports function 'CAP_SUPPORTS_DETACH_KERNEL_DRIVER'. Proceeding.", EMsgType.WARNING);
+        /*
         // Reset device
         result = LibUsb.resetDevice(handlerNS);
         if (result == 0)
@@ -237,6 +236,7 @@ public class UsbCommunications extends Task<Void> {
             close();
             return null;
         }
+        */
         // Set configuration (soft reset if needed)
         result = LibUsb.setConfiguration(handlerNS, 1);     // 1 - configuration all we need
         if (result != LibUsb.SUCCESS){
@@ -264,27 +264,6 @@ public class UsbCommunications extends Task<Void> {
             printLog("Set active configuration to device.", EMsgType.PASS);
         }
 
-        ////////////////////////////////////////// DEBUG INFORMATION START ///////////////////////////////////////////
-        //
-        ConfigDescriptor configDescriptor = new ConfigDescriptor();
-                //result = LibUsb.getConfigDescriptor(deviceNS, (byte)0x01, configDescriptor);
-        result = LibUsb.getActiveConfigDescriptor(deviceNS, configDescriptor);
-
-        switch (result){
-            case 0:
-                printLog("DBG: getActiveConfigDescriptor\n"+configDescriptor.dump(), EMsgType.PASS);
-                break;
-            case LibUsb.ERROR_NOT_FOUND:
-                printLog("DBG: getActiveConfigDescriptor: ERROR_NOT_FOUND", EMsgType.FAIL);
-                break;
-            default:
-                printLog("DBG: getActiveConfigDescriptor: "+result, EMsgType.FAIL);
-                break;
-        }
-
-        LibUsb.freeConfigDescriptor(configDescriptor);
-        //*/
-        ////////////////////////////////////////// DEBUG INFORMATION END //////////////////////////////////////////////
         // Claim interface
         result = LibUsb.claimInterface(handlerNS, DEFAULT_INTERFACE);
         if (result != LibUsb.SUCCESS) {
