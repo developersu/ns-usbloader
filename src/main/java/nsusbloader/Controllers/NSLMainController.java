@@ -11,7 +11,7 @@ import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLMain;
-import nsusbloader.UsbCommunications;
+import nsusbloader.USB.UsbCommunications;
 
 import java.io.File;
 import java.net.URL;
@@ -137,7 +137,7 @@ public class NSLMainController implements Initializable {
         if (usbThread == null || !usbThread.isAlive()){
             List<File> nspToUpload;
             if ((nspToUpload = tableFilesListController.getFiles()) == null) {
-                resourceBundle.getString("logsNoFolderFileSelected");
+                logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
                 return;
             }else {
                 logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");

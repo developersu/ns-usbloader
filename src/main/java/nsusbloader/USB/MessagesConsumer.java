@@ -1,10 +1,11 @@
-package nsusbloader;
+package nsusbloader.USB;
 
 import javafx.animation.AnimationTimer;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextArea;
 import nsusbloader.Controllers.NSTableViewController;
+import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.util.ArrayList;
@@ -69,7 +70,7 @@ public class MessagesConsumer extends AnimationTimer {
         }
     }
 
-    void interrupt(){
+    public void interrupt(){
         this.isInterrupted = true;
     }
 }

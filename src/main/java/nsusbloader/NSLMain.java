@@ -12,17 +12,16 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
-    public static final String appVersion = "v0.2.3_DEV";
+    public static final String appVersion = "v0.3_DEV";
     @Override
     public void start(Stage primaryStage) throws Exception{
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/NSLMain.fxml"));
 
         ResourceBundle rb;
-        if (Locale.getDefault().getISO3Language().equals("rus"))
-            rb = ResourceBundle.getBundle("locale", new Locale("ru"));
-        else
-            rb = ResourceBundle.getBundle("locale", new Locale("en"));
+        Locale userLocale = new Locale(Locale.getDefault().getISO3Language());      // NOTE: user locale based on ISO3 Language codes
+        rb = ResourceBundle.getBundle("locale", userLocale);
+
 
         loader.setResources(rb);
         Parent root = loader.load();

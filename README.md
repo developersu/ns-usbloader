@@ -35,16 +35,20 @@ JRE 8u60 or higher. See below.
 
 ### macOS
 
-See 'Linux' section.
+Double-click on downloaded .jar file. Follow instructions. Or see 'Linux' section.
 
 Set 'Security & Privacy' settings if needed.
+
+If you use different MacOS (not Mojave) - check release section for another JAR file.
 
 ### Windows: 
 
 * Download Zadig: https://zadig.akeo.ie/
-* Open tinfoil. Set 'Title Managment' -> 'Usb install NSP'
+* Open tinfoil. Set 'Title Management' -> 'Usb install NSP'
 * Connect NS to PC
-* Open Zadig, select NS in dropdown, select 'libusbK (v3.0.7.0)' (version may vary), click 'Install WCID Driver'
+* Open Zadig
+* Click 'Options' and select 'List All Devices'
+* Select NS in dropdown, select 'libusbK (v3.0.7.0)' (version may vary), click 'Install WCID Driver'
 * Check that in device list of you system you have 'libusbK USB Devices' folder and your NS inside of it
 * Download and install Java JRE (8+)
 * Get this application (JAR file) double-click on on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
@@ -66,10 +70,10 @@ Table 'Status' = 'Uploaded' does not means that file installed. It means that it
 Handling successful/failed installation is a purpose of the other side application (TinFoil/GoldLeaf). (And they don't provide any feedback interfaces so I can't detect success/failure.)
 
 ## TODO:
-- [x] macOS QA v0.1
-- [ ] macOS QA v0.2 (partly)
+- [x] macOS QA v0.1  (Mojave)
+- [x] macOS QA v0.2.2 (Mojave)
 - [x] Windows support
-- [ ] code refactoring (almost. todo: printLog() )
+- [x] code refactoring
 - [x] GoldLeaf support
 - [ ] XCI support
 - [ ] File order sort (non-critical)
