@@ -18,10 +18,8 @@ public class NSLMain extends Application {
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/NSLMain.fxml"));
 
-        ResourceBundle rb;
         Locale userLocale = new Locale(Locale.getDefault().getISO3Language());      // NOTE: user locale based on ISO3 Language codes
-        rb = ResourceBundle.getBundle("locale", userLocale);
-
+        ResourceBundle rb = ResourceBundle.getBundle("locale", userLocale);
 
         loader.setResources(rb);
         Parent root = loader.load();

@@ -5,6 +5,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
@@ -15,6 +17,7 @@ import nsusbloader.USB.UsbCommunications;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -136,7 +139,7 @@ public class NSLMainController implements Initializable {
     private void uploadBtnAction(){
         if (usbThread == null || !usbThread.isAlive()){
             List<File> nspToUpload;
-            if ((nspToUpload = tableFilesListController.getFiles()) == null) {
+            if ((nspToUpload = tableFilesListController.getFilesForUpload()) == null) {
                 logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
                 return;
             }else {
@@ -187,6 +190,51 @@ public class NSLMainController implements Initializable {
             uploadStopBtn.getStyleClass().remove("buttonStop");
             uploadStopBtn.getStyleClass().add("buttonUp");
         }
+    }
+    /**
+     * Drag-n-drop support (dragOver consumer)
+     * */
+    @FXML
+    private void handleDragOver(DragEvent event){
+        if (event.getDragboard().hasFiles())
+            event.acceptTransferModes(TransferMode.ANY);
+    }
+    /**
+     * Drag-n-drop support (drop consumer)
+     * */
+    @FXML
+    private void handleDrop(DragEvent event){
+        List<File> filesDropped = new ArrayList<>();
+        try {
+            for (File fileOrDir : event.getDragboard().getFiles()) {
+                if (fileOrDir.getName().toLowerCase().endsWith(".nsp"))
+                    filesDropped.add(fileOrDir);
+                else if (fileOrDir.isDirectory())
+                    for (File file : fileOrDir.listFiles())
+                        if (file.getName().toLowerCase().endsWith(".nsp"))
+                            filesDropped.add(file);
+            }
+        }
+        catch (SecurityException se){
+            se.printStackTrace();
+        }
+        if (!filesDropped.isEmpty()) {
+            List<File> filesAlreadyInTable;
+            if ((filesAlreadyInTable = tableFilesListController.getFiles()) != null) {
+                filesDropped.removeAll(filesAlreadyInTable);                          // Get what we already have and add new file(s)
+                if (!filesDropped.isEmpty()) {
+                    filesDropped.addAll(tableFilesListController.getFiles());
+                    tableFilesListController.setFiles(filesDropped);
+                }
+            }
+            else {
+                tableFilesListController.setFiles(filesDropped);
+                uploadStopBtn.setDisable(false);
+            }
+        }
+
+        event.setDropCompleted(true);
+
     }
     /**
      * Save preferences before exit

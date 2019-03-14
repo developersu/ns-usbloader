@@ -125,11 +125,26 @@ public class NSTableViewController implements Initializable {
         }
     }
     /**
+     * Return all files no matter how they're marked
+     * */
+    public List<File> getFiles(){
+        List<File> files = new ArrayList<>();
+        if (rowsObsLst.isEmpty())
+            return null;
+        else
+            for (NSLRowModel model: rowsObsLst)
+                files.add(model.getNspFile());
+        if (!files.isEmpty())
+            return files;
+        else
+            return null;
+    }
+    /**
      * Return files ready for upload. Requested from NSLMainController only -> uploadBtnAction()                            //TODO: set undefined
      * @return null if no files marked for upload
      *         List<File> if there are files
      * */
-    public List<File> getFiles(){
+    public List<File> getFilesForUpload(){
         List<File> files = new ArrayList<>();
         if (rowsObsLst.isEmpty())
             return null;
