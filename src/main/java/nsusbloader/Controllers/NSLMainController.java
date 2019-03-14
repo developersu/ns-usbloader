@@ -223,7 +223,7 @@ public class NSLMainController implements Initializable {
             if ((filesAlreadyInTable = tableFilesListController.getFiles()) != null) {
                 filesDropped.removeAll(filesAlreadyInTable);                          // Get what we already have and add new file(s)
                 if (!filesDropped.isEmpty()) {
-                    filesDropped.addAll(tableFilesListController.getFiles());
+                    filesDropped.addAll(filesAlreadyInTable);
                     tableFilesListController.setFiles(filesDropped);
                 }
             }
@@ -234,7 +234,6 @@ public class NSLMainController implements Initializable {
         }
 
         event.setDropCompleted(true);
-
     }
     /**
      * Save preferences before exit

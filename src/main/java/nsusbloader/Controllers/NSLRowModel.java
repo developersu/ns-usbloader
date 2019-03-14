@@ -16,7 +16,12 @@ public class NSLRowModel {
         this.nspFile = nspFile;
         this.markForUpload = checkBoxValue;
         this.nspFileName = nspFile.getName();
-        this.nspFileSize = String.format("%.2f", nspFile.length()/1024.0/1024.0);
+        if (nspFile.length()/1024.0/1024.0/1024.0 > 1)
+            this.nspFileSize = String.format("%.2f", nspFile.length()/1024.0/1024.0/1024.0)+" GB";
+        else if (nspFile.length()/1024.0/1024.0 > 1)
+            this.nspFileSize = String.format("%.2f", nspFile.length()/1024.0/1024.0)+" MB";
+        else
+            this.nspFileSize = String.format("%.2f", nspFile.length()/1024.0)+" kB";
         this.status = "";
     }
     // Model methods start
