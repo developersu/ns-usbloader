@@ -46,10 +46,10 @@ public class NSTableViewController implements Initializable {
             @Override
             public void handle(KeyEvent keyEvent) {
                 if (!rowsObsLst.isEmpty()) {
-                    if (keyEvent.getCode() == KeyCode.DELETE) {
+                    if (keyEvent.getCode() == KeyCode.DELETE && !MediatorControl.getInstance().getTransferActive()) {
                         rowsObsLst.removeAll(table.getSelectionModel().getSelectedItems());
                         if (rowsObsLst.isEmpty())
-                            MediatorControl.getInstance().getContoller().disableUploadStopBtn();    // TODO: change to something better
+                            MediatorControl.getInstance().getContoller().disableUploadStopBtn(true);    // TODO: change to something better
                         table.refresh();
                     } else if (keyEvent.getCode() == KeyCode.SPACE) {
                         for (NSLRowModel item : table.getSelectionModel().getSelectedItems()) {
@@ -132,7 +132,7 @@ public class NSTableViewController implements Initializable {
                             public void handle(ActionEvent actionEvent) {
                                 rowsObsLst.remove(row.getItem());
                                 if (rowsObsLst.isEmpty())
-                                    MediatorControl.getInstance().getContoller().disableUploadStopBtn();    // TODO: change to something better
+                                    MediatorControl.getInstance().getContoller().disableUploadStopBtn(true);    // TODO: change to something better
                                 table.refresh();
                             }
                         });
@@ -141,7 +141,7 @@ public class NSTableViewController implements Initializable {
                             @Override
                             public void handle(ActionEvent actionEvent) {
                                 rowsObsLst.clear();
-                                MediatorControl.getInstance().getContoller().disableUploadStopBtn();    // TODO: change to something better
+                                MediatorControl.getInstance().getContoller().disableUploadStopBtn(true);    // TODO: change to something better
                                 table.refresh();
                             }
                         });
@@ -188,37 +188,29 @@ public class NSTableViewController implements Initializable {
     /**
      * Add files when user selected them
      * */
-    public void setFiles(List<File> files){
-        rowsObsLst.clear();                 // TODO: consider table refresh
-        if (files == null)
-            return;
-        if (protocol.equals("TinFoil")){
-            for (File nspFile: files){
-                rowsObsLst.add(new NSLRowModel(nspFile, true));
-            }
+    public void setFiles(List<File> newFiles){
+        if (!rowsObsLst.isEmpty()){
+            List<String> filesAlreayInList = new ArrayList<>();
+            for (NSLRowModel model : rowsObsLst)
+                    filesAlreayInList.add(model.getNspFileName());
+            for (File file: newFiles)
+                if (!filesAlreayInList.contains(file.getName())) {
+                    if (protocol.equals("TinFoil"))
+                        rowsObsLst.add(new NSLRowModel(file, true));
+                    else
+                        rowsObsLst.add(new NSLRowModel(file, false));
+                }
         }
         else {
-            rowsObsLst.clear();
-            for (File nspFile: files){
-                rowsObsLst.add(new NSLRowModel(nspFile, false));
-            }
-            rowsObsLst.get(0).setMarkForUpload(true);
+            for (File file: newFiles)
+                if (protocol.equals("TinFoil"))
+                    rowsObsLst.add(new NSLRowModel(file, true));
+                else
+                    rowsObsLst.add(new NSLRowModel(file, false));
+            MediatorControl.getInstance().getContoller().disableUploadStopBtn(false);
         }
-    }
-    /**
-     * Return all files no matter how they're marked
-     * */
-    public List<File> getFiles(){
-        List<File> files = new ArrayList<>();
-        if (rowsObsLst.isEmpty())
-            return null;
-        else
-            for (NSLRowModel model: rowsObsLst)
-                files.add(model.getNspFile());
-        if (!files.isEmpty())
-            return files;
-        else
-            return null;
+        rowsObsLst.get(0).setMarkForUpload(true);
+        table.refresh();
     }
     /**
      * Return files ready for upload. Requested from NSLMainController only -> uploadBtnAction()                            //TODO: set undefined

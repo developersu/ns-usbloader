@@ -69,11 +69,11 @@ If you use different MacOS (not Mojave) - check release section for another JAR 
 Table 'Status' = 'Uploaded' does not means that file installed. It means that it has been sent to NS without any issues! That's what this app about. 
 Handling successful/failed installation is a purpose of the other side application (TinFoil/GoldLeaf). (And they don't provide any feedback interfaces so I can't detect success/failure.)
 
-## Translators! Traducteurs! Traductores! Übersetzer! Թարգմանիչներ!
+## Translators! Traductores! Übersetzer! Թարգմանիչներ!
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
 Upload somewhere (pastebin? google drive? whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add.
 
-### Thanks for great work done by to our translater~~s team~~!
+### Thanks for great work done by our translater~~s team~~!
 
 Français by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 
 

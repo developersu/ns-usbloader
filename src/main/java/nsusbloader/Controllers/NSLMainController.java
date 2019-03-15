@@ -128,10 +128,6 @@ public class NSLMainController implements Initializable {
             uploadStopBtn.setDisable(false);
             previouslyOpenedPath = filesList.get(0).getParent();
         }
-        else{
-            tableFilesListController.setFiles(null);
-            uploadStopBtn.setDisable(true);
-        }
     }
     /**
      * It's button listener when no transmission executes
@@ -194,8 +190,8 @@ public class NSLMainController implements Initializable {
     /**
      * Crunch. Now you see that I'm not a programmer.. This function called from NSTableViewController
      * */
-    public void disableUploadStopBtn(){
-        uploadStopBtn.setDisable(true);
+    public void disableUploadStopBtn(boolean disable){
+        uploadStopBtn.setDisable(disable);
     }
     /**
      * Drag-n-drop support (dragOver consumer)
@@ -210,6 +206,10 @@ public class NSLMainController implements Initializable {
      * */
     @FXML
     private void handleDrop(DragEvent event){
+        if (MediatorControl.getInstance().getTransferActive()) {
+            event.setDropCompleted(true);
+            return;
+        }
         List<File> filesDropped = new ArrayList<>();
         try {
             for (File fileOrDir : event.getDragboard().getFiles()) {
@@ -224,20 +224,8 @@ public class NSLMainController implements Initializable {
         catch (SecurityException se){
             se.printStackTrace();
         }
-        if (!filesDropped.isEmpty()) {
-            List<File> filesAlreadyInTable;
-            if ((filesAlreadyInTable = tableFilesListController.getFiles()) != null) {
-                filesDropped.removeAll(filesAlreadyInTable);                          // Get what we already have and add new file(s)
-                if (!filesDropped.isEmpty()) {
-                    filesDropped.addAll(filesAlreadyInTable);
-                    tableFilesListController.setFiles(filesDropped);
-                }
-            }
-            else {
-                tableFilesListController.setFiles(filesDropped);
-                uploadStopBtn.setDisable(false);
-            }
-        }
+        if (!filesDropped.isEmpty())
+            tableFilesListController.setFiles(filesDropped);
 
         event.setDropCompleted(true);
     }
