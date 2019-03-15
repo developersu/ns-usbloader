@@ -13,6 +13,10 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
@@ -35,12 +39,40 @@ public class NSTableViewController implements Initializable {
         rowsObsLst = FXCollections.observableArrayList();
 
         table.setPlaceholder(new Label());
+        table.setEditable(false);               // At least with hacks it works as expected. Otherwise - null pointer exception
+        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                if (!rowsObsLst.isEmpty()) {
+                    if (keyEvent.getCode() == KeyCode.DELETE) {
+                        rowsObsLst.removeAll(table.getSelectionModel().getSelectedItems());
+                        if (rowsObsLst.isEmpty())
+                            MediatorControl.getInstance().getContoller().disableUploadStopBtn();    // TODO: change to something better
+                        table.refresh();
+                    } else if (keyEvent.getCode() == KeyCode.SPACE) {
+                        for (NSLRowModel item : table.getSelectionModel().getSelectedItems()) {
+                            item.setMarkForUpload(!item.isMarkForUpload());
+                            restrictSelection(item);
+                        }
+                        table.refresh();
+                    }
+                }
+                keyEvent.consume();
+            }
+        });
 
         TableColumn<NSLRowModel, String> statusColumn = new TableColumn<>(resourceBundle.getString("tableStatusLbl"));
         TableColumn<NSLRowModel, String> fileNameColumn = new TableColumn<>(resourceBundle.getString("tableFileNameLbl"));
         TableColumn<NSLRowModel, String> fileSizeColumn = new TableColumn<>(resourceBundle.getString("tableSizeLbl"));
         TableColumn<NSLRowModel, Boolean> uploadColumn = new TableColumn<>(resourceBundle.getString("tableUploadLbl"));
+
+        statusColumn.setEditable(false);
+        fileNameColumn.setEditable(false);
+        fileSizeColumn.setEditable(false);
+        uploadColumn.setEditable(true);
+
         // See https://bugs.openjdk.java.net/browse/JDK-8157687
         statusColumn.setMinWidth(100.0);
         statusColumn.setPrefWidth(100.0);
@@ -77,7 +109,6 @@ public class NSTableViewController implements Initializable {
                         restrictSelection(model);
                     }
                 });
-
                 return booleanProperty;
             }
         });
@@ -101,7 +132,7 @@ public class NSTableViewController implements Initializable {
                             public void handle(ActionEvent actionEvent) {
                                 rowsObsLst.remove(row.getItem());
                                 if (rowsObsLst.isEmpty())
-                                    MediatorControl.getInstance().getContoller().disableUploadStopBtn();
+                                    MediatorControl.getInstance().getContoller().disableUploadStopBtn();    // TODO: change to something better
                                 table.refresh();
                             }
                         });
@@ -110,7 +141,7 @@ public class NSTableViewController implements Initializable {
                             @Override
                             public void handle(ActionEvent actionEvent) {
                                 rowsObsLst.clear();
-                                MediatorControl.getInstance().getContoller().disableUploadStopBtn();
+                                MediatorControl.getInstance().getContoller().disableUploadStopBtn();    // TODO: change to something better
                                 table.refresh();
                             }
                         });
@@ -124,6 +155,17 @@ public class NSTableViewController implements Initializable {
                                                 .then(MediatorControl.getInstance().getTransferActive()?(ContextMenu)null:contextMenu)
                                                 .otherwise((ContextMenu) null)
                         );
+                        row.setOnMouseClicked(new EventHandler<MouseEvent>() {      // Just.. don't ask..
+                            @Override
+                            public void handle(MouseEvent mouseEvent) {
+                                if (!row.isEmpty() && mouseEvent.getButton() == MouseButton.PRIMARY){
+                                    NSLRowModel thisItem = row.getItem();
+                                    thisItem.setMarkForUpload(!thisItem.isMarkForUpload());
+                                    restrictSelection(thisItem);
+                                }
+                                mouseEvent.consume();
+                            }
+                        });
                         return row;
                     }
                 }
@@ -140,8 +182,8 @@ public class NSTableViewController implements Initializable {
                 if (model != modelChecked)
                     model.setMarkForUpload(false);
             }
-            table.refresh();
         }
+        table.refresh();
     }
     /**
      * Add files when user selected them
