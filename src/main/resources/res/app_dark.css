@@ -193,7 +193,6 @@
 .table-view .column-header-background .label{
     -fx-background-color: transparent;
     -fx-text-fill: #08f3ff;
-
 }
 .table-view .column-header-background, .table-view .filler{
     -fx-background-color: #4f4f4f;
@@ -202,14 +201,19 @@
 .table-view .table-cell{
     -fx-text-fill: #f7fafa;
 }
-.table-row-cell, .table-row-cell:filled:selected, .table-row-cell:selected{
+.table-row-cell, .table-row-cell:selected, .table-row-cell:filled:selected{
     -fx-background-color: -fx-table-cell-border-color, #424242;
     -fx-background-insets: 0, 0 0 1 0;
     -fx-padding: 0.0em; /* 0 */
     -fx-table-cell-border-color: #6d8484;
 }
-
-.table-row-cell:odd, .table-row-cell:odd:filled:selected, .table-row-cell:odd:selected{
+.table-row-cell .text, .table-row-cell:odd .text{
+    -fx-fill: #f7fafa;
+}
+.table-row-cell:filled:selected .text, .table-row-cell:odd:filled:selected .text{
+    -fx-fill: #08f3ff;
+}
+.table-row-cell:odd, .table-row-cell:odd:selected, .table-row-cell:odd:filled:selected{
     -fx-background-color: -fx-table-cell-border-color, #4f4f4f;
     -fx-background-insets: 0, 0 0 1 0;
     -fx-padding: 0.0em; /* 0 */
@@ -218,14 +222,13 @@
 // -========================== Context menu =====================-
 .context-menu {
   -fx-background-color: #2d2d2d;
-  -fx-text-fill: white;
   -fx-cursor: hand;
 }
 .context-menu .menu-item .label {
   -fx-text-fill: #f7fafa;
 }
 .context-menu .menu-item:focused .label {
-  -fx-text-fill: #f7fafa;
+  -fx-text-fill: white;
 }
 
 
