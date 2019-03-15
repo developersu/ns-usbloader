@@ -192,6 +192,12 @@ public class NSLMainController implements Initializable {
         }
     }
     /**
+     * Crunch. Now you see that I'm not a programmer.. This function called from NSTableViewController
+     * */
+    public void disableUploadStopBtn(){
+        uploadStopBtn.setDisable(true);
+    }
+    /**
      * Drag-n-drop support (dragOver consumer)
      * */
     @FXML

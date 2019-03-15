@@ -1,19 +1,21 @@
 package nsusbloader.Controllers;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.Callback;
+import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.io.File;
@@ -32,6 +34,7 @@ public class NSTableViewController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         rowsObsLst = FXCollections.observableArrayList();
+
         table.setPlaceholder(new Label());
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -87,7 +90,45 @@ public class NSTableViewController implements Initializable {
                 return cell;
             }
         });
+        table.setRowFactory(        // this shit is made to implement context menu. It's such a pain..
+                new Callback<TableView<NSLRowModel>, TableRow<NSLRowModel>>() {
+                    @Override
+                    public TableRow<NSLRowModel> call(TableView<NSLRowModel> nslRowModelTableView) {
+                        final TableRow<NSLRowModel> row = new TableRow<>();
+                        ContextMenu contextMenu = new ContextMenu();
+                        MenuItem deleteMenuItem = new MenuItem(resourceBundle.getString("contextMenuBtnDelete"));
+                        deleteMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+                            @Override
+                            public void handle(ActionEvent actionEvent) {
+                                rowsObsLst.remove(row.getItem());
+                                if (rowsObsLst.isEmpty())
+                                    MediatorControl.getInstance().getContoller().disableUploadStopBtn();
+                                table.refresh();
+                            }
+                        });
+                        MenuItem deleteAllMenuItem = new MenuItem(resourceBundle.getString("contextMenuBtnDeleteAll"));
+                        deleteAllMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+                            @Override
+                            public void handle(ActionEvent actionEvent) {
+                                rowsObsLst.clear();
+                                MediatorControl.getInstance().getContoller().disableUploadStopBtn();
+                                table.refresh();
+                            }
+                        });
+                        contextMenu.getItems().addAll(deleteMenuItem, deleteAllMenuItem);
 
+                        row.setContextMenu(contextMenu);
+                        row.contextMenuProperty().bind(
+                                Bindings.when(
+                                        Bindings.isNotNull(
+                                                row.itemProperty()))
+                                                .then(MediatorControl.getInstance().getTransferActive()?(ContextMenu)null:contextMenu)
+                                                .otherwise((ContextMenu) null)
+                        );
+                        return row;
+                    }
+                }
+        );
         table.setItems(rowsObsLst);
         table.getColumns().addAll(statusColumn, fileNameColumn, fileSizeColumn, uploadColumn);
     }
@@ -108,9 +149,8 @@ public class NSTableViewController implements Initializable {
      * */
     public void setFiles(List<File> files){
         rowsObsLst.clear();                 // TODO: consider table refresh
-        if (files == null) {
+        if (files == null)
             return;
-        }
         if (protocol.equals("TinFoil")){
             for (File nspFile: files){
                 rowsObsLst.add(new NSLRowModel(nspFile, true));
