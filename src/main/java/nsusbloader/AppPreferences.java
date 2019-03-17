@@ -22,10 +22,24 @@ public class AppPreferences {
             protocol = "TinFoil";
         return protocol;
     }
+    public String getNetUsb(){
+        String netUsb = preferences.get("NETUSB", "USB");           // Don't let user to change settings manually
+        if (!netUsb.matches("(^USB$)|(^NET$)"))
+            netUsb = "USB";
+        return netUsb;
+    }
     public void setTheme(String theme){ preferences.put("THEME", theme); }
     public void setProtocol(String protocol){ preferences.put("PROTOCOL", protocol); }
+    public void setNetUsb(String netUsb){ preferences.put("NETUSB", netUsb); }
 
+    public void setNsIp(String ip){preferences.put("NSIP", ip);}
+    public String getNsIp(){return preferences.get("NSIP", "192.168.1.42");}
 
     public String getRecent(){ return preferences.get("RECENT", System.getProperty("user.home")); }
     public void setRecent(String path){ preferences.put("RECENT", path); }
+    //------------ SETTINGS ------------------//
+    public boolean getNsIpValidationNeeded() {return preferences.getBoolean("NSIPVALIDATION", true);}
+    public void setNsIpValidationNeeded(boolean need){preferences.putBoolean("NSIPVALIDATION", need);}
+    public boolean getExpertMode(){return preferences.getBoolean("EXPERTMODE", false);}
+    public void setExpertMode(boolean mode){preferences.putBoolean("EXPERTMODE", mode);}
 }

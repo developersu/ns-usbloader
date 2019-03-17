@@ -231,7 +231,19 @@
 .context-menu .menu-item:focused .label {
   -fx-text-fill: white;
 }
-
+// -========================== Text Field =====================-
+.text-field {
+    -fx-border-color: #289de8;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c2c2c;
+}
+.text-field:focused {
+    -fx-border-color: #e82382;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-color: transparent;
+    -fx-text-fill: #e82382;
+}
 
 
 
