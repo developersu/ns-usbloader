@@ -88,7 +88,7 @@ Français by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice)
 - [ ] XCI support
 - [ ] File order sort (non-critical)
 - [ ] More deep file analyze before uploading.
-- [] Network mode support for TinFoil
+- [x] Network mode support for TinFoil
 
 ## Thanks
 Appreciate assistance and support of both Vitaliy and Konstantin. Without you all this magic would not have happened.

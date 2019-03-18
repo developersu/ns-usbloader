@@ -13,12 +13,16 @@ import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
 import nsusbloader.NET.NETCommunications;
+import nsusbloader.NET.NETPacket;
 import nsusbloader.NSLMain;
 import nsusbloader.ServiceWindow;
 import nsusbloader.USB.UsbCommunications;
 
 import java.io.File;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -47,14 +51,14 @@ public class NSLMainController implements Initializable {
     @FXML
     public NSTableViewController tableFilesListController;            // Accessible from Mediator
     @FXML
-    private NetTabController NetTabController;
+    private SettingsController SettingsTabController;
     @FXML
     private TextField nsIpTextField;
     @FXML
     private Label nsIpLbl;
 
     private UsbCommunications usbCommunications;
-    private Thread usbThread;
+    private Thread workThread;
 
     private String previouslyOpenedPath;
 
@@ -177,7 +181,7 @@ public class NSLMainController implements Initializable {
      * It's button listener when no transmission executes
      * */
     private void uploadBtnAction(){
-        if ((usbThread == null || !usbThread.isAlive())){
+        if ((workThread == null || !workThread.isAlive())){
             if (choiceProtocol.getSelectionModel().getSelectedItem().equals("GoldLeaf") ||
                     (
                     choiceProtocol.getSelectionModel().getSelectedItem().equals("TinFoil")
@@ -188,26 +192,38 @@ public class NSLMainController implements Initializable {
                 if ((nspToUpload = tableFilesListController.getFilesForUpload()) == null) {
                     logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
                     return;
-                }else {
+                }
+                else {
                     logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
                     for (File item: nspToUpload)
                         logArea.appendText("  "+item.getAbsolutePath()+"\n");
                 }
                 usbCommunications = new UsbCommunications(nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
-                usbThread = new Thread(usbCommunications);
-                usbThread.setDaemon(true);
-                usbThread.start();
+                workThread = new Thread(usbCommunications);
+                workThread.setDaemon(true);
+                workThread.start();
             }
             else {      // NET INSTALL OVER TINFOIL
-                if (NetTabController.isNsIpValidate() && !nsIpTextField.getText().trim().matches("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"))
+                if (SettingsTabController.isNsIpValidate() && !nsIpTextField.getText().trim().matches("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"))
                     if (!ServiceWindow.getConfirmationWindow(resourceBundle.getString("windowTitleBadIp"),resourceBundle.getString("windowBodyBadIp")))
                         return;
                 String nsIP = nsIpTextField.getText().trim();
-                if (!NetTabController.getExpertModeSelected()) {
-                    NETCommunications netCommunications = new NETCommunications(nsIP);
-                    usbThread = new Thread(netCommunications);
-                    usbThread.setDaemon(true);
-                    usbThread.start();
+
+                List<File> nspToUpload;
+                if (!SettingsTabController.getExpertModeSelected()) {
+                    if ((nspToUpload = tableFilesListController.getFilesForUpload()) == null) {
+                        logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
+                        return;
+                    }
+                    else {
+                        logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
+                        for (File item: nspToUpload)
+                            logArea.appendText("  "+item.getAbsolutePath()+"\n");
+                    }
+                    NETCommunications netCommunications = new NETCommunications(nspToUpload, nsIP);      // TODO: move somewhere
+                    workThread = new Thread(netCommunications);
+                    workThread.setDaemon(true);
+                    workThread.start();
                 }
                 else {
                     // TODO; pass to another constructor
@@ -219,8 +235,8 @@ public class NSLMainController implements Initializable {
      * It's button listener when transmission in progress
      * */
     private void stopBtnAction(){
-        if (usbThread != null && usbThread.isAlive()){
-            usbCommunications.cancel(false);
+        if (workThread != null && workThread.isAlive()){
+            usbCommunications.cancel(false);            // TODO: add something abstract to use also for network
         }
     }
     /**
@@ -303,7 +319,8 @@ public class NSLMainController implements Initializable {
         AppPreferences.getInstance().setRecent(previouslyOpenedPath);
         AppPreferences.getInstance().setNetUsb(choiceNetUsb.getSelectionModel().getSelectedItem());
         AppPreferences.getInstance().setNsIp(nsIpTextField.getText().trim());
-        AppPreferences.getInstance().setNsIpValidationNeeded(NetTabController.isNsIpValidate());
-        AppPreferences.getInstance().setExpertMode(NetTabController.getExpertModeSelected());
+
+        AppPreferences.getInstance().setNsIpValidationNeeded(SettingsTabController.isNsIpValidate());
+        AppPreferences.getInstance().setExpertMode(SettingsTabController.getExpertModeSelected());
     }
 }

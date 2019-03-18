@@ -11,7 +11,7 @@ import nsusbloader.AppPreferences;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class NetTabController implements Initializable {
+public class SettingsController implements Initializable {
 
     @FXML
     private CheckBox validateNSHostNameCb;
@@ -25,6 +25,7 @@ public class NetTabController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         validateNSHostNameCb.setSelected(AppPreferences.getInstance().getNsIpValidationNeeded());
+
         if (AppPreferences.getInstance().getExpertMode()) {
             expertModeCb.setSelected(true);
             hostIpLbl.setVisible(true);
