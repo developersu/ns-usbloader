@@ -216,7 +216,6 @@ public class UsbCommunications extends Task<Void> {
         }
 
         close();
-        logPrinter.print("\tEnd chain", EMsgType.INFO);
         return null;
     }
     /**
@@ -709,6 +708,7 @@ public class UsbCommunications extends Task<Void> {
 
         // Report status and close
         logPrinter.update(nspMap, status);
+        logPrinter.print("\tEnd chain", EMsgType.INFO);
         logPrinter.close();
     }
     /**

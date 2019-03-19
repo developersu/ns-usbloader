@@ -3,14 +3,13 @@ package nsusbloader.NET;
 import javafx.concurrent.Task;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.NSLDataTypes.EMsgType;
 
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 /*
 * Add option: don't serve replies
 * */
@@ -21,49 +20,121 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
 
     private String hostIP;
     private int hostPort;
+    private String extras;
+
     private String switchIP;
 
     private HashMap<String, File> nspMap;
 
-
     private ServerSocket serverSocket;
 
+    private boolean isValid;
+    private boolean doNotServeRequests;
+    /**
+     * Simple constructor that everybody uses
+     * */
     public NETCommunications(List<File> filesList, String switchIP){
+        this.doNotServeRequests = false;
+        this.extras = "";
         this.logPrinter = new LogPrinter();
         this.switchIP = switchIP;
         this.nspMap = new HashMap<>();
+        logPrinter.print("\tPrepare chain", EMsgType.INFO);
+        // Collect and encode NSP files list
         try {
             for (File nspFile : filesList)
                 nspMap.put(URLEncoder.encode(nspFile.getName(), "UTF-8"), nspFile);
         }
         catch (UnsupportedEncodingException uee){
-            uee.printStackTrace();
-            return;                    // TODO: FIX
+            isValid = false;
+            logPrinter.print("NET: Unsupported encoding for 'URLEncoder'. Internal issue you can't fix. Please report.", EMsgType.FAIL);
+            for (File nspFile : filesList)
+                nspMap.put(nspFile.getName(), nspFile);
+            close(EFileStatus.FAILED);
+            return;
         }
-
-        try{        // todo: check other method if internet unavaliable
-            DatagramSocket socket = new DatagramSocket();
-            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);    //193.0.14.129 RIPE NCC
+        // Resolve IP
+        DatagramSocket socket;
+        try{                                        // todo: check other method if internet unavaliable
+            socket = new DatagramSocket();
+            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);    // Google
             hostIP = socket.getLocalAddress().getHostAddress();
-            //System.out.println(hostIP);
             socket.close();
         }
         catch (SocketException | UnknownHostException e){
-            e.printStackTrace();
+            logPrinter.print("NET: Can't get your computer IP using Google DNS server", EMsgType.INFO);
+            try {
+                socket = new DatagramSocket();
+                socket.connect(InetAddress.getByName("193.0.14.129"), 10002);    // RIPE NCC
+                hostIP = socket.getLocalAddress().getHostAddress();
+                socket.close();
+            }
+            catch (SocketException | UnknownHostException e1){
+                logPrinter.print("NET: Can't get your computer IP using RIPE NCC root server", EMsgType.INFO);
+                try {
+                    socket = new DatagramSocket();
+                    socket.connect(InetAddress.getByName("people.com.cn"), 10002);    // Renmin Ribao
+                    hostIP = socket.getLocalAddress().getHostAddress();
+                    socket.close();
+                }
+                catch (SocketException | UnknownHostException e2){
+                    logPrinter.print("NET: Can't get your computer IP using Renmin Ribao server", EMsgType.FAIL);
+                    logPrinter.print("Try using 'Expert mode' and set IP by yourself", EMsgType.INFO);
+                    try {
+                        Enumeration enumeration = NetworkInterface.getNetworkInterfaces();
+                        while (enumeration.hasMoreElements()) {
+                            NetworkInterface n = (NetworkInterface) enumeration.nextElement();
+                            Enumeration enumeration1 = n.getInetAddresses();
+                            while (enumeration1.hasMoreElements()) {
+                                InetAddress i = (InetAddress) enumeration1.nextElement();
+                                logPrinter.print("Check for: "+i.getHostAddress(), EMsgType.INFO);
+                            }
+                        }
+                    } catch (SocketException socketException) {
+                        logPrinter.print("Can't determine possible variants.", EMsgType.FAIL);
+                    }
+                    isValid = false;
+                    close(EFileStatus.FAILED);
+                    return;
+                }
+            }
         }
-        this.hostPort = 6000;                         // TODO: fix
-
-        try {
-
-            serverSocket = new ServerSocket(hostPort); // TODO: randomize
-            //System.out.println(serverSocket.getInetAddress()); 0.0.0.0
+        logPrinter.print("NET: Your IP detected as: "+hostIP, EMsgType.PASS);
+        // Detect port
+        Random portRandomizer = new Random();
+        for (int i=0; i<5; i++){
+            try {
+                this.hostPort = portRandomizer.nextInt(999)+6000;
+                serverSocket = new ServerSocket(hostPort);  //System.out.println(serverSocket.getInetAddress()); 0.0.0.0
+                logPrinter.print("NET: Your port detected as: "+hostPort, EMsgType.PASS);
+                break;
+            }
+            catch (IOException ioe){
+                if (i==4){
+                    logPrinter.print("NET: Can't find good port", EMsgType.FAIL);
+                    logPrinter.print("Try using 'Expert mode' and set port by yourself.", EMsgType.INFO);
+                    isValid = false;
+                    close(EFileStatus.FAILED);
+                    return;
+                }
+                else
+                    logPrinter.print("NET: Can't use port "+hostPort+"\nLooking for another one.", EMsgType.WARNING);
+            }
         }
-        catch (IOException ioe){
-            ioe.printStackTrace();
-            System.out.println("unable to use socket");
-        }
-
+        isValid = true;
     }
+    /**
+     * Do it hard way (expert mode selected)
+     * */
+    public NETCommunications(List<File> filesList, String switchIP, boolean doNotServeRequests, String hostIP, int hostPort, String extras){
+        this.doNotServeRequests = doNotServeRequests;
+        if (doNotServeRequests)
+            this.extras = extras;
+        else
+            this.extras = "";
+        this.switchIP = switchIP;
+    }
+
 /*
 Replace everything to ASCII (WEB representation)
 calculate
@@ -71,6 +142,15 @@ write in first 4 bytes
 * */
     @Override
     protected Void call() {
+        if (!isValid)
+            return null;
+        if (isCancelled()){
+            logPrinter.print("NET: interrupted by user", EMsgType.INFO);
+            close(EFileStatus.FAILED);
+            return null;
+        }
+
+        logPrinter.print("\tStart chain", EMsgType.INFO);
         // Get files list length
         StringBuilder myStrBuilder;
 
@@ -80,10 +160,10 @@ write in first 4 bytes
             myStrBuilder.append(':');
             myStrBuilder.append(hostPort);
             myStrBuilder.append('/');
+            myStrBuilder.append(extras);
             myStrBuilder.append(fileNameEncoded);
             myStrBuilder.append('\n');
         }
-
 
         byte[] nspListNames = myStrBuilder.toString().getBytes(StandardCharsets.UTF_8);                 // Follow the
         byte[] nspListSize = ByteBuffer.allocate(Integer.BYTES).putInt(nspListNames.length).array();    // defining order
@@ -186,5 +266,22 @@ write in first 4 bytes
                     }
             }
         }
+    }
+    /**
+     * Close when done
+     * */
+    private void close(EFileStatus status){
+        try {
+            serverSocket.close();
+            logPrinter.print("NET: Closing server socket.", EMsgType.PASS);
+        }
+        catch (IOException ioe){
+            logPrinter.print("NET: Closing server socket failed. Sometimes it's not an issue.", EMsgType.WARNING);
+        }
+        if (status != null) {
+            logPrinter.update(nspMap, status);
+        }
+        logPrinter.print("\tEnd chain", EMsgType.INFO);
+        logPrinter.close();
     }
 }

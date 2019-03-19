@@ -9,10 +9,8 @@ import javafx.scene.layout.VBox;
 import nsusbloader.AppPreferences;
 import nsusbloader.ServiceWindow;
 
-
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.function.UnaryOperator;
 
 public class SettingsController implements Initializable {
 
@@ -53,12 +51,16 @@ public class SettingsController implements Initializable {
         pcIpTextField.setDisable(AppPreferences.getInstance().getAutoDetectIp());
         autoDetectIpCb.setOnAction(e->{
             pcIpTextField.setDisable(autoDetectIpCb.isSelected());
+            if (!autoDetectIpCb.isSelected())
+                pcIpTextField.requestFocus();
         });
 
         randPortCb.setSelected(AppPreferences.getInstance().getRandPort());
         pcPortTextField.setDisable(AppPreferences.getInstance().getRandPort());
         randPortCb.setOnAction(e->{
             pcPortTextField.setDisable(randPortCb.isSelected());
+            if (!randPortCb.isSelected())
+                pcPortTextField.requestFocus();
         });
 
         if (AppPreferences.getInstance().getNotServeRequests()){
@@ -85,6 +87,7 @@ public class SettingsController implements Initializable {
                 pcPortTextField.setDisable(false);
 
                 pcExtraTextField.setDisable(false);
+                pcIpTextField.requestFocus();
             }
             else {
                 autoDetectIpCb.setDisable(false);

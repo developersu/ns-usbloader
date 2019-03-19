@@ -80,7 +80,7 @@ public class AppPreferences {
     public boolean getNotServeRequests(){return preferences.getBoolean("DONTSERVEREQ", false);}
     public void setNotServeRequests(boolean mode){preferences.putBoolean("DONTSERVEREQ", mode);}
 
-    public String getHostIp(){ return preferences.get("HOSTIP", "0.0.0.0");}
+    public String getHostIp(){ return preferences.get("HOSTIP", "0.0.0.0").replaceAll("(\\s)|(\t)", "");}   // who the hell said 'paranoid'?
     public void setHostIp(String ip){preferences.put("HOSTIP", ip);}
 
     public String getHostPort(){
@@ -93,6 +93,6 @@ public class AppPreferences {
     }
     public void setHostPort(String port){preferences.put("HOSTPORT", port);}
 
-    public String getHostExtra(){ return preferences.get("HOSTEXTRA", "");}
+    public String getHostExtra(){ return preferences.get("HOSTEXTRA", "").replaceAll("(\\s)|(\t)", "");}    // oh just shut up...
     public void setHostExtra(String postfix){preferences.put("HOSTEXTRA", postfix);}
 }

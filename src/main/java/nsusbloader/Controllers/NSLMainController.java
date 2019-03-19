@@ -18,11 +18,11 @@ import nsusbloader.ServiceWindow;
 import nsusbloader.USB.UsbCommunications;
 
 import java.io.File;
-import java.net.URL;
+import java.net.*;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.function.UnaryOperator;
 
 public class NSLMainController implements Initializable {
 
@@ -206,10 +206,10 @@ public class NSLMainController implements Initializable {
                 workThread.start();
             }
             else {      // NET INSTALL OVER TINFOIL
-                if (SettingsTabController.isNsIpValidate() && !nsIpTextField.getText().trim().matches("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"))
+                if (SettingsTabController.isNsIpValidate() && !nsIpTextField.getText().matches("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"))
                     if (!ServiceWindow.getConfirmationWindow(resourceBundle.getString("windowTitleBadIp"),resourceBundle.getString("windowBodyBadIp")))
                         return;
-                String nsIP = nsIpTextField.getText().trim();
+                String nsIP = nsIpTextField.getText();
 
                 List<File> nspToUpload;
                 if (!SettingsTabController.getExpertModeSelected()) {
