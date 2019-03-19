@@ -10,7 +10,6 @@ public class ServiceWindow   {
     /**
      * Create window with notification
      * */
-    /* // not used
     public static void getErrorNotification(String title, String body){
         Alert alertBox = new Alert(Alert.AlertType.ERROR);
         alertBox.setTitle(title);
@@ -20,10 +19,9 @@ public class ServiceWindow   {
         alertBox.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alertBox.setResizable(true);        // Java bug workaround for JDR11/OpenJFX. TODO: nothing. really.
         alertBox.setResizable(false);
-        alertBox.getDialogPane().getStylesheets().add("/res/app.css");
+        alertBox.getDialogPane().getStylesheets().add(AppPreferences.getInstance().getTheme());
         alertBox.show();
     }
-    */
     /**
      * Create notification window with confirm/deny
      * */

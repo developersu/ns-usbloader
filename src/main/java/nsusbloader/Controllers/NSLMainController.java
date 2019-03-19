@@ -13,19 +13,16 @@ import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
 import nsusbloader.NET.NETCommunications;
-import nsusbloader.NET.NETPacket;
 import nsusbloader.NSLMain;
 import nsusbloader.ServiceWindow;
 import nsusbloader.USB.UsbCommunications;
 
 import java.io.File;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.UnaryOperator;
 
 public class NSLMainController implements Initializable {
 
@@ -129,7 +126,12 @@ public class NSLMainController implements Initializable {
             nsIpLbl.setVisible(true);
             nsIpTextField.setVisible(true);
         }
-
+        nsIpTextField.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getControlNewText().contains(" ") | change.getControlNewText().contains("\t"))
+                return null;
+            else
+                return change;
+        }));
         this.previouslyOpenedPath = null;
 
         Region btnSwitchImage = new Region();
@@ -314,13 +316,20 @@ public class NSLMainController implements Initializable {
     /**
      * Save preferences before exit
      * */
-    public void exit(){
-        AppPreferences.getInstance().setProtocol(choiceProtocol.getSelectionModel().getSelectedItem());
-        AppPreferences.getInstance().setRecent(previouslyOpenedPath);
-        AppPreferences.getInstance().setNetUsb(choiceNetUsb.getSelectionModel().getSelectedItem());
-        AppPreferences.getInstance().setNsIp(nsIpTextField.getText().trim());
-
-        AppPreferences.getInstance().setNsIpValidationNeeded(SettingsTabController.isNsIpValidate());
-        AppPreferences.getInstance().setExpertMode(SettingsTabController.getExpertModeSelected());
+    public void exit(){ // TODO: add method to set all in AppPreferences
+        AppPreferences.getInstance().setAll(
+                choiceProtocol.getSelectionModel().getSelectedItem(),
+                previouslyOpenedPath,
+                choiceNetUsb.getSelectionModel().getSelectedItem(),
+                nsIpTextField.getText().trim(),
+                SettingsTabController.isNsIpValidate(),
+                SettingsTabController.getExpertModeSelected(),
+                SettingsTabController.getAutoIpSelected(),
+                SettingsTabController.getRandPortSelected(),
+                SettingsTabController.getNotServeSelected(),
+                SettingsTabController.getHostIp(),
+                SettingsTabController.getHostPort(),
+                SettingsTabController.getHostExtra()
+        );
     }
 }

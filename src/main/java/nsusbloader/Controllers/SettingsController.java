@@ -4,12 +4,15 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.VBox;
 import nsusbloader.AppPreferences;
+import nsusbloader.ServiceWindow;
 
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.UnaryOperator;
 
 public class SettingsController implements Initializable {
 
@@ -27,7 +30,7 @@ public class SettingsController implements Initializable {
     @FXML
     private TextField pcPortTextField;
     @FXML
-    private TextField pcPostfixTextField;
+    private TextField pcExtraTextField;
 
     @FXML
     private CheckBox dontServeCb;
@@ -43,23 +46,96 @@ public class SettingsController implements Initializable {
 
         expertModeCb.setSelected(AppPreferences.getInstance().getExpertMode());
         expertModeCb.setOnAction(e->{
-            if (expertModeCb.isSelected())
-                expertSettingsVBox.setDisable(false);
-            else
-                expertSettingsVBox.setDisable(true);
+                expertSettingsVBox.setDisable(!expertModeCb.isSelected());
         });
+
         autoDetectIpCb.setSelected(AppPreferences.getInstance().getAutoDetectIp());
+        pcIpTextField.setDisable(AppPreferences.getInstance().getAutoDetectIp());
+        autoDetectIpCb.setOnAction(e->{
+            pcIpTextField.setDisable(autoDetectIpCb.isSelected());
+        });
 
         randPortCb.setSelected(AppPreferences.getInstance().getRandPort());
+        pcPortTextField.setDisable(AppPreferences.getInstance().getRandPort());
+        randPortCb.setOnAction(e->{
+            pcPortTextField.setDisable(randPortCb.isSelected());
+        });
 
+        if (AppPreferences.getInstance().getNotServeRequests()){
+            dontServeCb.setSelected(true);
 
+            autoDetectIpCb.setSelected(false);
+            autoDetectIpCb.setDisable(true);
+            pcIpTextField.setDisable(false);
 
-        dontServeCb.setSelected(AppPreferences.getInstance().getNotServeRequests());
+            randPortCb.setSelected(false);
+            randPortCb.setDisable(true);
+            pcPortTextField.setDisable(false);
+        }
+        pcExtraTextField.setDisable(!AppPreferences.getInstance().getNotServeRequests());
+
+        dontServeCb.setOnAction(e->{
+            if (dontServeCb.isSelected()){
+                autoDetectIpCb.setSelected(false);
+                autoDetectIpCb.setDisable(true);
+                pcIpTextField.setDisable(false);
+
+                randPortCb.setSelected(false);
+                randPortCb.setDisable(true);
+                pcPortTextField.setDisable(false);
+
+                pcExtraTextField.setDisable(false);
+            }
+            else {
+                autoDetectIpCb.setDisable(false);
+                autoDetectIpCb.setSelected(true);
+                pcIpTextField.setDisable(true);
+
+                randPortCb.setDisable(false);
+                randPortCb.setSelected(true);
+                pcPortTextField.setDisable(true);
+
+                pcExtraTextField.setDisable(true);
+            }
+        });
+
+        pcIpTextField.setText(AppPreferences.getInstance().getHostIp());
+        pcPortTextField.setText(AppPreferences.getInstance().getHostPort());
+        pcExtraTextField.setText(AppPreferences.getInstance().getHostExtra());
+
+        pcIpTextField.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getControlNewText().contains(" ") | change.getControlNewText().contains("\t"))
+                return null;
+            else
+                return change;
+        }));
+        pcPortTextField.setTextFormatter(new TextFormatter<Object>(change -> {
+            if (change.getControlNewText().matches("^[0-9]{0,5}$")) {
+                if ((Integer.parseInt(change.getControlNewText()) > 65535) || (Integer.parseInt(change.getControlNewText()) == 0)) {
+                    ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleErrorPort"), resourceBundle.getString("windowBodyErrorPort"));
+                    return null;
+                }
+                return change;
+            }
+            else
+                return null;
+        }));
+        pcExtraTextField.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getControlNewText().contains(" ") | change.getControlNewText().contains("\t"))
+                return null;
+            else
+                return change;
+        }));
     }
 
-    public boolean getExpertModeSelected(){
-        return expertModeCb.isSelected();
-    }
+    public boolean getExpertModeSelected(){ return expertModeCb.isSelected(); }
+    public boolean getAutoIpSelected(){ return autoDetectIpCb.isSelected(); }
+    public boolean getRandPortSelected(){ return randPortCb.isSelected(); }
+    public boolean getNotServeSelected(){ return dontServeCb.isSelected(); }
 
     public boolean isNsIpValidate(){ return validateNSHostNameCb.isSelected(); }
+
+    public String getHostIp(){ return pcIpTextField.getText(); }
+    public String getHostPort(){ return pcPortTextField.getText(); }
+    public String getHostExtra(){ return pcExtraTextField.getText(); }
 }

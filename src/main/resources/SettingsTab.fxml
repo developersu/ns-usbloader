@@ -42,11 +42,11 @@
                   </HBox>
                   <HBox>
                      <children>
-                        <TextField fx:id="pcIpTextField" />
+                        <TextField fx:id="pcIpTextField" promptText="XXX,XXX,XXX,XXX" />
                         <Label text=":" />
-                        <TextField fx:id="pcPortTextField" />
+                        <TextField fx:id="pcPortTextField" promptText="0-65535" />
                         <Label text="/" />
-                        <TextField fx:id="pcPostfixTextField">
+                        <TextField fx:id="pcExtraTextField" HBox.hgrow="ALWAYS">
                            <HBox.margin>
                               <Insets />
                            </HBox.margin>

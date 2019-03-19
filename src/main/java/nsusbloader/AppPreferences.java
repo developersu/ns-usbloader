@@ -10,6 +10,33 @@ public class AppPreferences {
 
     private AppPreferences(){ preferences = Preferences.userRoot().node("NS-USBloader"); }
 
+    public void setAll(
+            String Protocol,
+            String PreviouslyOpened,
+            String NetUsb,
+            String NsIp,
+            boolean NsIpValidate,
+            boolean ExpertMode,
+            boolean AutoIp,
+            boolean RandPort,
+            boolean NotServe,
+            String HostIp,
+            String HostPort,
+            String HostExtra
+            ){
+        setProtocol(Protocol);
+        setRecent(PreviouslyOpened);
+        setNetUsb(NetUsb);
+        setNsIp(NsIp);
+        setNsIpValidationNeeded(NsIpValidate);
+        setExpertMode(ExpertMode);
+        setAutoDetectIp(AutoIp);
+        setRandPort(RandPort);
+        setNotServeRequests(NotServe);
+        setHostIp(HostIp);
+        setHostPort(HostPort);
+        setHostExtra(HostExtra);
+    }
     public String getTheme(){
         String theme = preferences.get("THEME", "/res/app_dark.css");           // Don't let user to change settings manually
         if (!theme.matches("(^/res/app_dark.css$)|(^/res/app_light.css$)"))
@@ -56,9 +83,16 @@ public class AppPreferences {
     public String getHostIp(){ return preferences.get("HOSTIP", "0.0.0.0");}
     public void setHostIp(String ip){preferences.put("HOSTIP", ip);}
 
-    public String getHostPort(){ return preferences.get("HOSTPORT", "6042");}
+    public String getHostPort(){
+        String value = preferences.get("HOSTPORT", "6042");
+        if (!value.matches("^[0-9]{1,5}$"))
+            return "6042";
+        if ((Integer.parseInt(value) > 65535) || (Integer.parseInt(value) < 1))
+            return "6042";
+        return value;
+    }
     public void setHostPort(String port){preferences.put("HOSTPORT", port);}
 
-    public String getHostPostfix(){ return preferences.get("HOSTPOSTFIX", "");}
-    public void setHostPostfix(String postfix){preferences.put("HOSTPOSTFIX", postfix);}
+    public String getHostExtra(){ return preferences.get("HOSTEXTRA", "");}
+    public void setHostExtra(String postfix){preferences.put("HOSTEXTRA", postfix);}
 }

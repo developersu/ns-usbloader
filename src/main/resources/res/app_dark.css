@@ -232,6 +232,7 @@
 }
 // -========================== Text Field =====================-
 .text-field {
+    -fx-prompt-text-fill: #40596c;
     -fx-border-color: #289de8;
     -fx-border-width: 0 0 1 0;
     -fx-background-color: transparent;
