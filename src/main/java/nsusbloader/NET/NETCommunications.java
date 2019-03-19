@@ -27,6 +27,9 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
 
     private boolean isValid;
     private boolean doNotServeRequests;
+
+    private OutputStream currSockOS;
+    private PrintWriter currSockPW;
     /**
      * Simple constructor that everybody uses
      * */
@@ -197,93 +200,154 @@ write in first 4 bytes
         logPrinter.print("NET: Initiation files list has been sent to NS.", EMsgType.PASS);
 
         // Go transfer
-        try {
-            Socket clientSocket = serverSocket.accept();
+        Socket clientSocket;
+        System.out.println("0");
+        work_routine:
+        while (true){
+            try {
+                System.out.println("0.5");
+                clientSocket = serverSocket.accept();
+                System.out.println("1");
+                BufferedReader br = new BufferedReader(
+                        new InputStreamReader(clientSocket.getInputStream())
+                );
 
-            InputStream is = clientSocket.getInputStream();
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(isr);
+                currSockOS = clientSocket.getOutputStream();
+                currSockPW = new PrintWriter(new OutputStreamWriter(currSockOS));
 
-            OutputStream os = clientSocket.getOutputStream();
-            OutputStreamWriter osr = new OutputStreamWriter(os);
-            PrintWriter pw = new PrintWriter(osr);
+                String line;
+                LinkedList<String> tcpPacket = new LinkedList<>();
 
-            String line;
-            LinkedList<String> tcpPackeet = new LinkedList<>();
-            while ((line = br.readLine()) != null) {
-//                if (isCancelled())                      // TODO: notice everywhere
-//                    break;
-                System.out.println(line);              // TODO: remove DBG
-                if (line.trim().isEmpty()) {           // If TCP packet is ended
-                    handleRequest(tcpPackeet, pw);     // Proceed required things
-                    tcpPackeet.clear();                // Clear data and wait for next TCP packet
+                while ((line = br.readLine()) != null) {
+                    System.out.println(line);              // TODO: remove DBG
+                    if (line.trim().isEmpty()) {           // If TCP packet is ended
+                        if (handleRequest(tcpPacket))     // Proceed required things
+                            break work_routine;
+                        tcpPacket.clear();                // Clear data and wait for next TCP packet
+                    }
+                    else
+                        tcpPacket.add(line);               // Otherwise collect data
                 }
-                else
-                    tcpPackeet.add(line);               // Otherwise collect data
+                System.out.println("\t\tPacket covered!\n"); // reopen client sock
+                clientSocket.close();
             }
-            System.out.println("\nDone!"); // reopen client sock
-            clientSocket.close();
+            catch (IOException ioe){    // If server socket closed, then client socket also closed.
+                System.out.println("2");
+                break;
+            }
         }
-        catch (IOException ioe){
-            System.out.println("client sock closed");
-        }
+        System.out.println("3");
         if (!isCancelled())
             close(EFileStatus.UNKNOWN);
         return null;
     }
 
-    // 200 206 400 (inv range) 404 416 (416 Range Not Satisfiable )
-    private void handleRequest(LinkedList<String> packet, PrintWriter pw){
+    // 200 206 400 (inv range) 404 416 (Range Not Satisfiable )
+    /**
+     * Handle requests
+     * @return true if failed
+     * */
+    private boolean handleRequest(LinkedList<String> packet){
+    //private boolean handleRequest(LinkedList<String> packet, OutputStreamWriter pw){
         File requestedFile;
+        requestedFile = nspMap.get(packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", ""));
+        if (!requestedFile.exists() || requestedFile.length() == 0){   // well.. tell 404 if file exists with 0 length is against standard, but saves time
+            currSockPW.write(NETPacket.getCode404());
+            currSockPW.flush();
+            logPrinter.print("NET: File "+requestedFile.getName()+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
+            logPrinter.update(requestedFile, EFileStatus.FAILED);
+            return true;
+        }
         if (packet.get(0).startsWith("HEAD")){
-            requestedFile = nspMap.get(packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", ""));
-            if (requestedFile == null || !requestedFile.exists()){
-                pw.write(NETPacket.getCode404());
-                pw.flush();
-                logPrinter.update(requestedFile, EFileStatus.FAILED);
-            }
-            else {
-                pw.write(NETPacket.getCode200(requestedFile.length()));
-                pw.flush();
-                System.out.println(requestedFile.getAbsolutePath()+"\n"+NETPacket.getCode200(requestedFile.length()));
-            }
-            return;
+            currSockPW.write(NETPacket.getCode200(requestedFile.length()));
+            currSockPW.flush();
+            logPrinter.print("NET: Replying for requested file: "+requestedFile.getName(), EMsgType.INFO);
+            return false;
         }
         if (packet.get(0).startsWith("GET")) {
-            requestedFile = nspMap.get(packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", ""));
-            if (requestedFile == null || !requestedFile.exists()){
-                pw.write(NETPacket.getCode404());
-                pw.flush();
-                logPrinter.update(requestedFile, EFileStatus.FAILED);
-            }
-            else {
-                for (String line: packet)
-                    if (line.toLowerCase().startsWith("range")){
+            for (String line: packet) {
+                if (line.toLowerCase().startsWith("range")) {               //todo: fix
+                    try {
                         String[] rangeStr = line.toLowerCase().replaceAll("^range:\\s+?bytes=", "").split("-", 2);
-                        if (!rangeStr[0].isEmpty() && !rangeStr[1].isEmpty()){      // If both ranges defined: Read requested
+                        if (!rangeStr[0].isEmpty() && !rangeStr[1].isEmpty()) {      // If both ranges defined: Read requested
+                                if (Long.parseLong(rangeStr[0]) > Long.parseLong(rangeStr[1])){ // If start bytes greater then end bytes
+                                    currSockPW.write(NETPacket.getCode400());
+                                    currSockPW.flush();
+                                    logPrinter.print("NET: Requested range for "+requestedFile.getName()+" is incorrect. Returning 400", EMsgType.FAIL);
+                                    logPrinter.update(requestedFile, EFileStatus.FAILED);
+                                    return true;
+                                }
+                                if (writeToSocket(requestedFile, Long.parseLong(rangeStr[0]), Long.parseLong(rangeStr[1])))         // DO WRITE
+                                    return true;
 
                         }
-                        else if (!rangeStr[0].isEmpty()){                           // If only START defined: Read all
-
+                        else if (!rangeStr[0].isEmpty()) {                           // If only START defined: Read all
+                            if (writeToSocket(requestedFile, Long.parseLong(rangeStr[0]), requestedFile.length()))         // DO WRITE
+                                return true;
                         }
-                        else if (!rangeStr[1].isEmpty()){                           // If only END defined: Try to read last 500 bytes
-
+                        else if (!rangeStr[1].isEmpty()) {                           // If only END defined: Try to read last 500 bytes
+                            if (requestedFile.length() > 500){
+                                if (writeToSocket(requestedFile, requestedFile.length()-500, requestedFile.length()))         // DO WRITE
+                                    return true;
+                            }
+                            else {                                                  // If file smaller than 500 bytes
+                                currSockPW.write(NETPacket.getCode416());
+                                currSockPW.flush();
+                                logPrinter.print("NET: File size requested for "+requestedFile.getName()+" while actual size of it: "+requestedFile.length()+". Returning 416", EMsgType.FAIL);
+                                logPrinter.update(requestedFile, EFileStatus.FAILED);
+                                return true;
+                            }
                         }
                         else {
-                            pw.write(NETPacket.getCode400());
-                            pw.flush();
+                            currSockPW.write(NETPacket.getCode400());                       // If Range not defined: like "Range: bytes=-"
+                            currSockPW.flush();
+                            logPrinter.print("NET: Requested range for "+requestedFile.getName()+" is incorrect (empty start & end). Returning 400", EMsgType.FAIL);
                             logPrinter.update(requestedFile, EFileStatus.FAILED);
-                            //logPrinter.print();                                   // TODO: INFORM
+                            return true;
                         }
+                        break;
                     }
+                    catch (NumberFormatException nfe){
+                        currSockPW.write(NETPacket.getCode400());
+                        currSockPW.flush();
+                        logPrinter.print("NET: Requested range for "+requestedFile.getName()+" has incorrect format. Returning 400\n\t"+nfe.getMessage(), EMsgType.FAIL);
+                        logPrinter.update(requestedFile, EFileStatus.FAILED);
+                        return true;
+                    }
+                }
             }
         }
+        return false;
+    }
+    /**
+     * Send files.
+     * */
+    private boolean writeToSocket(File file, long start, long end){
+        currSockPW.write(NETPacket.getCode206(file.length(), start, end));
+        currSockPW.flush();
+        try{
+            long count = end - start;
+
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+            raf.seek(start);
+            for (int i=0; i <= count; i++)
+                currSockOS.write(raf.read());
+            currSockOS.flush();
+            raf.close();
+        }
+        catch (IOException ioe){
+            logPrinter.print("IO Exception:\n  "+ioe.getMessage(), EMsgType.FAIL);
+            ioe.printStackTrace();
+            return true;
+        }
+        return false;
     }
     /**
      * Close when done
      * */
     private void close(EFileStatus status){
-        System.out.println("called");
+        if (isCancelled())
+            logPrinter.print("NET: Interrupted by user.", EMsgType.INFO);
         try {
             serverSocket.close();
             logPrinter.print("NET: Closing server socket.", EMsgType.PASS);

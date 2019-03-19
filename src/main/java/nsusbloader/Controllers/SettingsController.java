@@ -114,7 +114,9 @@ public class SettingsController implements Initializable {
         }));
         pcPortTextField.setTextFormatter(new TextFormatter<Object>(change -> {
             if (change.getControlNewText().matches("^[0-9]{0,5}$")) {
-                if ((Integer.parseInt(change.getControlNewText()) > 65535) || (Integer.parseInt(change.getControlNewText()) == 0)) {
+                if (!change.getControlNewText().isEmpty()
+                        && ((Integer.parseInt(change.getControlNewText()) > 65535) || (Integer.parseInt(change.getControlNewText()) == 0))
+                ) {
                     ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleErrorPort"), resourceBundle.getString("windowBodyErrorPort"));
                     return null;
                 }

@@ -31,21 +31,21 @@ public class NETPacket {
                                             "Date: %s\r\n" +
                                             "Connection: close\r\n"+
                                             "Content-Type: text/html;charset=utf-8\r\n"+
-                                            "Content-Length: 0\r\b\r\n";
+                                            "Content-Length: 0\r\n\r\n";
     private static final String CODE_404 =
                                             "HTTP/1.0 404 Not Found\r\n"+
                                             "Server: NS-USBloader-"+NSLMain.appVersion+"\r\n" +
                                             "Date: %s\r\n" +
                                             "Connection: close\r\n"+
                                             "Content-Type: text/html;charset=utf-8\r\n"+
-                                            "Content-Length: 0\r\b\r\n";
+                                            "Content-Length: 0\r\n\r\n";
     private static final String CODE_416 =
                                             "HTTP/1.0 416 Requested Range Not Satisfiable\r\n"+
                                             "Server: NS-USBloader-"+NSLMain.appVersion+"\r\n" +
                                             "Date: %s\r\n" +
                                             "Connection: close\r\n"+
                                             "Content-Type: text/html;charset=utf-8\r\n"+
-                                            "Content-Length: 0\r\b\r\n";
+                                            "Content-Length: 0\r\n\r\n";
     public static String getCode200(long nspFileSize){
         return String.format(CODE_200, ZonedDateTime.now(ZoneId.of("GMT")).format(DateTimeFormatter.RFC_1123_DATE_TIME), nspFileSize-1, nspFileSize, nspFileSize);
     }

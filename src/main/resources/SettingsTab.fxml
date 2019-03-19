@@ -42,7 +42,7 @@
                   </HBox>
                   <HBox>
                      <children>
-                        <TextField fx:id="pcIpTextField" promptText="XXX,XXX,XXX,XXX" />
+                        <TextField fx:id="pcIpTextField" promptText="XXX.XXX.XXX.XXX" />
                         <Label text=":" />
                         <TextField fx:id="pcPortTextField" promptText="0-65535" />
                         <Label text="/" />
