@@ -40,6 +40,25 @@ public class AppPreferences {
     //------------ SETTINGS ------------------//
     public boolean getNsIpValidationNeeded() {return preferences.getBoolean("NSIPVALIDATION", true);}
     public void setNsIpValidationNeeded(boolean need){preferences.putBoolean("NSIPVALIDATION", need);}
+
     public boolean getExpertMode(){return preferences.getBoolean("EXPERTMODE", false);}
     public void setExpertMode(boolean mode){preferences.putBoolean("EXPERTMODE", mode);}
+
+    public boolean getAutoDetectIp(){return preferences.getBoolean("AUTOHOSTIP", true);}
+    public void setAutoDetectIp(boolean mode){preferences.putBoolean("AUTOHOSTIP", mode);}
+
+    public boolean getRandPort(){return preferences.getBoolean("RANDHOSTPORT", true);}
+    public void setRandPort(boolean mode){preferences.putBoolean("RANDHOSTPORT", mode);}
+
+    public boolean getNotServeRequests(){return preferences.getBoolean("DONTSERVEREQ", false);}
+    public void setNotServeRequests(boolean mode){preferences.putBoolean("DONTSERVEREQ", mode);}
+
+    public String getHostIp(){ return preferences.get("HOSTIP", "0.0.0.0");}
+    public void setHostIp(String ip){preferences.put("HOSTIP", ip);}
+
+    public String getHostPort(){ return preferences.get("HOSTPORT", "6042");}
+    public void setHostPort(String port){preferences.put("HOSTPORT", port);}
+
+    public String getHostPostfix(){ return preferences.get("HOSTPOSTFIX", "");}
+    public void setHostPostfix(String postfix){preferences.put("HOSTPOSTFIX", postfix);}
 }

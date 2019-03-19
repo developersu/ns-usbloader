@@ -36,6 +36,8 @@
                         <Label text="%netTabHostIPLbl" />
                         <Label text=":" />
                         <Label text="%netTabHostPortLbl" />
+                        <Label text="/" />
+                        <Label text="%netTabHostExtraLbl" />
                      </children>
                   </HBox>
                   <HBox>

@@ -3,7 +3,6 @@ package nsusbloader.Controllers;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import nsusbloader.AppPreferences;
@@ -40,18 +39,27 @@ public class SettingsController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         validateNSHostNameCb.setSelected(AppPreferences.getInstance().getNsIpValidationNeeded());
 
-        expertSettingsVBox.setDisable(AppPreferences.getInstance().getExpertMode());
+        expertSettingsVBox.setDisable(!AppPreferences.getInstance().getExpertMode());
 
+        expertModeCb.setSelected(AppPreferences.getInstance().getExpertMode());
         expertModeCb.setOnAction(e->{
             if (expertModeCb.isSelected())
                 expertSettingsVBox.setDisable(false);
             else
                 expertSettingsVBox.setDisable(true);
         });
+        autoDetectIpCb.setSelected(AppPreferences.getInstance().getAutoDetectIp());
+
+        randPortCb.setSelected(AppPreferences.getInstance().getRandPort());
+
+
+
+        dontServeCb.setSelected(AppPreferences.getInstance().getNotServeRequests());
     }
 
     public boolean getExpertModeSelected(){
         return expertModeCb.isSelected();
     }
+
     public boolean isNsIpValidate(){ return validateNSHostNameCb.isSelected(); }
 }
