@@ -1,6 +1,6 @@
 package nsusbloader.USB.PFS;
 
-import nsusbloader.USB.LogPrinter;
+import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.ServiceWindow;
 

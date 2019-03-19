@@ -1,4 +1,4 @@
-package nsusbloader.USB;
+package nsusbloader.ModelControllers;
 
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -14,7 +14,7 @@ public class LogPrinter {
     private BlockingQueue<Double> progressQueue;
     private HashMap<String, EFileStatus> statusMap;      // BlockingQueue for literally one object. TODO: read more books ; replace to hashMap
 
-    LogPrinter(){
+    public LogPrinter(){
         this.msgQueue = new LinkedBlockingQueue<>();
         this.progressQueue = new LinkedBlockingQueue<>();
         this.statusMap =  new HashMap<>();
@@ -53,11 +53,22 @@ public class LogPrinter {
         progressQueue.put(value);
     }
     /**
-     * When we're done
+     * When we're done - update status
      * */
-    public void updateAndClose(HashMap<String, File> nspMap, EFileStatus status){
-        for (String fileName: nspMap.keySet())
-            statusMap.put(fileName, status);
+    public void update(HashMap<String, File> nspMap, EFileStatus status){
+        for (File file: nspMap.values())
+            statusMap.putIfAbsent(file.getName(), status);
+    }
+    /**
+     * When we're done - update status
+     * */
+    public void update(File file, EFileStatus status){
+        statusMap.putIfAbsent(file.getName(), status);
+    }
+    /**
+     * When we're done - close it
+     * */
+    public void close(){
         msgConsumer.interrupt();
     }
 }

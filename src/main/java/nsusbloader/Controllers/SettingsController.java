@@ -5,6 +5,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import nsusbloader.AppPreferences;
 
 
@@ -16,30 +17,36 @@ public class SettingsController implements Initializable {
     @FXML
     private CheckBox validateNSHostNameCb;
     @FXML
-    private TextField pcIpTextField;
-    @FXML
     private CheckBox expertModeCb;
     @FXML
-    private Label hostIpLbl;
+    private CheckBox autoDetectIpCb;
+    @FXML
+    private CheckBox randPortCb;
+
+    @FXML
+    private TextField pcIpTextField;
+    @FXML
+    private TextField pcPortTextField;
+    @FXML
+    private TextField pcPostfixTextField;
+
+    @FXML
+    private CheckBox dontServeCb;
+
+    @FXML
+    private VBox expertSettingsVBox;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         validateNSHostNameCb.setSelected(AppPreferences.getInstance().getNsIpValidationNeeded());
 
-        if (AppPreferences.getInstance().getExpertMode()) {
-            expertModeCb.setSelected(true);
-            hostIpLbl.setVisible(true);
-            pcIpTextField.setVisible(true);
-        }
+        expertSettingsVBox.setDisable(AppPreferences.getInstance().getExpertMode());
+
         expertModeCb.setOnAction(e->{
-            if (expertModeCb.isSelected()){
-                hostIpLbl.setVisible(true);
-                pcIpTextField.setVisible(true);
-            }
-            else {
-                hostIpLbl.setVisible(false);
-                pcIpTextField.setVisible(false);
-            }
+            if (expertModeCb.isSelected())
+                expertSettingsVBox.setDisable(false);
+            else
+                expertSettingsVBox.setDisable(true);
         });
     }
 

@@ -1,4 +1,4 @@
-package nsusbloader.USB;
+package nsusbloader.ModelControllers;
 
 import javafx.animation.AnimationTimer;
 import javafx.scene.control.ProgressBar;

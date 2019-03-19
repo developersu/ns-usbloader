@@ -1,15 +1,13 @@
 package nsusbloader.NET;
 
 import javafx.concurrent.Task;
-import nsusbloader.NSLMain;
+import nsusbloader.NSLDataTypes.EFileStatus;
+import nsusbloader.ModelControllers.LogPrinter;
 
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,6 +16,8 @@ import java.util.List;
 * */
 
 public class NETCommunications extends Task<Void> { // todo: thows IOException?
+
+    private LogPrinter logPrinter;
 
     private String hostIP;
     private int hostPort;
@@ -29,6 +29,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
     private ServerSocket serverSocket;
 
     public NETCommunications(List<File> filesList, String switchIP){
+        this.logPrinter = new LogPrinter();
         this.switchIP = switchIP;
         this.nspMap = new HashMap<>();
         try {
@@ -117,6 +118,8 @@ write in first 4 bytes
             String line;
             LinkedList<String> tcpPackeet = new LinkedList<>();
             while ((line = br.readLine()) != null) {
+                if (isCancelled())                      // TODO: notice everywhere
+                    break;
                 System.out.println(line);              // TODO: remove DBG
                 if (line.trim().isEmpty()) {           // If TCP packet is ended
                     handleRequest(tcpPackeet, pw);     // Proceed required things
@@ -132,21 +135,55 @@ write in first 4 bytes
         catch (IOException ioe){
             ioe.printStackTrace();          // TODO: fix
         }
-
+        logPrinter.update(nspMap, EFileStatus.UNKNOWN);
+        logPrinter.close();
         return null;
     }
 
-    // 200 206 400 (inv range) 404
+    // 200 206 400 (inv range) 404 416 (416 Range Not Satisfiable )
     private void handleRequest(LinkedList<String> packet, PrintWriter pw){
+        File requestedFile;
         if (packet.get(0).startsWith("HEAD")){
-            File requestedFile = nspMap.get(packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", ""));
+            requestedFile = nspMap.get(packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", ""));
             if (requestedFile == null || !requestedFile.exists()){
-                return;                     //todo: send 404
+                pw.write(NETPacket.getCode404());
+                pw.flush();
+                logPrinter.update(requestedFile, EFileStatus.FAILED);
             }
             else {
                 pw.write(NETPacket.getCode200(requestedFile.length()));
                 pw.flush();
                 System.out.println(requestedFile.getAbsolutePath()+"\n"+NETPacket.getCode200(requestedFile.length()));
+            }
+            return;
+        }
+        if (packet.get(0).startsWith("GET")) {
+            requestedFile = nspMap.get(packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", ""));
+            if (requestedFile == null || !requestedFile.exists()){
+                pw.write(NETPacket.getCode404());
+                pw.flush();
+                logPrinter.update(requestedFile, EFileStatus.FAILED);
+            }
+            else {
+                for (String line: packet)
+                    if (line.toLowerCase().startsWith("range")){
+                        String[] rangeStr = line.toLowerCase().replaceAll("^range:\\s+?bytes=", "").split("-", 2);
+                        if (!rangeStr[0].isEmpty() && !rangeStr[1].isEmpty()){      // If both ranges defined: Read requested
+
+                        }
+                        else if (!rangeStr[0].isEmpty()){                           // If only START defined: Read all
+
+                        }
+                        else if (!rangeStr[1].isEmpty()){                           // If only END defined: Try to read last 500 bytes
+
+                        }
+                        else {
+                            pw.write(NETPacket.getCode400());
+                            pw.flush();
+                            logPrinter.update(requestedFile, EFileStatus.FAILED);
+                            //logPrinter.print();                                   // TODO: INFORM
+                        }
+                    }
             }
         }
     }

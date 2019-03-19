@@ -1,6 +1,7 @@
 package nsusbloader.USB;
 
 import javafx.concurrent.Task;
+import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.USB.PFS.PFSProvider;
@@ -707,7 +708,8 @@ public class UsbCommunications extends Task<Void> {
         }
 
         // Report status and close
-        logPrinter.updateAndClose(nspMap, status);
+        logPrinter.update(nspMap, status);
+        logPrinter.close();
     }
     /**
      * Sending any byte array to USB device
