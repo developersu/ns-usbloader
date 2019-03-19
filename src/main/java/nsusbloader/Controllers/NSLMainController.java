@@ -2,6 +2,7 @@ package nsusbloader.Controllers;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -20,7 +21,6 @@ import nsusbloader.USB.UsbCommunications;
 import java.io.File;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -54,7 +54,7 @@ public class NSLMainController implements Initializable {
     @FXML
     private Label nsIpLbl;
 
-    private UsbCommunications usbCommunications;
+    private Task<Void> usbNetCommunications;
     private Thread workThread;
 
     private String previouslyOpenedPath;
@@ -200,8 +200,8 @@ public class NSLMainController implements Initializable {
                     for (File item: nspToUpload)
                         logArea.appendText("  "+item.getAbsolutePath()+"\n");
                 }
-                usbCommunications = new UsbCommunications(nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
-                workThread = new Thread(usbCommunications);
+                usbNetCommunications = new UsbCommunications(nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
+                workThread = new Thread(usbNetCommunications);
                 workThread.setDaemon(true);
                 workThread.start();
             }
@@ -212,24 +212,31 @@ public class NSLMainController implements Initializable {
                 String nsIP = nsIpTextField.getText();
 
                 List<File> nspToUpload;
-                if (!SettingsTabController.getExpertModeSelected()) {
-                    if ((nspToUpload = tableFilesListController.getFilesForUpload()) == null) {
-                        logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
-                        return;
-                    }
-                    else {
-                        logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
-                        for (File item: nspToUpload)
-                            logArea.appendText("  "+item.getAbsolutePath()+"\n");
-                    }
-                    NETCommunications netCommunications = new NETCommunications(nspToUpload, nsIP);      // TODO: move somewhere
-                    workThread = new Thread(netCommunications);
-                    workThread.setDaemon(true);
-                    workThread.start();
+                if ((nspToUpload = tableFilesListController.getFilesForUpload()) == null) {
+                    logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
+                    return;
                 }
                 else {
-                    // TODO; pass to another constructor
+                    logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
+                    for (File item: nspToUpload)
+                        logArea.appendText("  "+item.getAbsolutePath()+"\n");
                 }
+                if (!SettingsTabController.getExpertModeSelected())
+                    usbNetCommunications = new NETCommunications(nspToUpload, nsIP, false, "", "", "");
+                else {
+                    usbNetCommunications = new NETCommunications(
+                            nspToUpload,
+                            nsIP,
+                            SettingsTabController.getNotServeSelected(),
+                            SettingsTabController.getAutoIpSelected()?"":SettingsTabController.getHostIp(),
+                            SettingsTabController.getRandPortSelected()?"":SettingsTabController.getHostPort(),
+                            SettingsTabController.getNotServeSelected()?SettingsTabController.getHostExtra():""
+                    );
+                }
+
+                workThread = new Thread(usbNetCommunications);
+                workThread.setDaemon(true);
+                workThread.start();
             }
         }
     }
@@ -238,7 +245,7 @@ public class NSLMainController implements Initializable {
      * */
     private void stopBtnAction(){
         if (workThread != null && workThread.isAlive()){
-            usbCommunications.cancel(false);            // TODO: add something abstract to use also for network
+            usbNetCommunications.cancel(false);            // TODO: add something abstract to use also for network
         }
     }
     /**

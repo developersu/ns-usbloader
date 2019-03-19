@@ -225,7 +225,7 @@ public class NSTableViewController implements Initializable {
             for (NSLRowModel model: rowsObsLst){
                 if (model.isMarkForUpload()){
                     files.add(model.getNspFile());
-                    model.setStatus(EFileStatus.UNKNOWN);
+                    model.setStatus(EFileStatus.INDETERMINATE);
                 }
             }
             if (!files.isEmpty()) {
