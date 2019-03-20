@@ -184,22 +184,24 @@ public class NSLMainController implements Initializable {
      * */
     private void uploadBtnAction(){
         if ((workThread == null || !workThread.isAlive())){
+            // Collect files
+            List<File> nspToUpload;
+            if ((nspToUpload = tableFilesListController.getFilesForUpload()) == null) {
+                logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
+                return;
+            }
+            else {
+                logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
+                for (File item: nspToUpload)
+                    logArea.appendText("  "+item.getAbsolutePath()+"\n");
+            }
+            // If USB selected
             if (choiceProtocol.getSelectionModel().getSelectedItem().equals("GoldLeaf") ||
                     (
                     choiceProtocol.getSelectionModel().getSelectedItem().equals("TinFoil")
                     && choiceNetUsb.getSelectionModel().getSelectedItem().equals("USB")
                     )
             ){
-                List<File> nspToUpload;
-                if ((nspToUpload = tableFilesListController.getFilesForUpload()) == null) {
-                    logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
-                    return;
-                }
-                else {
-                    logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
-                    for (File item: nspToUpload)
-                        logArea.appendText("  "+item.getAbsolutePath()+"\n");
-                }
                 usbNetCommunications = new UsbCommunications(nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
                 workThread = new Thread(usbNetCommunications);
                 workThread.setDaemon(true);
@@ -209,18 +211,9 @@ public class NSLMainController implements Initializable {
                 if (SettingsTabController.isNsIpValidate() && !nsIpTextField.getText().matches("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"))
                     if (!ServiceWindow.getConfirmationWindow(resourceBundle.getString("windowTitleBadIp"),resourceBundle.getString("windowBodyBadIp")))
                         return;
+
                 String nsIP = nsIpTextField.getText();
 
-                List<File> nspToUpload;
-                if ((nspToUpload = tableFilesListController.getFilesForUpload()) == null) {
-                    logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
-                    return;
-                }
-                else {
-                    logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
-                    for (File item: nspToUpload)
-                        logArea.appendText("  "+item.getAbsolutePath()+"\n");
-                }
                 if (!SettingsTabController.getExpertModeSelected())
                     usbNetCommunications = new NETCommunications(nspToUpload, nsIP, false, "", "", "");
                 else {
