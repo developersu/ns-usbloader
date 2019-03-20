@@ -6,7 +6,7 @@ With GUI and cookies. Wokrs on Windows, macOS and Linux.
 
 Sometimes I add new posts [on my home page](https://developersu.blogspot.com/search/label/NS-USBloader) about this project.
 
-![Screenshot](https://farm8.staticflickr.com/7834/47133893471_37fd9689c4_o.png)
+![Screenshot](https://farm8.staticflickr.com/7809/46703921964_53f60f04ed_o.png)
 
 ### License
 
