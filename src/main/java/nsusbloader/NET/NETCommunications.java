@@ -328,8 +328,8 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
             raf.close();
         }
         catch (IOException ioe){
-            logPrinter.print("IO Exception:\n  "+ioe.getMessage(), EMsgType.FAIL);
-            ioe.printStackTrace();
+            logPrinter.print("NET: File transmission failed. Returned:\n\t"+ioe.getMessage(), EMsgType.FAIL);
+            logPrinter.update(file, EFileStatus.FAILED);
             return true;
         }
         return false;
