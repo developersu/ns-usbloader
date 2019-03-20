@@ -16,7 +16,12 @@ public class NSLRowModel {
         this.nspFile = nspFile;
         this.markForUpload = checkBoxValue;
         this.nspFileName = nspFile.getName();
-        this.nspFileSize = String.format("%.2f", nspFile.length()/1024.0/1024.0);
+        if (nspFile.length()/1024.0/1024.0/1024.0 > 1)
+            this.nspFileSize = String.format("%.2f", nspFile.length()/1024.0/1024.0/1024.0)+" GB";
+        else if (nspFile.length()/1024.0/1024.0 > 1)
+            this.nspFileSize = String.format("%.2f", nspFile.length()/1024.0/1024.0)+" MB";
+        else
+            this.nspFileSize = String.format("%.2f", nspFile.length()/1024.0)+" kB";
         this.status = "";
     }
     // Model methods start
@@ -45,11 +50,14 @@ public class NSLRowModel {
             case FAILED:
                 this.status = "Failed";
                 break;
-            case UNKNOWN:
+            case INDETERMINATE:
                 this.status = "...";
                 break;
+            case UNKNOWN:
+                this.status = "Unknown";
+                break;
             case INCORRECT_FILE_FAILED:
-                this.status = "Failed: Incorrect file";
+                this.status = "Failed: Bad file";
                 markForUpload = false;
                 break;
         }

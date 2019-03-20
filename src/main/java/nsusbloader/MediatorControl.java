@@ -18,7 +18,7 @@ public class MediatorControl {
     public void setController(NSLMainController controller){
         this.applicationController = controller;
     }
-    NSLMainController getContoller(){ return this.applicationController; }
+    public NSLMainController getContoller(){ return this.applicationController; }
 
     public synchronized void setTransferActive(boolean state) {
         isTransferActive.set(state);

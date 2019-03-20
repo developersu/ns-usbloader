@@ -84,7 +84,7 @@
     -fx-background-color: #fefefe;
 }
 .dialog-pane > .button-bar > .container{
-    -fx-background-color: #2d2d2d;
+    -fx-background-color: #ebebeb;
 }
 
 .dialog-pane > .label{
@@ -207,7 +207,13 @@
     -fx-padding: 0.0em; /* 0 */
     -fx-table-cell-border-color: #b0b0b0;
 }
-
+.table-row-cell .text, .table-row-cell:odd .text {
+    -fx-fill: #2c2c2c;
+}
+.table-row-cell:filled:selected .text, .table-row-cell:odd:filled:selected .text{
+    -fx-fill: #2c2c2c;
+    -fx-font-weight: bold
+}
 .table-row-cell:odd, .table-row-cell:odd:filled:selected, .table-row-cell:odd:selected{
     -fx-background-color: -fx-table-cell-border-color, #fefefe;
     -fx-background-insets: 0, 0 0 1 0;
@@ -217,16 +223,27 @@
 // -========================== Context menu =====================-
 .context-menu {
   -fx-background-color: #fefefe;
-  -fx-text-fill: white;
   -fx-cursor: hand;
 }
 .context-menu .menu-item .label {
   -fx-text-fill: #2c2c2c;
 }
 .context-menu .menu-item:focused .label {
-  -fx-text-fill: #2c2c2c;
+  -fx-text-fill: white;
 }
-
+// -========================== Text Field =====================-
+.text-field {
+    -fx-border-color: #289de8;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c2c2c;
+}
+.text-field:focused {
+    -fx-border-color: #e82382;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-color: transparent;
+    -fx-text-fill: #e82382;
+}
 
 
 

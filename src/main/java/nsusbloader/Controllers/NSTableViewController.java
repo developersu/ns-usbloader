@@ -1,19 +1,24 @@
 package nsusbloader.Controllers;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
+import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.io.File;
@@ -32,13 +37,42 @@ public class NSTableViewController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         rowsObsLst = FXCollections.observableArrayList();
+
         table.setPlaceholder(new Label());
+        table.setEditable(false);               // At least with hacks it works as expected. Otherwise - null pointer exception
+        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                if (!rowsObsLst.isEmpty()) {
+                    if (keyEvent.getCode() == KeyCode.DELETE && !MediatorControl.getInstance().getTransferActive()) {
+                        rowsObsLst.removeAll(table.getSelectionModel().getSelectedItems());
+                        if (rowsObsLst.isEmpty())
+                            MediatorControl.getInstance().getContoller().disableUploadStopBtn(true);    // TODO: change to something better
+                        table.refresh();
+                    } else if (keyEvent.getCode() == KeyCode.SPACE) {
+                        for (NSLRowModel item : table.getSelectionModel().getSelectedItems()) {
+                            item.setMarkForUpload(!item.isMarkForUpload());
+                            restrictSelection(item);
+                        }
+                        table.refresh();
+                    }
+                }
+                keyEvent.consume();
+            }
+        });
 
         TableColumn<NSLRowModel, String> statusColumn = new TableColumn<>(resourceBundle.getString("tableStatusLbl"));
         TableColumn<NSLRowModel, String> fileNameColumn = new TableColumn<>(resourceBundle.getString("tableFileNameLbl"));
         TableColumn<NSLRowModel, String> fileSizeColumn = new TableColumn<>(resourceBundle.getString("tableSizeLbl"));
         TableColumn<NSLRowModel, Boolean> uploadColumn = new TableColumn<>(resourceBundle.getString("tableUploadLbl"));
+
+        statusColumn.setEditable(false);
+        fileNameColumn.setEditable(false);
+        fileSizeColumn.setEditable(false);
+        uploadColumn.setEditable(true);
+
         // See https://bugs.openjdk.java.net/browse/JDK-8157687
         statusColumn.setMinWidth(100.0);
         statusColumn.setPrefWidth(100.0);
@@ -75,7 +109,6 @@ public class NSTableViewController implements Initializable {
                         restrictSelection(model);
                     }
                 });
-
                 return booleanProperty;
             }
         });
@@ -87,7 +120,56 @@ public class NSTableViewController implements Initializable {
                 return cell;
             }
         });
+        table.setRowFactory(        // this shit is made to implement context menu. It's such a pain..
+                new Callback<TableView<NSLRowModel>, TableRow<NSLRowModel>>() {
+                    @Override
+                    public TableRow<NSLRowModel> call(TableView<NSLRowModel> nslRowModelTableView) {
+                        final TableRow<NSLRowModel> row = new TableRow<>();
+                        ContextMenu contextMenu = new ContextMenu();
+                        MenuItem deleteMenuItem = new MenuItem(resourceBundle.getString("contextMenuBtnDelete"));
+                        deleteMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+                            @Override
+                            public void handle(ActionEvent actionEvent) {
+                                rowsObsLst.remove(row.getItem());
+                                if (rowsObsLst.isEmpty())
+                                    MediatorControl.getInstance().getContoller().disableUploadStopBtn(true);    // TODO: change to something better
+                                table.refresh();
+                            }
+                        });
+                        MenuItem deleteAllMenuItem = new MenuItem(resourceBundle.getString("contextMenuBtnDeleteAll"));
+                        deleteAllMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+                            @Override
+                            public void handle(ActionEvent actionEvent) {
+                                rowsObsLst.clear();
+                                MediatorControl.getInstance().getContoller().disableUploadStopBtn(true);    // TODO: change to something better
+                                table.refresh();
+                            }
+                        });
+                        contextMenu.getItems().addAll(deleteMenuItem, deleteAllMenuItem);
 
+                        row.setContextMenu(contextMenu);
+                        row.contextMenuProperty().bind(
+                                Bindings.when(
+                                        Bindings.isNotNull(
+                                                row.itemProperty()))
+                                                .then(MediatorControl.getInstance().getTransferActive()?(ContextMenu)null:contextMenu)
+                                                .otherwise((ContextMenu) null)
+                        );
+                        row.setOnMouseClicked(new EventHandler<MouseEvent>() {      // Just.. don't ask..
+                            @Override
+                            public void handle(MouseEvent mouseEvent) {
+                                if (!row.isEmpty() && mouseEvent.getButton() == MouseButton.PRIMARY){
+                                    NSLRowModel thisItem = row.getItem();
+                                    thisItem.setMarkForUpload(!thisItem.isMarkForUpload());
+                                    restrictSelection(thisItem);
+                                }
+                                mouseEvent.consume();
+                            }
+                        });
+                        return row;
+                    }
+                }
+        );
         table.setItems(rowsObsLst);
         table.getColumns().addAll(statusColumn, fileNameColumn, fileSizeColumn, uploadColumn);
     }
@@ -100,36 +182,42 @@ public class NSTableViewController implements Initializable {
                 if (model != modelChecked)
                     model.setMarkForUpload(false);
             }
-            table.refresh();
         }
+        table.refresh();
     }
     /**
      * Add files when user selected them
      * */
-    public void setFiles(List<File> files){
-        rowsObsLst.clear();                 // TODO: consider table refresh
-        if (files == null) {
-            return;
-        }
-        if (protocol.equals("TinFoil")){
-            for (File nspFile: files){
-                rowsObsLst.add(new NSLRowModel(nspFile, true));
-            }
+    public void setFiles(List<File> newFiles){
+        if (!rowsObsLst.isEmpty()){
+            List<String> filesAlreayInList = new ArrayList<>();
+            for (NSLRowModel model : rowsObsLst)
+                    filesAlreayInList.add(model.getNspFileName());
+            for (File file: newFiles)
+                if (!filesAlreayInList.contains(file.getName())) {
+                    if (protocol.equals("TinFoil"))
+                        rowsObsLst.add(new NSLRowModel(file, true));
+                    else
+                        rowsObsLst.add(new NSLRowModel(file, false));
+                }
         }
         else {
-            rowsObsLst.clear();
-            for (File nspFile: files){
-                rowsObsLst.add(new NSLRowModel(nspFile, false));
-            }
-            rowsObsLst.get(0).setMarkForUpload(true);
+            for (File file: newFiles)
+                if (protocol.equals("TinFoil"))
+                    rowsObsLst.add(new NSLRowModel(file, true));
+                else
+                    rowsObsLst.add(new NSLRowModel(file, false));
+            MediatorControl.getInstance().getContoller().disableUploadStopBtn(false);
         }
+        rowsObsLst.get(0).setMarkForUpload(true);
+        table.refresh();
     }
     /**
      * Return files ready for upload. Requested from NSLMainController only -> uploadBtnAction()                            //TODO: set undefined
      * @return null if no files marked for upload
      *         List<File> if there are files
      * */
-    public List<File> getFiles(){
+    public List<File> getFilesForUpload(){
         List<File> files = new ArrayList<>();
         if (rowsObsLst.isEmpty())
             return null;
@@ -137,7 +225,7 @@ public class NSTableViewController implements Initializable {
             for (NSLRowModel model: rowsObsLst){
                 if (model.isMarkForUpload()){
                     files.add(model.getNspFile());
-                    model.setStatus(EFileStatus.UNKNOWN);
+                    model.setStatus(EFileStatus.INDETERMINATE);
                 }
             }
             if (!files.isEmpty()) {
