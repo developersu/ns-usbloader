@@ -93,6 +93,7 @@ root # udevadm control --reload-rules && udevadm trigger
 
 ### Known bugs
 * Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't selected anything on NS). Also, sometimes, when network transmission started and nothing received from NS.
+* Unable to use it on macOS version lower then Mojave. See: [Failing to claim interface on OSX](https://github.com/developersu/ns-usbloader/issues/2). Could be solved by using different build (different JAR).
 
 #### NOTES
 Table 'Status' = 'Uploaded' does not mean that file installed. It means that it has been sent to NS without any issues! That's what this app about. 
