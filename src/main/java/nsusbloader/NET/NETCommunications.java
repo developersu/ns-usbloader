@@ -130,11 +130,12 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         else {
             try {
                 this.hostPort = Integer.parseInt(hostPortNum);
+                serverSocket = new ServerSocket(hostPort);
                 logPrinter.print("NET: Using defined port number: " + hostPort, EMsgType.PASS);
             }
-            catch (NumberFormatException exeption){ // Literally never happens.
-                isValid = false;
+            catch (NumberFormatException | IOException exeption){ // Literally never happens.
                 logPrinter.print("NET: Can't use port defined in settings: " + hostPortNum + "\nIt's not a valid number!", EMsgType.WARNING);
+                isValid = false;
                 close(EFileStatus.FAILED);
                 return;
             }
@@ -149,11 +150,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         this.close(EFileStatus.UNKNOWN);
         super.cancelled();
     }
-/*
-Replace everything to ASCII (WEB representation)
-calculate
-write in first 4 bytes
-* */
+
     @Override
     protected Void call() {
         if (!isValid | isCancelled())
@@ -201,13 +198,10 @@ write in first 4 bytes
 
         // Go transfer
         Socket clientSocket;
-        System.out.println("0");
         work_routine:
         while (true){
             try {
-                System.out.println("0.5");
                 clientSocket = serverSocket.accept();
-                System.out.println("1");
                 BufferedReader br = new BufferedReader(
                         new InputStreamReader(clientSocket.getInputStream())
                 );
@@ -219,7 +213,7 @@ write in first 4 bytes
                 LinkedList<String> tcpPacket = new LinkedList<>();
 
                 while ((line = br.readLine()) != null) {
-                    System.out.println(line);              // TODO: remove DBG
+                    //System.out.println(line);              // TODO: remove DBG
                     if (line.trim().isEmpty()) {           // If TCP packet is ended
                         if (handleRequest(tcpPacket))     // Proceed required things
                             break work_routine;
@@ -228,15 +222,13 @@ write in first 4 bytes
                     else
                         tcpPacket.add(line);               // Otherwise collect data
                 }
-                System.out.println("\t\tPacket covered!\n"); // reopen client sock
+                // and reopen client sock
                 clientSocket.close();
             }
             catch (IOException ioe){    // If server socket closed, then client socket also closed.
-                System.out.println("2");
                 break;
             }
         }
-        System.out.println("3");
         if (!isCancelled())
             close(EFileStatus.UNKNOWN);
         return null;
