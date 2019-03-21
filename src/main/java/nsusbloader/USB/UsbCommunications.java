@@ -698,12 +698,12 @@ public class UsbCommunications extends Task<Void> {
                 logPrinter.print("Release interface", EMsgType.PASS);
 
             LibUsb.close(handlerNS);
-            logPrinter.print("Requested handler updateAndClose", EMsgType.INFO);
+            logPrinter.print("Requested handler close", EMsgType.INFO);
         }
         // Close context in the end
         if (contextNS != null) {
             LibUsb.exit(contextNS);
-            logPrinter.print("Requested context updateAndClose", EMsgType.INFO);
+            logPrinter.print("Requested context close", EMsgType.INFO);
         }
 
         // Report status and close
