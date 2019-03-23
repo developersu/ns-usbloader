@@ -1,5 +1,6 @@
 package nsusbloader.Controllers;
 
+import javafx.application.HostServices;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -11,11 +12,9 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
-import nsusbloader.AppPreferences;
-import nsusbloader.MediatorControl;
+import nsusbloader.*;
+import nsusbloader.ModelControllers.UpdatesChecker;
 import nsusbloader.NET.NETCommunications;
-import nsusbloader.NSLMain;
-import nsusbloader.ServiceWindow;
 import nsusbloader.USB.UsbCommunications;
 
 import java.io.File;
@@ -140,7 +139,28 @@ public class NSLMainController implements Initializable {
         this.switchThemeBtn.setOnAction(e->switchTheme());
 
         previouslyOpenedPath = AppPreferences.getInstance().getRecent();
+
+        if (AppPreferences.getInstance().getAutoCheckUpdates()){
+            Task<List<String>> updTask = new UpdatesChecker();
+            updTask.setOnSucceeded(event->{
+                List<String> result = updTask.getValue();
+                if (result != null){
+                    if (!result.get(0).isEmpty())
+                        SettingsTabController.setNewVersionLink(result.get(0));
+                        ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionAval"), resourceBundle.getString("windowTitleNewVersionAval")+": "+result.get(0) + "\n\n" + result.get(1));
+                }
+                else
+                    ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionUnknown"), resourceBundle.getString("windowBodyNewVersionUnknown"));
+            });
+            Thread updates = new Thread(updTask);
+            updates.setDaemon(true);
+            updates.start();
+        }
     }
+    /**
+     * Provide hostServices to Settings tab
+     * */
+    public void setHostServices(HostServices hs ){ SettingsTabController.registerHostServices(hs);}
     /**
      * Changes UI theme on the go
      * */
@@ -329,7 +349,8 @@ public class NSLMainController implements Initializable {
                 SettingsTabController.getNotServeSelected(),
                 SettingsTabController.getHostIp(),
                 SettingsTabController.getHostPort(),
-                SettingsTabController.getHostExtra()
+                SettingsTabController.getHostExtra(),
+                SettingsTabController.getAutoCheckForUpdates()
         );
     }
 }

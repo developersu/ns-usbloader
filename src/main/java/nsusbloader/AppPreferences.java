@@ -22,7 +22,8 @@ public class AppPreferences {
             boolean NotServe,
             String HostIp,
             String HostPort,
-            String HostExtra
+            String HostExtra,
+            boolean autoCheck4Updates
             ){
         setProtocol(Protocol);
         setRecent(PreviouslyOpened);
@@ -36,6 +37,7 @@ public class AppPreferences {
         setHostIp(HostIp);
         setHostPort(HostPort);
         setHostExtra(HostExtra);
+        setAutoCheckUpdates(autoCheck4Updates);
     }
     public String getTheme(){
         String theme = preferences.get("THEME", "/res/app_dark.css");           // Don't let user to change settings manually
@@ -95,4 +97,7 @@ public class AppPreferences {
 
     public String getHostExtra(){ return preferences.get("HOSTEXTRA", "").replaceAll("(\\s)|(\t)", "");}    // oh just shut up...
     public void setHostExtra(String postfix){preferences.put("HOSTEXTRA", postfix);}
+
+    public boolean getAutoCheckUpdates(){return preferences.getBoolean("AUTOCHECK4UPDATES", false); }
+    public void setAutoCheckUpdates(boolean prop){preferences.putBoolean("AUTOCHECK4UPDATES", prop); }
 }

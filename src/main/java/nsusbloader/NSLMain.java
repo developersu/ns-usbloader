@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
-    public static final String appVersion = "v0.3";
+    public static final String appVersion = "v0.3.1";
     @Override
     public void start(Stage primaryStage) throws Exception{
 
@@ -48,6 +48,7 @@ public class NSLMain extends Application {
         });
 
         NSLMainController controller = loader.getController();
+        controller.setHostServices(getHostServices());
         primaryStage.setOnHidden(e-> controller.exit());
     }
 

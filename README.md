@@ -35,8 +35,6 @@ Double-click on downloaded .jar file. Follow instructions. Or see 'Linux' sectio
 
 Set 'Security & Privacy' settings if needed.
 
-If you use different MacOS (not Mojave) - check release section for another JAR file.
-
 ##### Windows: 
 
 * Download Zadig: [https://zadig.akeo.ie/](https://zadig.akeo.ie/)
@@ -102,7 +100,9 @@ usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This shou
 
 ### Translators! Traductores! Übersetzer! Թարգմանիչներ!
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
-Upload somewhere (pastebin? google drive? whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add.
+Upload somewhere (pastebin? google drive? whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add. 
+
+NOTE: actually it's not gonna work in real, because we should stay in touch and I'll need you when add something that should be translated =(
 
 #### Thanks for great work done by our translater~~s team~~!
 
@@ -113,7 +113,7 @@ Français by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice)
 - [x] macOS QA v0.1  (Mojave)
 - [x] macOS QA v0.2.2 (Mojave)
 - [x] macOS QA v0.2.3-DEV (High Sierra)
-- [ ] macOS QA v0.3 (Mojave, High Sierra)
+- [x] macOS QA v0.3 (all)
 - [x] Windows support
 - [x] code refactoring
 - [x] GoldLeaf support
@@ -121,6 +121,8 @@ Français by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice)
 - [ ] File order sort (non-critical)
 - [ ] More deep file analyze before uploading.
 - [x] Network mode support for TinFoil
+- [x] 'Check for application updates' functionality
+
 
 #### Thanks
 Appreciate assistance and support of both Vitaliy and Konstantin. Without you all this magic would not have happened.
