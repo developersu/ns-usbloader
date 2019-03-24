@@ -2,30 +2,30 @@
 
 NS-USBloader is a PC-side TinFoil (USB and Network) and GoldLeaf (USB) NSP installer. Replacement for default **usb_install_pc.py**, **remote_install_pc.py** *(never ever use this. even if you brave. no idea why it works.)* and **GoldTree**.
 
-With GUI and cookies. Wokrs on Windows, macOS and Linux.
+With GUI and cookies. Works on Windows, macOS and Linux.
 
-Sometimes I add new posts [on my home page](https://developersu.blogspot.com/search/label/NS-USBloader) about this project.
+Sometimes I add new posts about this project [on my home page](https://developersu.blogspot.com/search/label/NS-USBloader).
 
 ![Screenshot](https://farm8.staticflickr.com/7809/46703921964_53f60f04ed_o.png)
 
 ### License
 
-Source code spreads under the GNU General Public License v.3. You can find it in LICENSE file.
+[GNU General Public License v3](https://github.com/developersu/ns-usbloader/blob/master/LICENSE)
 
-### Used libraries
+### Used libraries & resources
 * [OpenJFX](https://wiki.openjdk.java.net/display/OpenJFX/Main)
 * [usb4java](https://mvnrepository.com/artifact/org.usb4java/usb4java)
-* Few icons taken from: [materialdesignicons](http://materialdesignicons.com/)
+* Few icons taken from: [materialdesignicons.com](http://materialdesignicons.com/)
 
 ### System requirements
 
-JRE 8u60 or higher.
+JRE/JDK 8u60 or higher.
 
 ### Usage
 #### How to start it on..
 ##### Linux:
 
-1. Install JRE/JDK 8u60 or higher (openJDK is good. Oracle's one is also good). JavaFX not needed, if you're interested (it's embedded).
+1. Install JRE/JDK 8u60 or higher (openJDK is good. Oracle's one is also good). JavaFX not needed (it's embedded).
 
 2. `root # java -jar /path/to/NS-USBloader.jar`
 
@@ -57,7 +57,7 @@ Ok, I'm almost sure that this version has bugs. I don't remember where I downloa
 
 Let's rephrase, if you have working version of TinFoil **DO NOT** use this one. Ok. let's begin.
 
-There are three tabs. Firs one is main.
+There are three tabs. First one is main.
 
 ##### First tab.
 
@@ -77,9 +77,9 @@ Here you can configure settings for network file transmission. Usually you shoul
 
 That's where all logs dropped. Verbose information about transmissions comes here.
 
-Why when 'Net' once started it never ends?
+Why when 'NET' once started it never ends?
 
-Because there is HTTP server inside of application. It can't determine the moment when all transmissions finished (unless they failed). So you have to look on your NS screen and 'Interrupt' is once done.
+Because there is HTTP server inside of application. It can't determine the moment when all transmissions finishes (unless they failed). So you have to look on your NS screen and 'Interrupt' it once done.
 
 ### Tips&tricks
 #### Linux: Add user to 'udev' rules to use NS not-from-root-account
@@ -90,13 +90,13 @@ root # udevadm control --reload-rules && udevadm trigger
 ```
 
 ### Known bugs
-* Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't selected anything on NS). Also, sometimes, when network transmission started and nothing received from NS.
+* Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't select anything on NS). Sometimes this issue also appears when network transmission started and nothing received from NS.
 
-#### NOTES
-Table 'Status' = 'Uploaded' does not mean that file installed. It means that it has been sent to NS without any issues! That's what this app about. 
-Handling successful/failed installation is a purpose of the other side application (TinFoil/GoldLeaf). (And they don't provide any feedback interfaces so I can't detect success/failure.)
+### Other notes
+'Status' = 'Uploaded' that appears in the table does not mean that file has been installed. It means that it has been sent to NS without any issues! That's what this app about. 
+Handling successful/failed installation is a purpose of the other side application: TinFoil or GoldLeaf. And they don't provide any feedback interfaces so I can't detect success/failure.
 
-usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This shouldn't impact anyone except users of macOS High Sierra (and Sierra?) where previous versions of NS-USBloader didn't work. 
+usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This should not impact anyone except users of macOS High Sierra (and Sierra, and El Capitan) where previous versions of NS-USBloader didn't work. 
 
 ### Translators! Traductores! Übersetzer! Թարգմանիչներ!
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
@@ -104,7 +104,7 @@ Upload somewhere (pastebin? google drive? whatever else). [Create new issue](htt
 
 NOTE: actually it's not gonna work in real, because we should stay in touch and I'll need you when add something that should be translated =(
 
-#### Thanks for great work done by our translater~~s team~~!
+#### Thanks for great work done by our translator~~s team~~!
 
 Français by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 
 
@@ -113,7 +113,7 @@ Français by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice)
 - [x] macOS QA v0.1  (Mojave)
 - [x] macOS QA v0.2.2 (Mojave)
 - [x] macOS QA v0.2.3-DEV (High Sierra)
-- [x] macOS QA v0.3 (all)
+- [x] macOS QA v0.3
 - [x] Windows support
 - [x] code refactoring
 - [x] GoldLeaf support
