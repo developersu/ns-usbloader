@@ -45,7 +45,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         // Collect and encode NSP files list
         try {
             for (File nspFile : filesList)
-                nspMap.put(URLEncoder.encode(nspFile.getName(), "UTF-8"), nspFile);
+                nspMap.put(URLEncoder.encode(nspFile.getName(), "UTF-8").replaceAll("\\+", "%20"), nspFile); // replace + to %20
         }
         catch (UnsupportedEncodingException uee){
             isValid = false;
@@ -63,21 +63,24 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
                 socket.connect(InetAddress.getByName("8.8.8.8"), 10002);    // Google
                 hostIP = socket.getLocalAddress().getHostAddress();
                 socket.close();
-            } catch (SocketException | UnknownHostException e) {
+            }
+            catch (SocketException | UnknownHostException e) {
                 logPrinter.print("NET: Can't get your computer IP using Google DNS server. Returned:\n\t"+e.getMessage(), EMsgType.INFO);
                 try {
                     socket = new DatagramSocket();
                     socket.connect(InetAddress.getByName("193.0.14.129"), 10002);    // RIPE NCC
                     hostIP = socket.getLocalAddress().getHostAddress();
                     socket.close();
-                } catch (SocketException | UnknownHostException e1) {
+                }
+                catch (SocketException | UnknownHostException e1) {
                     logPrinter.print("NET: Can't get your computer IP using RIPE NCC root server. Returned:\n\t"+e1.getMessage(), EMsgType.INFO);
                     try {
                         socket = new DatagramSocket();
                         socket.connect(InetAddress.getByName("people.com.cn"), 10002);    // Renmin Ribao
                         hostIP = socket.getLocalAddress().getHostAddress();
                         socket.close();
-                    } catch (SocketException | UnknownHostException e2) {
+                    }
+                    catch (SocketException | UnknownHostException e2) {
                         logPrinter.print("NET: Can't get your computer IP using Renmin Ribao server. Returned:\n\t"+e2.getMessage(), EMsgType.FAIL);
                         logPrinter.print("Try using 'Expert mode' and set IP manually.", EMsgType.INFO);
                         try {
@@ -90,7 +93,8 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
                                     logPrinter.print("Check for: " + i.getHostAddress(), EMsgType.INFO);
                                 }
                             }
-                        } catch (SocketException socketException) {     // Good block.
+                        }
+                        catch (SocketException socketException) {     // Good block.
                             logPrinter.print("Can't determine possible variants. Returned:\n\t"+socketException.getMessage(), EMsgType.FAIL);
                         }
                         isValid = false;
@@ -107,33 +111,58 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         }
 
         // Get port
-        if (hostPortNum.isEmpty()) {
-            Random portRandomizer = new Random();
-            for (int i = 0; i < 5; i++) {
+        if (! doNotServeRequests) {
+            if (hostPortNum.isEmpty()) {
+                Random portRandomizer = new Random();
+                for (int i = 0; i < 5; i++) {
+                    try {
+                        this.hostPort = portRandomizer.nextInt(999) + 6000;
+                        serverSocket = new ServerSocket(hostPort);  //System.out.println(serverSocket.getInetAddress()); 0.0.0.0
+                        logPrinter.print("NET: Your port detected as: " + hostPort, EMsgType.PASS);
+                        break;
+                    }
+                    catch (IOException ioe) {
+                        if (i == 4) {
+                            logPrinter.print("NET: Can't find good port", EMsgType.FAIL);
+                            logPrinter.print("Try using 'Expert mode' and set port by yourself.", EMsgType.INFO);
+                            isValid = false;
+                            close(EFileStatus.FAILED);
+                            return;
+                        } else
+                            logPrinter.print("NET: Can't use port " + hostPort + "\nLooking for another one.", EMsgType.WARNING);
+                    }
+                }
+            } else {
                 try {
-                    this.hostPort = portRandomizer.nextInt(999) + 6000;
-                    serverSocket = new ServerSocket(hostPort);  //System.out.println(serverSocket.getInetAddress()); 0.0.0.0
-                    logPrinter.print("NET: Your port detected as: " + hostPort, EMsgType.PASS);
-                    break;
-                } catch (IOException ioe) {
-                    if (i == 4) {
-                        logPrinter.print("NET: Can't find good port", EMsgType.FAIL);
-                        logPrinter.print("Try using 'Expert mode' and set port by yourself.", EMsgType.INFO);
-                        isValid = false;
-                        close(EFileStatus.FAILED);
-                        return;
-                    } else
-                        logPrinter.print("NET: Can't use port " + hostPort + "\nLooking for another one.", EMsgType.WARNING);
+                    this.hostPort = Integer.parseInt(hostPortNum);
+                    serverSocket = new ServerSocket(hostPort);
+                    logPrinter.print("NET: Using defined port number: " + hostPort, EMsgType.PASS);
+                }
+                catch (NumberFormatException nfe) { // Literally never happens.
+                    logPrinter.print("NET: Can't use port defined in settings: " + hostPortNum + "\nIt's not a valid number!", EMsgType.FAIL);
+                    isValid = false;
+                    close(EFileStatus.FAILED);
+                    return;
+                }
+                catch (IOException ioex){
+                    logPrinter.print("NET: Can't use port defined in settings: " + hostPortNum + "\n\t"+ioex.getMessage(), EMsgType.FAIL);
+                    isValid = false;
+                    close(EFileStatus.FAILED);
+                    return;
                 }
             }
         }
         else {
-            try {
-                this.hostPort = Integer.parseInt(hostPortNum);
-                serverSocket = new ServerSocket(hostPort);
-                logPrinter.print("NET: Using defined port number: " + hostPort, EMsgType.PASS);
+            if (hostPortNum.isEmpty()){
+                logPrinter.print("NET: Port must be defined if 'Don't serve requests' option selected!", EMsgType.FAIL);
+                isValid = false;
+                close(EFileStatus.FAILED);
+                return;
             }
-            catch (NumberFormatException | IOException exeption){ // Literally never happens.
+            try {
+                 this.hostPort = Integer.parseInt(hostPortNum);
+            }
+            catch (NumberFormatException fex){
                 logPrinter.print("NET: Can't use port defined in settings: " + hostPortNum + "\nIt's not a valid number!", EMsgType.WARNING);
                 isValid = false;
                 close(EFileStatus.FAILED);
@@ -315,17 +344,54 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
      * Send files.
      * */
     private boolean writeToSocket(File file, long start, long end){
+        logPrinter.print("NET: Responding to requested range: "+start+"-"+end, EMsgType.INFO);
         currSockPW.write(NETPacket.getCode206(file.length(), start, end));
         currSockPW.flush();
         try{
-            long count = end - start;
+            long count = end - start + 1;
 
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
-            raf.seek(start);
-            for (int i=0; i <= count; i++)
-                currSockOS.write(raf.read());
-            currSockOS.flush();
-            raf.close();
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+            int readPice = 8388608;                     // = 8Mb
+            byte[] byteBuf;
+
+            if (bis.skip(start) != start){
+                logPrinter.print("NET: Unable to skip requested range.", EMsgType.FAIL);
+                logPrinter.update(file, EFileStatus.FAILED);
+                return true;
+            }
+            long currentOffset = 0;
+            while (currentOffset < count){
+                if (isCancelled())
+                    return true;
+                if ((currentOffset+readPice) >= count){
+                    readPice = Math.toIntExact(count - currentOffset);
+                }
+                byteBuf = new byte[readPice];
+
+                if (bis.read(byteBuf) != readPice){
+                    logPrinter.print("NET: Reading of file stream suddenly ended.", EMsgType.FAIL);
+                    return true;
+                }
+                currSockOS.write(byteBuf);
+                //-----------------------------------------/
+                try {
+                    logPrinter.updateProgress((currentOffset+readPice)/(count/100.0) / 100.0);
+                }catch (InterruptedException ie){
+                    getException().printStackTrace();               // TODO: Do something with this
+                }
+                //-----------------------------------------/
+                currentOffset += readPice;
+            }
+            currSockOS.flush();         // TODO: check if this really needed.
+            bis.close();
+            //-----------------------------------------/
+            try{
+                logPrinter.updateProgress(1.0);
+            }
+            catch (InterruptedException ie){
+                getException().printStackTrace();               // TODO: Do something with this
+            }
+            //-----------------------------------------/
         }
         catch (IOException ioe){
             logPrinter.print("NET: File transmission failed. Returned:\n\t"+ioe.getMessage(), EMsgType.FAIL);
@@ -341,8 +407,10 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         if (isCancelled())
             logPrinter.print("NET: Interrupted by user.", EMsgType.INFO);
         try {
-            serverSocket.close();
-            logPrinter.print("NET: Closing server socket.", EMsgType.PASS);
+            if (serverSocket != null) {
+                serverSocket.close();
+                logPrinter.print("NET: Closing server socket.", EMsgType.PASS);
+            }
         }
         catch (IOException | NullPointerException ioe){
             logPrinter.print("NET: Closing server socket failed. Sometimes it's not an issue.", EMsgType.WARNING);

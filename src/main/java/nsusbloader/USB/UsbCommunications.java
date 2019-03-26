@@ -359,7 +359,7 @@ public class UsbCommunications extends Task<Void> {
 
                 BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspMap.get(receivedRequestedNSP)));      // TODO: refactor?
                 byte[] bufferCurrent ;//= new byte[1048576];        // eq. Allocate 1mb
-                int bufferLength;
+
                 if (bufferedInStream.skip(receivedRangeOffset) != receivedRangeOffset){
                     logPrinter.print("TF Requested skip is out of file size. Nothing to transmit.", EMsgType.FAIL);
                     return false;
@@ -376,43 +376,35 @@ public class UsbCommunications extends Task<Void> {
                         readPice = Math.toIntExact(receivedRangeSize - currentOffset);
                     //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // TODO: NOTE: DEBUG
                     // updating progress bar (if a lot of data requested) START BLOCK
-                    if (isProgessBarInitiated){
-                        try {
-                            if (currentOffset+readPice == receivedRangeOffset){
-                                logPrinter.updateProgress(1.0);
-                                isProgessBarInitiated = false;
-                            }
-                            else
-                                logPrinter.updateProgress((currentOffset+readPice)/(receivedRangeSize/100.0) / 100.0);
-                        }catch (InterruptedException ie){
-                            getException().printStackTrace();               // TODO: Do something with this
-                        }
+                    //-----------------------------------------/
+                    try {
+                        logPrinter.updateProgress((currentOffset+readPice)/(receivedRangeSize/100.0) / 100.0);
+                    }catch (InterruptedException ie){
+                        getException().printStackTrace();               // TODO: Do something with this
                     }
-                    else {
-                        if ((readPice == 8388608) && (currentOffset == 0))
-                            isProgessBarInitiated = true;
-                    }
-                    // updating progress bar if needed END BLOCK
-
+                    //-----------------------------------------/
                     bufferCurrent = new byte[readPice];                                                         // TODO: not perfect moment, consider refactoring.
 
-                    bufferLength = bufferedInStream.read(bufferCurrent);
-
-                    if (bufferLength != -1){
-                        //write to USB
-                        if (!writeToUsb(bufferCurrent)) {
-                            logPrinter.print("TF Failure during NSP transmission.", EMsgType.FAIL);
-                            return false;
-                        }
-                        currentOffset += readPice;
-                    }
-                    else {
+                    if (bufferedInStream.read(bufferCurrent) != readPice) {                                      // changed since @ v0.3.2
                         logPrinter.print("TF Reading of stream suddenly ended.", EMsgType.WARNING);
                         return false;
                     }
-
+                    //write to USB
+                    if (!writeToUsb(bufferCurrent)) {
+                        logPrinter.print("TF Failure during NSP transmission.", EMsgType.FAIL);
+                        return false;
+                    }
+                    currentOffset += readPice;
                 }
                 bufferedInStream.close();
+                //-----------------------------------------/
+                try{
+                    logPrinter.updateProgress(1.0);
+                }
+                catch (InterruptedException ie){
+                    getException().printStackTrace();               // TODO: Do something with this
+                }
+                //-----------------------------------------/
             } catch (FileNotFoundException fnfe){
                 logPrinter.print("TF FileNotFoundException:\n  "+fnfe.getMessage(), EMsgType.FAIL);
                 fnfe.printStackTrace();
@@ -422,7 +414,7 @@ public class UsbCommunications extends Task<Void> {
                 ioe.printStackTrace();
                 return false;
             } catch (ArithmeticException ae){
-                logPrinter.print("TF ArithmeticException (can't cast end offset minus current to 'integer'):\n  "+ae.getMessage(), EMsgType.FAIL);
+                logPrinter.print("TF ArithmeticException (can't cast 'offset end' - 'offsets current' to 'integer'):\n  "+ae.getMessage(), EMsgType.FAIL);
                 ae.printStackTrace();
                 return false;
             }
@@ -653,26 +645,23 @@ public class UsbCommunications extends Task<Void> {
                     if (!writeToUsb(readBuf))
                         return false;
                     //-----------------------------------------/
-                    if (isProgessBarInitiated){
-                        try {
-                            if (readFrom+readPice == realNcaSize){
-                                logPrinter.updateProgress(1.0);
-                                isProgessBarInitiated = false;
-                            }
-                            else
-                                logPrinter.updateProgress((readFrom+readPice)/(realNcaSize/100.0) / 100.0);
-                        }catch (InterruptedException ie){
-                            getException().printStackTrace();               // TODO: Do something with this
-                        }
-                    }
-                    else {
-                        if ((readPice == 8388608) && (readFrom == 0))
-                            isProgessBarInitiated = true;
+                    try {
+                        logPrinter.updateProgress((readFrom+readPice)/(realNcaSize/100.0) / 100.0);
+                    }catch (InterruptedException ie){
+                        getException().printStackTrace();               // TODO: Do something with this
                     }
                     //-----------------------------------------/
                     readFrom += readPice;
                 }
                 bufferedInStream.close();
+                //-----------------------------------------/
+                try{
+                    logPrinter.updateProgress(1.0);
+                }
+                catch (InterruptedException ie){
+                    getException().printStackTrace();               // TODO: Do something with this
+                }
+                //-----------------------------------------/
             }
             catch (IOException ioe){
                 logPrinter.print("  Failed to read NCA ID "+requestedNcaID+". IO Exception:\n  "+ioe.getMessage(), EMsgType.FAIL);

@@ -44,7 +44,7 @@ Set 'Security & Privacy' settings if needed.
 * Click 'Options' and select 'List All Devices'
 * Select NS in dropdown, select 'libusbK (v3.0.7.0)' (version may vary), click 'Install WCID Driver'
 * Check that in device list of you system you have 'libusbK USB Devices' folder and your NS inside of it
-* Download and install Java JRE (8+)
+* Download and install Java JRE (8u60 or higher)
 * Get this application (JAR file) double-click on on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
 * Remember to have fun!
 
@@ -71,7 +71,9 @@ There you can select checkbox for files that will be send to application (TF/GL)
 
 ##### Second tab.
 
-Here you can configure settings for network file transmission. Usually you shouldn't change anything. But it you're cool hacker, go ahead! The most interesting option here is 'Don't serve requests'. Architecture of the TinFoil networking is working interesting way. When you select in TF network NSP transfer, application will wait at port 2000 for the information about where should it take files from. Like '192.168.1.5:6060/my_file.nsp'. Usually NS-USBloader serves requests by implementing simplified HTTP server and bringing it up and so on. But if this option selected, you can define path to remote location of the files. For example if you set in settings 'shared.lan:80/ROMS/NS/' and add in table file 'my file.nsp' then NS-USBloader will simply tell TinFoil "Hey, go take files from 'shared.lan:80/ROMS/NS/my+file.nsp' ". Of course you have to bring 'shared.lan' host up and make file accessible from such address. All this requires more investigation. BTW, the issue could be that NS-USBloader encodes 'space' char as '+' and some web-servers understand 'space' as '%20D'. It could be fixed in later versions of NS-USBloader if I go deeper in it or you leave me feedback with information/request. As I said, this feature is interesting, but I guess won't be popular.
+Here you can configure settings for network file transmission. Usually you shouldn't change anything. But it you're cool hacker, go ahead! The most interesting option here is 'Don't serve requests'. Architecture of the TinFoil's NET part is working interesting way. When you select in TF network NSP transfer, application will wait at port 2000 for the information about where should it take files from. Like '192.168.1.5:6060/my file.nsp'. Usually NS-USBloader serves requests by implementing simplified HTTP server and bringing it up and so on. But if this option selected, you can define path to remote location of the files. For example if you set in settings '192.168.4.2:80/ROMS/NS/' and add in table file 'my file.nsp' then NS-USBloader will simply tell TinFoil "Hey, go take files from '192.168.4.2:80/ROMS/NS/my%20file.nsp' ". Of course you have to bring '192.168.4.2' host up and make file accessible from such address (just go install nginx). As I said, this feature is interesting, but I guess won't be popular.
+
+Also here you can check 'Auto-check for updates' or click button to verify if new version released or not.
 
 ##### Third tab.
 
