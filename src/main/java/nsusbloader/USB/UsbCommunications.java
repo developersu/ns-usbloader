@@ -4,6 +4,7 @@ import javafx.concurrent.Task;
 import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
+import nsusbloader.RainbowHexDump;
 import nsusbloader.USB.PFS.PFSProvider;
 import org.usb4java.*;
 
@@ -456,15 +457,16 @@ public class UsbCommunications extends Task<Void> {
      * */
     private class GoldLeaf{
         //                     CMD                                G     L     U     C     ID    0     0     0
-        private final byte[] CMD_ConnectionRequest =  new byte[]{0x47, 0x4c, 0x55, 0x43, 0x00, 0x00, 0x00, 0x00};    // Write-only command
-        private final byte[] CMD_NSPName =            new byte[]{0x47, 0x4c, 0x55, 0x43, 0x02, 0x00, 0x00, 0x00};    // Write-only command
-        private final byte[] CMD_NSPData =            new byte[]{0x47, 0x4c, 0x55, 0x43, 0x04, 0x00, 0x00, 0x00};    // Write-only command
+        private final byte[] CMD_GLUC =               new byte[]{0x47, 0x4c, 0x55, 0x43};
+        private final byte[] CMD_ConnectionRequest =  new byte[]{0x00, 0x00, 0x00, 0x00};    // Write-only command
+        private final byte[] CMD_NSPName =            new byte[]{0x02, 0x00, 0x00, 0x00};    // Write-only command
+        private final byte[] CMD_NSPData =            new byte[]{0x04, 0x00, 0x00, 0x00};    // Write-only command
 
-        private final byte[] CMD_ConnectionResponse = new byte[]{0x47, 0x4c, 0x55, 0x43, 0x01, 0x00, 0x00, 0x00};
-        private final byte[] CMD_Start =              new byte[]{0x47, 0x4c, 0x55, 0x43, 0x03, 0x00, 0x00, 0x00};
-        private final byte[] CMD_NSPContent =         new byte[]{0x47, 0x4c, 0x55, 0x43, 0x05, 0x00, 0x00, 0x00};
-        private final byte[] CMD_NSPTicket =          new byte[]{0x47, 0x4c, 0x55, 0x43, 0x06, 0x00, 0x00, 0x00};
-        private final byte[] CMD_Finish =             new byte[]{0x47, 0x4c, 0x55, 0x43, 0x07, 0x00, 0x00, 0x00};
+        private final byte[] CMD_ConnectionResponse = new byte[]{0x01, 0x00, 0x00, 0x00};
+        private final byte[] CMD_Start =              new byte[]{0x03, 0x00, 0x00, 0x00};
+        private final byte[] CMD_NSPContent =         new byte[]{0x05, 0x00, 0x00, 0x00};
+        private final byte[] CMD_NSPTicket =          new byte[]{0x06, 0x00, 0x00, 0x00};
+        private final byte[] CMD_Finish =             new byte[]{0x07, 0x00, 0x00, 0x00};
 
         GoldLeaf(){
             logPrinter.print("===========================================================================", EMsgType.INFO);
@@ -484,44 +486,54 @@ public class UsbCommunications extends Task<Void> {
             byte[] readByte;
 
             // Go connect to GoldLeaf
-            if (writeToUsb(CMD_ConnectionRequest))
-                logPrinter.print("GL Initiating GoldLeaf connection", EMsgType.PASS);
+            if (writeToUsb(CMD_GLUC))
+                logPrinter.print("GL Initiating GoldLeaf connection: 1/2", EMsgType.PASS);
             else {
-                logPrinter.print("GL Initiating GoldLeaf connection", EMsgType.FAIL);
+                logPrinter.print("GL Initiating GoldLeaf connection: 1/2", EMsgType.FAIL);
+                return false;
+            }
+            if (writeToUsb(CMD_ConnectionRequest))
+                logPrinter.print("GL Initiating GoldLeaf connection: 2/2", EMsgType.PASS);
+            else {
+                logPrinter.print("GL Initiating GoldLeaf connection: 2/2", EMsgType.FAIL);
                 return false;
             }
             while (true) {
                 readByte = readFromUsb();
                 if (readByte == null)
                     return false;
-
-                if (Arrays.equals(readByte, CMD_ConnectionResponse)) {
-                    if (!handleConnectionResponse(pfsElement))
+                if (Arrays.equals(readByte, CMD_GLUC)) {
+                    readByte = readFromUsb();
+                    if (readByte == null)
                         return false;
-                    else
-                        continue;
-                }
-                if (Arrays.equals(readByte, CMD_Start)) {
-                    if (!handleStart(pfsElement))
-                        return false;
-                    else
-                        continue;
-                }
-                if (Arrays.equals(readByte, CMD_NSPContent)) {
-                    if (!handleNSPContent(pfsElement, true))
-                        return false;
-                    else
-                        continue;
-                }
-                if (Arrays.equals(readByte, CMD_NSPTicket)) {
-                    if (!handleNSPContent(pfsElement, false))
-                        return false;
-                    else
-                        continue;
-                }
-                if (Arrays.equals(readByte, CMD_Finish)) {
-                    logPrinter.print("GL Closing GoldLeaf connection: Transfer successful.", EMsgType.PASS);
-                    break;
+                    if (Arrays.equals(readByte, CMD_ConnectionResponse)) {
+                        if (!handleConnectionResponse(pfsElement))
+                            return false;
+                        else
+                            continue;
+                    }
+                    if (Arrays.equals(readByte, CMD_Start)) {
+                        if (!handleStart(pfsElement))
+                            return false;
+                        else
+                            continue;
+                    }
+                    if (Arrays.equals(readByte, CMD_NSPContent)) {
+                        if (!handleNSPContent(pfsElement, true))
+                            return false;
+                        else
+                            continue;
+                    }
+                    if (Arrays.equals(readByte, CMD_NSPTicket)) {
+                        if (!handleNSPContent(pfsElement, false))
+                            return false;
+                        else
+                            continue;
+                    }
+                    if (Arrays.equals(readByte, CMD_Finish)) {
+                        logPrinter.print("GL Closing GoldLeaf connection: Transfer successful.", EMsgType.PASS);
+                        break;
+                    }
                 }
             }
             return true;
@@ -531,23 +543,28 @@ public class UsbCommunications extends Task<Void> {
          * */
         private boolean handleConnectionResponse(PFSProvider pfsElement){
             logPrinter.print("GL 'ConnectionResponse' command:", EMsgType.INFO);
-            if (!writeToUsb(CMD_NSPName)) {
-                logPrinter.print("  [1/3]", EMsgType.FAIL);
+            if (!writeToUsb(CMD_GLUC)) {
+                logPrinter.print("  [1/4]", EMsgType.FAIL);
                 return false;
             }
-            logPrinter.print("  [1/3]", EMsgType.PASS);
+            logPrinter.print("  [1/4]", EMsgType.PASS);
+            if (!writeToUsb(CMD_NSPName)) {
+                logPrinter.print("  [2/4]", EMsgType.FAIL);
+                return false;
+            }
+            logPrinter.print("  [2/4]", EMsgType.PASS);
 
             if (!writeToUsb(pfsElement.getBytesNspFileNameLength())) {
-                logPrinter.print("  [2/3]", EMsgType.FAIL);
+                logPrinter.print("  [3/4]", EMsgType.FAIL);
                 return false;
             }
-            logPrinter.print("  [2/3]", EMsgType.PASS);
+            logPrinter.print("  [3/4]", EMsgType.PASS);
 
             if (!writeToUsb(pfsElement.getBytesNspFileName())) {
-                logPrinter.print("  [3/3]", EMsgType.FAIL);
+                logPrinter.print("  [4/4]", EMsgType.FAIL);
                 return false;
             }
-            logPrinter.print("  [3/3]", EMsgType.PASS);
+            logPrinter.print("  [4/4]", EMsgType.PASS);
 
             return true;
         }
@@ -556,6 +573,12 @@ public class UsbCommunications extends Task<Void> {
          * */
         private boolean handleStart(PFSProvider pfsElement){
             logPrinter.print("GL Handle 'Start' command:", EMsgType.INFO);
+            if (!writeToUsb(CMD_GLUC)) {
+                logPrinter.print("  [Send command prepare]", EMsgType.FAIL);
+                return false;
+            }
+            logPrinter.print("  [Send command prepare]", EMsgType.PASS);
+
             if (!writeToUsb(CMD_NSPData)) {
                 logPrinter.print("  [Send command]", EMsgType.FAIL);
                 return false;
@@ -602,7 +625,7 @@ public class UsbCommunications extends Task<Void> {
          * */
         private boolean handleNSPContent(PFSProvider pfsElement, boolean isItRawRequest){
             int requestedNcaID;
-            boolean isProgessBarInitiated = false;
+
             if (isItRawRequest) {
                 logPrinter.print("GL Handle 'Content' command", EMsgType.INFO);
                 byte[] readByte = readFromUsb();

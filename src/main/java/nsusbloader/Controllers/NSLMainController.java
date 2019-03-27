@@ -91,6 +91,7 @@ public class NSLMainController implements Initializable {
             tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem());
             if (choiceProtocol.getSelectionModel().getSelectedItem().equals("GoldLeaf")) {
                 choiceNetUsb.setDisable(true);
+                choiceNetUsb.getSelectionModel().select("USB");
                 nsIpLbl.setVisible(false);
                 nsIpTextField.setVisible(false);
             }
@@ -109,6 +110,7 @@ public class NSLMainController implements Initializable {
         choiceNetUsb.getSelectionModel().select(AppPreferences.getInstance().getNetUsb());
         if (choiceProtocol.getSelectionModel().getSelectedItem().equals("GoldLeaf")) {
             choiceNetUsb.setDisable(true);
+            choiceNetUsb.getSelectionModel().select("USB");
         }
         choiceNetUsb.setOnAction(e->{
             if (choiceNetUsb.getSelectionModel().getSelectedItem().equals("NET")){
