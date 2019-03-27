@@ -147,9 +147,10 @@ public class NSLMainController implements Initializable {
             updTask.setOnSucceeded(event->{
                 List<String> result = updTask.getValue();
                 if (result != null){
-                    if (!result.get(0).isEmpty())
+                    if (!result.get(0).isEmpty()) {
                         SettingsTabController.setNewVersionLink(result.get(0));
-                        ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionAval"), resourceBundle.getString("windowTitleNewVersionAval")+": "+result.get(0) + "\n\n" + result.get(1));
+                        ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionAval"), resourceBundle.getString("windowTitleNewVersionAval") + ": " + result.get(0) + "\n\n" + result.get(1));
+                    }
                 }
                 else
                     ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionUnknown"), resourceBundle.getString("windowBodyNewVersionUnknown"));
