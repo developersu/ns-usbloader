@@ -456,7 +456,7 @@ public class UsbCommunications extends Task<Void> {
      * GoldLeaf processing
      * */
     private class GoldLeaf{
-        //                     CMD                                G     L     U     C     ID    0     0     0
+        //                     CMD                                G     L     U     C
         private final byte[] CMD_GLUC =               new byte[]{0x47, 0x4c, 0x55, 0x43};
         private final byte[] CMD_ConnectionRequest =  new byte[]{0x00, 0x00, 0x00, 0x00};    // Write-only command
         private final byte[] CMD_NSPName =            new byte[]{0x02, 0x00, 0x00, 0x00};    // Write-only command

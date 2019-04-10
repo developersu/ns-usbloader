@@ -33,7 +33,7 @@ public class MessagesConsumer extends AnimationTimer {
         this.progressBar = MediatorControl.getInstance().getContoller().progressBar;
 
         this.statusMap = statusMap;
-        this.tableViewController = MediatorControl.getInstance().getContoller().tableFilesListController;
+        this.tableViewController = MediatorControl.getInstance().getContoller().FrontTabController.tableFilesListController;
 
         progressBar.setProgress(0.0);
 
