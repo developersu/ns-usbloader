@@ -1,15 +1,12 @@
 package nsusbloader.Controllers;
 
 import javafx.application.HostServices;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import nsusbloader.*;
@@ -36,22 +33,11 @@ public class NSLMainController implements Initializable {
     private Region btnUpStopImage;
     @FXML
     public ProgressBar progressBar;            // Accessible from Mediator
-    @FXML
-    private ChoiceBox<String> choiceProtocol, choiceNetUsb;
-    @FXML
-    private Button switchThemeBtn;
 
-    @FXML
-    private Pane specialPane;
-
-    @FXML
-    public NSTableViewController tableFilesListController;            // Accessible from Mediator
     @FXML
     private SettingsController SettingsTabController;
     @FXML
-    private TextField nsIpTextField;
-    @FXML
-    private Label nsIpLbl;
+    public FrontController FrontTabController;             // Accessible from Mediator | todo: incapsulate
 
     private Task<Void> usbNetCommunications;
     private Thread workThread;
@@ -70,8 +56,6 @@ public class NSLMainController implements Initializable {
 
         MediatorControl.getInstance().setController(this);
 
-        specialPane.getStyleClass().add("special-pane-as-border");  // UI hacks
-
         uploadStopBtn.setDisable(true);
         selectNspBtn.setOnAction(e->{ selectFilesBtnAction(); });
         uploadStopBtn.setOnAction(e->{ uploadBtnAction(); });
@@ -80,67 +64,11 @@ public class NSLMainController implements Initializable {
 
         this.btnUpStopImage = new Region();
         btnUpStopImage.getStyleClass().add("regionUpload");
-        //uploadStopBtn.getStyleClass().remove("button");
+        
         uploadStopBtn.getStyleClass().add("buttonUp");
         uploadStopBtn.setGraphic(btnUpStopImage);
 
-        ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "GoldLeaf");
-        choiceProtocol.setItems(choiceProtocolList);
-        choiceProtocol.getSelectionModel().select(AppPreferences.getInstance().getProtocol());
-        choiceProtocol.setOnAction(e-> {
-            tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem());
-            if (choiceProtocol.getSelectionModel().getSelectedItem().equals("GoldLeaf")) {
-                choiceNetUsb.setDisable(true);
-                choiceNetUsb.getSelectionModel().select("USB");
-                nsIpLbl.setVisible(false);
-                nsIpTextField.setVisible(false);
-            }
-            else {
-                choiceNetUsb.setDisable(false);
-                if (choiceNetUsb.getSelectionModel().getSelectedItem().equals("NET")) {
-                    nsIpLbl.setVisible(true);
-                    nsIpTextField.setVisible(true);
-                }
-            }
-        });  // Add listener to notify tableView controller
-        tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem());   // Notify tableView controller
-
-        ObservableList<String> choiceNetUsbList = FXCollections.observableArrayList("USB", "NET");
-        choiceNetUsb.setItems(choiceNetUsbList);
-        choiceNetUsb.getSelectionModel().select(AppPreferences.getInstance().getNetUsb());
-        if (choiceProtocol.getSelectionModel().getSelectedItem().equals("GoldLeaf")) {
-            choiceNetUsb.setDisable(true);
-            choiceNetUsb.getSelectionModel().select("USB");
-        }
-        choiceNetUsb.setOnAction(e->{
-            if (choiceNetUsb.getSelectionModel().getSelectedItem().equals("NET")){
-                nsIpLbl.setVisible(true);
-                nsIpTextField.setVisible(true);
-            }
-            else{
-                nsIpLbl.setVisible(false);
-                nsIpTextField.setVisible(false);
-            }
-        });
-        nsIpTextField.setText(AppPreferences.getInstance().getNsIp());
-        if (choiceProtocol.getSelectionModel().getSelectedItem().equals("TinFoil") && choiceNetUsb.getSelectionModel().getSelectedItem().equals("NET")){
-            nsIpLbl.setVisible(true);
-            nsIpTextField.setVisible(true);
-        }
-        nsIpTextField.setTextFormatter(new TextFormatter<>(change -> {
-            if (change.getControlNewText().contains(" ") | change.getControlNewText().contains("\t"))
-                return null;
-            else
-                return change;
-        }));
-        this.previouslyOpenedPath = null;
-
-        Region btnSwitchImage = new Region();
-        btnSwitchImage.getStyleClass().add("regionLamp");
-        switchThemeBtn.setGraphic(btnSwitchImage);
-        this.switchThemeBtn.setOnAction(e->switchTheme());
-
-        previouslyOpenedPath = AppPreferences.getInstance().getRecent();
+        this.previouslyOpenedPath = AppPreferences.getInstance().getRecent();
 
         if (AppPreferences.getInstance().getAutoCheckUpdates()){
             Task<List<String>> updTask = new UpdatesChecker();
@@ -164,20 +92,7 @@ public class NSLMainController implements Initializable {
      * Provide hostServices to Settings tab
      * */
     public void setHostServices(HostServices hs ){ SettingsTabController.registerHostServices(hs);}
-    /**
-     * Changes UI theme on the go
-     * */
-    private void switchTheme(){
-        if (switchThemeBtn.getScene().getStylesheets().get(0).equals("/res/app_dark.css")) {
-            switchThemeBtn.getScene().getStylesheets().remove("/res/app_dark.css");
-            switchThemeBtn.getScene().getStylesheets().add("/res/app_light.css");
-        }
-        else {
-            switchThemeBtn.getScene().getStylesheets().remove("/res/app_light.css");
-            switchThemeBtn.getScene().getStylesheets().add("/res/app_dark.css");
-        }
-        AppPreferences.getInstance().setTheme(switchThemeBtn.getScene().getStylesheets().get(0));
-    }
+
     /**
      * Functionality for selecting NSP button.
      * Uses setReady and setNotReady to simplify code readability.
@@ -189,15 +104,15 @@ public class NSLMainController implements Initializable {
 
         File validator = new File(previouslyOpenedPath);
         if (validator.exists())
-            fileChooser.setInitialDirectory(validator);         // TODO: read from prefs
+            fileChooser.setInitialDirectory(validator);
         else
-            fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));         // TODO: read from prefs
+            fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
 
         filesList = fileChooser.showOpenMultipleDialog(logArea.getScene().getWindow());
         if (filesList != null && !filesList.isEmpty()) {
-            tableFilesListController.setFiles(filesList);
+            FrontTabController.tableFilesListController.setFiles(filesList);
             uploadStopBtn.setDisable(false);
             previouslyOpenedPath = filesList.get(0).getParent();
         }
@@ -209,7 +124,7 @@ public class NSLMainController implements Initializable {
         if ((workThread == null || !workThread.isAlive())){
             // Collect files
             List<File> nspToUpload;
-            if ((nspToUpload = tableFilesListController.getFilesForUpload()) == null) {
+            if ((nspToUpload = FrontTabController.tableFilesListController.getFilesForUpload()) == null) {
                 logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
                 return;
             }
@@ -219,23 +134,23 @@ public class NSLMainController implements Initializable {
                     logArea.appendText("  "+item.getAbsolutePath()+"\n");
             }
             // If USB selected
-            if (choiceProtocol.getSelectionModel().getSelectedItem().equals("GoldLeaf") ||
+            if (FrontTabController.getSelectedProtocol().equals("GoldLeaf") ||
                     (
-                    choiceProtocol.getSelectionModel().getSelectedItem().equals("TinFoil")
-                    && choiceNetUsb.getSelectionModel().getSelectedItem().equals("USB")
+                    FrontTabController.getSelectedProtocol().equals("TinFoil")
+                    && FrontTabController.getSelectedNetUsb().equals("USB")
                     )
             ){
-                usbNetCommunications = new UsbCommunications(nspToUpload, choiceProtocol.getSelectionModel().getSelectedItem());
+                usbNetCommunications = new UsbCommunications(nspToUpload, FrontTabController.getSelectedProtocol());
                 workThread = new Thread(usbNetCommunications);
                 workThread.setDaemon(true);
                 workThread.start();
             }
             else {      // NET INSTALL OVER TINFOIL
-                if (SettingsTabController.isNsIpValidate() && !nsIpTextField.getText().matches("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"))
+                if (SettingsTabController.isNsIpValidate() && ! FrontTabController.getNsIp().matches("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"))
                     if (!ServiceWindow.getConfirmationWindow(resourceBundle.getString("windowTitleBadIp"),resourceBundle.getString("windowBodyBadIp")))
                         return;
 
-                String nsIP = nsIpTextField.getText();
+                String nsIP = FrontTabController.getNsIp();
 
                 if (!SettingsTabController.getExpertModeSelected())
                     usbNetCommunications = new NETCommunications(nspToUpload, nsIP, false, "", "", "");
@@ -261,7 +176,7 @@ public class NSLMainController implements Initializable {
      * */
     private void stopBtnAction(){
         if (workThread != null && workThread.isAlive()){
-            usbNetCommunications.cancel(false);            // TODO: add something abstract to use also for network
+            usbNetCommunications.cancel(false);
         }
     }
     /**
@@ -332,19 +247,19 @@ public class NSLMainController implements Initializable {
             se.printStackTrace();
         }
         if (!filesDropped.isEmpty())
-            tableFilesListController.setFiles(filesDropped);
+            FrontTabController.tableFilesListController.setFiles(filesDropped);
 
         event.setDropCompleted(true);
     }
     /**
      * Save preferences before exit
      * */
-    public void exit(){ // TODO: add method to set all in AppPreferences
+    public void exit(){
         AppPreferences.getInstance().setAll(
-                choiceProtocol.getSelectionModel().getSelectedItem(),
+                FrontTabController.getSelectedProtocol(),
                 previouslyOpenedPath,
-                choiceNetUsb.getSelectionModel().getSelectedItem(),
-                nsIpTextField.getText().trim(),
+                FrontTabController.getSelectedNetUsb(),
+                FrontTabController.getNsIp(),
                 SettingsTabController.isNsIpValidate(),
                 SettingsTabController.getExpertModeSelected(),
                 SettingsTabController.getAutoIpSelected(),

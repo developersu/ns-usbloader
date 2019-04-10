@@ -50,8 +50,14 @@ public class UpdatesChecker extends Task<List<String>> {
             return null;
         }
 
+        String currentVersion;
+        if (NSLMain.appVersion.matches("^v(([0-9])+?\\.)+[0-9]+(-.+)$"))        // if current version have postfix like v0.1-Experimental
+            currentVersion = NSLMain.appVersion.replaceAll("(-.*$)", "");       // cut postfix
+        else
+            currentVersion = NSLMain.appVersion;
+
         List<String> returningValue = new ArrayList<>();
-        if (!newVersion.equals(NSLMain.appVersion)) {                     //  if latest noted version in GitHub is different to this version
+        if (!newVersion.equals(currentVersion)) {                     //  if latest noted version in GitHub is different to this version
             returningValue.add(newVersion);
             returningValue.add(changeLog);
             return returningValue;
