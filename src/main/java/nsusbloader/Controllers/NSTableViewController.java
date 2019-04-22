@@ -25,6 +25,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.ResourceBundle;
 
 public class NSTableViewController implements Initializable {
@@ -259,9 +260,16 @@ public class NSTableViewController implements Initializable {
                 model.setMarkForUpload(true);
         }
         else {
-            for (NSLRowModel model: rowsObsLst)
-                model.setMarkForUpload(false);
-            rowsObsLst.get(0).setMarkForUpload(true);
+            ListIterator<NSLRowModel> iterator = rowsObsLst.listIterator();
+            while (iterator.hasNext()){
+                NSLRowModel current = iterator.next();
+                if (current.getNspFileName().toLowerCase().endsWith("xci"))
+                    iterator.remove();
+                else
+                    current.setMarkForUpload(false);
+            }
+            if (!rowsObsLst.isEmpty())
+                rowsObsLst.get(0).setMarkForUpload(true);
         }
         table.refresh();
     }

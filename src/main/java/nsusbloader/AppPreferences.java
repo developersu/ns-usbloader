@@ -23,7 +23,8 @@ public class AppPreferences {
             String HostIp,
             String HostPort,
             String HostExtra,
-            boolean autoCheck4Updates
+            boolean autoCheck4Updates,
+            boolean tinfoilXciSupport
             ){
         setProtocol(Protocol);
         setRecent(PreviouslyOpened);
@@ -38,6 +39,7 @@ public class AppPreferences {
         setHostPort(HostPort);
         setHostExtra(HostExtra);
         setAutoCheckUpdates(autoCheck4Updates);
+        setTfXCI(tinfoilXciSupport);
     }
     public String getTheme(){
         String theme = preferences.get("THEME", "/res/app_dark.css");           // Don't let user to change settings manually
@@ -100,4 +102,7 @@ public class AppPreferences {
 
     public boolean getAutoCheckUpdates(){return preferences.getBoolean("AUTOCHECK4UPDATES", false); }
     public void setAutoCheckUpdates(boolean prop){preferences.putBoolean("AUTOCHECK4UPDATES", prop); }
+
+    public boolean getTfXCI(){return preferences.getBoolean("TF_XCI", false);}
+    public void setTfXCI(boolean prop){ preferences.putBoolean("TF_XCI", prop); }
 }

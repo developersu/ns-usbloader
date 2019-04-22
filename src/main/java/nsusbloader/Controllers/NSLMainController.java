@@ -108,8 +108,12 @@ public class NSLMainController implements Initializable {
         else
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
-
+        if (SettingsTabController.getTfXCISupport() && FrontTabController.getSelectedProtocol().equals("TinFoil")){
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI", "*.nsp", "*.xci"));
+        }
+        else
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
+        
         filesList = fileChooser.showOpenMultipleDialog(logArea.getScene().getWindow());
         if (filesList != null && !filesList.isEmpty()) {
             FrontTabController.tableFilesListController.setFiles(filesList);
@@ -234,13 +238,25 @@ public class NSLMainController implements Initializable {
         }
         List<File> filesDropped = new ArrayList<>();
         try {
-            for (File fileOrDir : event.getDragboard().getFiles()) {
-                if (fileOrDir.getName().toLowerCase().endsWith(".nsp"))
-                    filesDropped.add(fileOrDir);
-                else if (fileOrDir.isDirectory())
-                    for (File file : fileOrDir.listFiles())
-                        if (file.getName().toLowerCase().endsWith(".nsp"))
-                            filesDropped.add(file);
+            if (SettingsTabController.getTfXCISupport() && FrontTabController.getSelectedProtocol().equals("TinFoil")){
+                for (File fileOrDir : event.getDragboard().getFiles()) {
+                    if (fileOrDir.getName().toLowerCase().endsWith(".nsp") || fileOrDir.getName().toLowerCase().endsWith(".xci"))
+                        filesDropped.add(fileOrDir);
+                    else if (fileOrDir.isDirectory())
+                        for (File file : fileOrDir.listFiles())
+                            if (file.getName().toLowerCase().endsWith(".nsp") || file.getName().toLowerCase().endsWith(".xci"))
+                                filesDropped.add(file);
+                }
+            }
+            else {
+                for (File fileOrDir : event.getDragboard().getFiles()) {
+                    if (fileOrDir.getName().toLowerCase().endsWith(".nsp"))
+                        filesDropped.add(fileOrDir);
+                    else if (fileOrDir.isDirectory())
+                        for (File file : fileOrDir.listFiles())
+                            if (file.getName().toLowerCase().endsWith(".nsp"))
+                                filesDropped.add(file);
+                }
             }
         }
         catch (SecurityException se){
@@ -268,7 +284,8 @@ public class NSLMainController implements Initializable {
                 SettingsTabController.getHostIp(),
                 SettingsTabController.getHostPort(),
                 SettingsTabController.getHostExtra(),
-                SettingsTabController.getAutoCheckForUpdates()
+                SettingsTabController.getAutoCheckForUpdates(),
+                SettingsTabController.getTfXCISupport()
         );
     }
 }

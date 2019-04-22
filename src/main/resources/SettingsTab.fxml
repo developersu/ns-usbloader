@@ -84,9 +84,11 @@
                   <Button fx:id="checkForUpdBtn" mnemonicParsing="false" />
                </children>
             </HBox>
+            <CheckBox fx:id="tfXciSpprtCb" mnemonicParsing="false" text="%netTabAllowXciCb" />
+            <Label disable="true" text="%netTabAllowXciTextField" wrapText="true" />
          </children>
          <padding>
-            <Insets left="5.0" right="5.0" top="5.0" />
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
          </padding>
       </VBox>
    </children>

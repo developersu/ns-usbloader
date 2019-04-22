@@ -45,6 +45,8 @@ public class SettingsController implements Initializable {
     private Hyperlink newVersionLink;
     @FXML
     private Button checkForUpdBtn;
+    @FXML
+    private CheckBox tfXciSpprtCb;
 
     private HostServices hs;
 
@@ -176,6 +178,7 @@ public class SettingsController implements Initializable {
             updates.setDaemon(true);
             updates.start();
         });
+        tfXciSpprtCb.setSelected(AppPreferences.getInstance().getTfXCI());
     }
 
     public boolean getExpertModeSelected(){ return expertModeCb.isSelected(); }
@@ -189,6 +192,7 @@ public class SettingsController implements Initializable {
     public String getHostPort(){ return pcPortTextField.getText(); }
     public String getHostExtra(){ return pcExtraTextField.getText(); }
     public boolean getAutoCheckForUpdates(){ return autoCheckUpdCb.isSelected(); }
+    public boolean getTfXCISupport(){ return tfXciSpprtCb.isSelected(); }
 
     public void registerHostServices(HostServices hostServices){this.hs = hostServices;}
 
