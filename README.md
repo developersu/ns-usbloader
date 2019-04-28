@@ -1,6 +1,6 @@
 # NS-USBloader
 
-NS-USBloader is a PC-side TinFoil (USB and Network) and GoldLeaf (USB) NSP installer. Replacement for default **usb_install_pc.py**, **remote_install_pc.py** *(never ever use this. even if you brave. no idea why it works.)* and **GoldTree**.
+NS-USBloader is a PC-side **[Adubbz/TinFoil](https://github.com/Adubbz/Tinfoil/)** (version 0.2.1; USB and Network) and **GoldLeaf** (USB) NSP installer. Replacement for default **usb_install_pc.py**, **remote_install_pc.py** *(never ever use this. even if you brave. no idea why it works.)* and **GoldTree**.
 
 With GUI and cookies. Works on Windows, macOS and Linux.
 
@@ -44,7 +44,7 @@ Set 'Security & Privacy' settings if needed.
 * Click 'Options' and select 'List All Devices'
 * Select NS in dropdown, select 'libusbK (v3.0.7.0)' (version may vary), click 'Install WCID Driver'
 * Check that in device list of you system you have 'libusbK USB Devices' folder and your NS inside of it
-* Download and install Java JRE (8u60 or higher)
+* [Download and install Java JRE](http://java.com/download/) (8u60 or higher)
 * Get this application (JAR file) double-click on on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
 * Remember to have fun!
 
@@ -111,7 +111,6 @@ NOTE: actually it's not gonna work in real, because we should stay in touch and 
 Français by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 
 
 Italian by [unbranched](https://github.com/unbranched)
-
 
 #### TODO (maybe):
 - [x] macOS QA v0.1  (Mojave)
