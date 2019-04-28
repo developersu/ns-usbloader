@@ -109,6 +109,7 @@ NOTE: actually it's not gonna work in real, because we should stay in touch and 
 #### Thanks for great work done by our translator~~s team~~!
 
 Français by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 
+
 Italian by [unbranched](https://github.com/unbranched)
 
 
