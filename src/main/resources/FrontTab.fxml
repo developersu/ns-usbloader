@@ -44,7 +44,7 @@
                   <Insets bottom="2.0" />
                </VBox.margin>
             </GridPane>
-            <fx:include fx:id="tableFilesList" source="TableView.fxml" />
+            <fx:include fx:id="tableFilesList" source="TableView.fxml" VBox.vgrow="ALWAYS" />
          </children>
       </VBox>
    </children>
