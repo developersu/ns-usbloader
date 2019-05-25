@@ -11,8 +11,7 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
-    -fx-effect: dropshadow(three-pass-box, #b4b4b4, 2, 0, 0, 0);
-    
+    -fx-effect: dropshadow(three-pass-box, #cccccc, 2, 0, 0, 0);
 }
 .button:hover, .buttonStop:hover, .buttonUp:hover, .choice-box:hover, .button:focused:hover, .buttonStop:focused:hover, .buttonUp:focused:hover, .buttonSelect:focused:hover, .choice-box:focused:hover{
     -fx-background-color: #fefefe;
@@ -20,10 +19,15 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
+    -fx-effect: dropshadow(three-pass-box, #00caca, 2, 0, 0, 0);
 }
 .button:focused, .buttonStop:focused, .buttonUp:focused, .buttonSelect:focused, .choice-box:focused{
     -fx-background-color: #cccccc;
     -fx-border-color: #cccccc;
+    -fx-border-radius: 3;
+    -fx-border-width: 2;
+    -fx-text-fill: #2c2c2c;
+    -fx-effect: dropshadow(three-pass-box, #cccccc, 2, 0, 0, 0);
 }
 
 .button:pressed, .button:pressed:hover{
@@ -32,6 +36,7 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
+    -fx-effect: dropshadow(three-pass-box, #e82382, 2, 0, 0, 0);
 }
 .buttonSelect:pressed, .buttonSelect:pressed:hover{
     -fx-background-color: #fefefe;
@@ -39,6 +44,7 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
+    -fx-effect: dropshadow(three-pass-box, #289de8, 2, 0, 0, 0);
 }
 .buttonUp:pressed, .buttonUp:pressed:hover{
     -fx-background-color: #fefefe;
@@ -46,6 +52,7 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
+    -fx-effect: dropshadow(three-pass-box, #a2e019, 2, 0, 0, 0);
 }
 .buttonStop:pressed, .buttonStop:pressed:hover{
     -fx-background-color: #fefefe;
@@ -53,6 +60,7 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
+    -fx-effect: dropshadow(three-pass-box, #fb582c, 2, 0, 0, 0);
 }
 // -========================+ TextArea =====================-
 .text-area{
@@ -136,27 +144,30 @@
 
 // -======================== TAB PANE =========================-
 .tab-pane .tab SVGPath{
-    -fx-fill: #2c2c2c;                                      // OK
+    -fx-fill: #2c2c2c;
 }
-.tab-pane .tab:selected SVGPath{
-    -fx-fill: #289de8;                                      // OK
+.tab-pane .tab:selected SVGPath, .tab-pane .tab:selected:hover SVGPath{
+    -fx-fill: #289de8;
+}
+.tab-pane .tab:hover SVGPath{
+    -fx-fill: #1c6fa2;
 }
 .tab-pane .tab{
-    -fx-background-color: #fefefe;                          //ok
+    -fx-background-color: #fefefe;
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
     -fx-border-radius: 0 0 0 0;
     -fx-border-width: 3 0 0 0;
-    -fx-border-color: #fefefe;                               //OK
+    -fx-border-color: #fefefe;
 }
 
 .tab-pane .tab:selected{
-    -fx-background-color: #ebebeb;                          // OK
+    -fx-background-color: #ebebeb;
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
     -fx-border-radius: 0 0 0 0;
     -fx-border-width: 3 0 0 0;
-    -fx-border-color: #289de8;                              // OK
+    -fx-border-color: #289de8;
 }
 
 .tab-pane > .tab-header-area {
@@ -166,7 +177,7 @@
 
 .tab-pane > .tab-header-area > .tab-header-background
 {
-   -fx-background-color: #fefefe;                       // OK
+   -fx-background-color: #fefefe;
 
 }
 .tab-pane > .tab-header-area > .headers-region > .tab {
@@ -178,6 +189,7 @@
     -fx-background-image: url(app_logo.png);
     -fx-background-position: center;
     -fx-background-repeat: no-repeat;
+    -fx-background-radius: 3;
     -fx-border-color: #06b9bb;
     -fx-border-radius: 3;
     -fx-border-width: 2;

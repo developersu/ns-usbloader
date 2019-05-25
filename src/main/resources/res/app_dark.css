@@ -24,7 +24,6 @@
     -fx-background-color: #6a6a6a;
     -fx-border-color: #6a6a6a;
 }
-
 .button:pressed, .button:pressed:hover{
     -fx-background-color: #4f4f4f;
     -fx-border-color: #e82382;
@@ -138,8 +137,11 @@
 .tab-pane .tab SVGPath{
     -fx-fill: #f7fafa;
 }
-.tab-pane .tab:selected SVGPath{
+.tab-pane .tab:selected SVGPath, .tab-pane .tab:selected:hover SVGPath{
     -fx-fill: #08f3ff;
+}
+.tab-pane .tab:hover SVGPath{
+    -fx-fill: #7effff;
 }
 .tab-pane .tab{
     -fx-background-color: #424242;
@@ -178,6 +180,7 @@
     -fx-background-image: url(app_logo.png);
     -fx-background-position: center;
     -fx-background-repeat: no-repeat;
+    -fx-background-radius: 3;
     -fx-border-color: #00ffc9;
     -fx-border-radius: 3;
     -fx-border-width: 2;
