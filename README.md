@@ -1,5 +1,7 @@
 # NS-USBloader
 
+![License](https://img.shields.io/badge/License-GPLv3-blue.svg) [![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg)]() [![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg)]()
+
 NS-USBloader is a PC-side **[Adubbz/TinFoil](https://github.com/Adubbz/Tinfoil/)** (version 0.2.1; USB and Network) and **GoldLeaf** (USB) NSP installer. Replacement for default **usb_install_pc.py**, **remote_install_pc.py** *(never ever use this. even if you brave. no idea why it works.)* and **GoldTree**.
 
 With GUI and cookies. Works on Windows, macOS and Linux.
