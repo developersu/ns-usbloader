@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ResourceBundleManager">
+    <file url="file://$PROJECT_DIR$/src/main/resources/locale.properties" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/locale_fra.properties" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/locale_ita.properties" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/locale_rus.properties" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/locale_ukr.properties" />
+    <custom-resource-bundle>
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale_fra.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale_ita.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale_rus.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale_ukr.properties" />
+      <base-name>locale</base-name>
+    </custom-resource-bundle>
+    <custom-resource-bundle>
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale_fra.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale_ita.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale_kor.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale_rus.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/locale_ukr.properties" />
+      <base-name>locale</base-name>
+    </custom-resource-bundle>
+  </component>
+</project>
