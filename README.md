@@ -114,6 +114,8 @@ Italian by [unbranched](https://github.com/unbranched)
 
 Korean by [DDinghoya](https://github.com/DDinghoya)
 
+Portuguese by [almircanella](https://github.com/almircanella)
+
 #### TODO (maybe):
 - [x] macOS QA v0.1  (Mojave)
 - [x] macOS QA v0.2.2 (Mojave)
