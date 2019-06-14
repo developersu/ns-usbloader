@@ -3,8 +3,10 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -12,84 +14,96 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsController">
-   <children>
-      <VBox spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsController">
+   <content>
+      <AnchorPane>
          <children>
-            <CheckBox fx:id="validateNSHostNameCb" mnemonicParsing="false" text="%netTabValidateNSHostNameCb">
-               <VBox.margin>
-                  <Insets />
-               </VBox.margin>
-            </CheckBox>
-            <CheckBox fx:id="expertModeCb" mnemonicParsing="false" text="%netTabExpertModeCb" />
-            <VBox fx:id="expertSettingsVBox" spacing="5.0">
+            <VBox spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <children>
-                  <CheckBox fx:id="autoDetectIpCb" mnemonicParsing="false" text="%netTabAutoDetectIpCb">
+                  <CheckBox fx:id="validateNSHostNameCb" mnemonicParsing="false" text="%netTabValidateNSHostNameCb">
                      <VBox.margin>
                         <Insets />
                      </VBox.margin>
                   </CheckBox>
-                  <CheckBox fx:id="randPortCb" mnemonicParsing="false" text="%netTabRandSelectPortCb">
-                     <VBox.margin>
-                        <Insets />
-                     </VBox.margin>
-                  </CheckBox>
-                  <HBox>
+                  <CheckBox fx:id="expertModeCb" mnemonicParsing="false" text="%netTabExpertModeCb" />
+                  <VBox fx:id="expertSettingsVBox" spacing="5.0">
                      <children>
-                        <Label text="%netTabHostIPLbl" />
-                        <Label text=":" />
-                        <Label text="%netTabHostPortLbl" />
-                        <Label text="/" />
-                        <Label text="%netTabHostExtraLbl" />
-                     </children>
-                  </HBox>
-                  <HBox>
-                     <children>
-                        <TextField fx:id="pcIpTextField" promptText="XXX.XXX.XXX.XXX" />
-                        <Label text=":" />
-                        <TextField fx:id="pcPortTextField" promptText="0-65535" />
-                        <Label text="/" />
-                        <TextField fx:id="pcExtraTextField" HBox.hgrow="ALWAYS">
-                           <HBox.margin>
+                        <CheckBox fx:id="autoDetectIpCb" mnemonicParsing="false" text="%netTabAutoDetectIpCb">
+                           <VBox.margin>
                               <Insets />
-                           </HBox.margin>
-                        </TextField>
+                           </VBox.margin>
+                        </CheckBox>
+                        <CheckBox fx:id="randPortCb" mnemonicParsing="false" text="%netTabRandSelectPortCb">
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                        </CheckBox>
+                        <HBox>
+                           <children>
+                              <Label text="%netTabHostIPLbl" />
+                              <Label text=":" />
+                              <Label text="%netTabHostPortLbl" />
+                              <Label text="/" />
+                              <Label text="%netTabHostExtraLbl" />
+                           </children>
+                        </HBox>
+                        <HBox>
+                           <children>
+                              <TextField fx:id="pcIpTextField" promptText="XXX.XXX.XXX.XXX" />
+                              <Label text=":" />
+                              <TextField fx:id="pcPortTextField" promptText="0-65535" />
+                              <Label text="/" />
+                              <TextField fx:id="pcExtraTextField" HBox.hgrow="ALWAYS">
+                                 <HBox.margin>
+                                    <Insets />
+                                 </HBox.margin>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <Separator prefWidth="200.0" />
+                        <CheckBox fx:id="dontServeCb" mnemonicParsing="false" text="%netTabDontServeRequestsCb">
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                        </CheckBox>
+                        <Label disable="true" text="%netTabDontServeRequestsDescription" wrapText="true">
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                        </Label>
+                     </children>
+                     <padding>
+                        <Insets left="10.0" />
+                     </padding>
+                  </VBox>
+                  <HBox>
+                     <children>
+                        <VBox>
+                           <children>
+                              <CheckBox fx:id="autoCheckUpdCb" mnemonicParsing="false" text="%netTabAutoCheckForUpdates" />
+                              <Hyperlink fx:id="newVersionLink" />
+                           </children>
+                        </VBox>
+                        <Pane HBox.hgrow="ALWAYS" />
+                        <Button fx:id="checkForUpdBtn" mnemonicParsing="false" />
                      </children>
                   </HBox>
-                  <Separator prefWidth="200.0" />
-                  <CheckBox fx:id="dontServeCb" mnemonicParsing="false" text="%netTabDontServeRequestsCb">
-                     <VBox.margin>
-                        <Insets />
-                     </VBox.margin>
-                  </CheckBox>
-                  <Label disable="true" text="%netTabDontServeRequestsDescription" wrapText="true">
-                     <VBox.margin>
-                        <Insets />
-                     </VBox.margin>
-                  </Label>
+                  <HBox alignment="CENTER_LEFT" spacing="5.0">
+                     <children>
+                        <Label text="%netTabLanguage" />
+                        <ChoiceBox fx:id="langCB" prefWidth="150.0" />
+                        <Button fx:id="langBtn" mnemonicParsing="false" text="OK" />
+                     </children>
+                  </HBox>
+                  <CheckBox fx:id="tfXciSpprtCb" mnemonicParsing="false" text="%netTabAllowXciCb" />
+                  <Label disable="true" text="%netTabAllowXciTextField" wrapText="true" />
                </children>
                <padding>
-                  <Insets left="10.0" />
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                </padding>
             </VBox>
-            <HBox>
-               <children>
-                  <VBox>
-                     <children>
-                        <CheckBox fx:id="autoCheckUpdCb" mnemonicParsing="false" text="%netTabAutoCheckForUpdates" />
-                        <Hyperlink fx:id="newVersionLink" />
-                     </children>
-                  </VBox>
-                  <Pane HBox.hgrow="ALWAYS" />
-                  <Button fx:id="checkForUpdBtn" mnemonicParsing="false" />
-               </children>
-            </HBox>
-            <CheckBox fx:id="tfXciSpprtCb" mnemonicParsing="false" text="%netTabAllowXciCb" />
-            <Label disable="true" text="%netTabAllowXciTextField" wrapText="true" />
          </children>
-         <padding>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-         </padding>
-      </VBox>
-   </children>
-</AnchorPane>
+      </AnchorPane>
+   </content>
+</ScrollPane>

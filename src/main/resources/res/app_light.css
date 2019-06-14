@@ -126,6 +126,7 @@
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #2c2c2c;
+    -fx-effect: dropshadow(three-pass-box, #eea11e, 2, 0, 0, 0);
 }
 
 // Background color of the whole context menu

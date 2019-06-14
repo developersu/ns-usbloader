@@ -1,6 +1,8 @@
 package nsusbloader.Controllers;
 
 import javafx.application.HostServices;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -11,9 +13,10 @@ import nsusbloader.AppPreferences;
 import nsusbloader.ServiceWindow;
 import nsusbloader.ModelControllers.UpdatesChecker;
 
+import javax.security.auth.callback.Callback;
+import java.io.File;
 import java.net.URL;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class SettingsController implements Initializable {
 
@@ -47,6 +50,11 @@ public class SettingsController implements Initializable {
     private Button checkForUpdBtn;
     @FXML
     private CheckBox tfXciSpprtCb;
+
+    @FXML
+    private Button langBtn;
+    @FXML
+    private ChoiceBox<String> langCB;
 
     private HostServices hs;
 
@@ -179,6 +187,31 @@ public class SettingsController implements Initializable {
             updates.start();
         });
         tfXciSpprtCb.setSelected(AppPreferences.getInstance().getTfXCI());
+
+        // Language settings area
+        URL resourceURL = this.getClass().getResource("/");
+        String[] filesList = new File(resourceURL.getFile()).list(); // Screw it. This WON'T produce NullPointerException
+
+        ObservableList<String> langCBObsList = FXCollections.observableArrayList();
+        langCBObsList.add("eng");
+
+        for (String jarFileName : filesList)
+            if (jarFileName.startsWith("locale_"))
+                langCBObsList.add(jarFileName.substring(7, 10));
+
+        langCB.setItems(langCBObsList);
+        if (langCBObsList.contains(AppPreferences.getInstance().getLanguage()))
+            langCB.getSelectionModel().select(AppPreferences.getInstance().getLanguage());
+        else
+            langCB.getSelectionModel().select("eng");
+
+        langBtn.setOnAction(e->{
+            AppPreferences.getInstance().setLanguage(langCB.getSelectionModel().getSelectedItem());
+            ServiceWindow.getInfoNotification("",
+                    ResourceBundle.getBundle("locale", new Locale(langCB.getSelectionModel().getSelectedItem()))
+                            .getString("windowBodyRestartToApplyLang"));
+        });
+
     }
 
     public boolean getExpertModeSelected(){ return expertModeCb.isSelected(); }

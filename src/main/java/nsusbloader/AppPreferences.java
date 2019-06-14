@@ -1,5 +1,6 @@
 package nsusbloader;
 
+import java.util.Locale;
 import java.util.prefs.Preferences;
 
 public class AppPreferences {
@@ -105,4 +106,7 @@ public class AppPreferences {
 
     public boolean getTfXCI(){return preferences.getBoolean("TF_XCI", false);}
     public void setTfXCI(boolean prop){ preferences.putBoolean("TF_XCI", prop); }
+
+    public String getLanguage(){return preferences.get("USR_LANG", Locale.getDefault().getISO3Language());}
+    public void setLanguage(String langStr){preferences.put("USR_LANG", langStr);}
 }
