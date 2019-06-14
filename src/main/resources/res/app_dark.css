@@ -40,7 +40,7 @@
 }
 .buttonUp:pressed, .buttonUp:pressed:hover{
     -fx-background-color: #4f4f4f;
-    -fx-border-color: #a2e019;
+    -fx-border-color: #71e016;
     -fx-border-radius: 3;
     -fx-border-width: 2;
     -fx-text-fill: #f7fafa;
@@ -248,14 +248,63 @@
     -fx-text-fill: #08f3ff;
 }
 
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track{
+    -fx-background-color :transparent;
+    -fx-border-color :transparent;
+    -fx-background-radius : 0.0em;
+    -fx-border-radius :2.0em;
+}
+
+// -========================== Scroll =====================-
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: #71e016;
+}
+
+.scroll-bar:horizontal,
+.scroll-bar:vertical {
+    -fx-background-color: #2d2d2d;
+}
+
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track,
+.scroll-bar:horizontal .decrement-button,
+.scroll-bar:vertical .decrement-button,
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:vertical .increment-button {
+    -fx-background-color: transparent;
+}
 
 
+.scroll-bar:horizontal .thumb{
+    -fx-background-color: #06bdc3;
+    -fx-background-insets: 4 0 4 0;
+    -fx-background-radius : 5;
+}
+.scroll-bar:horizontal .thumb:hover{
+    -fx-background-color: #08f3ff;
+    -fx-background-insets: 4 0 4 0;
+    -fx-background-radius : 5;
+}
+
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #06bdc3;
+    -fx-background-insets: 0 4 0 4;
+    -fx-background-radius : 5;
+}
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #08f3ff;
+    -fx-background-insets: 0 4 0 4;
+    -fx-background-radius : 5;
+}
+/***********************************************************/
 .regionUpload{
-    -fx-shape: "M8,21V19H16V21H8M8,17V15H16V17H8M8,13V11H16V13H8M19,9H5L12,2L19,9Z";
-    -fx-background-color: #a2e019;
-    -size: 24;
-    -fx-min-height: -size;
-    -fx-min-width: 20;
+    -fx-shape: "M 4.0078125,0 C 1.5078125,0 0,1.4882812 0,3.984375 V 15.988281 C 0,18.417969 1.4927148,20 4.0078125,20 H 6.5 V 0 Z M 15,2.9 7,13 h 5 c 0,1.661689 -0.0097,6.246588 -0.0098,7.011719 H 18 V 13 h 5 z M 23.5,0 v 20 c 1.004057,-7.06e-4 1.659943,0 2.492187,0 C 28.414063,20 30,18.496094 30,15.996094 V 3.9765625 C 30,1.5195311 28.508727,0 26.003907,0 Z M 3.1015625,2.9570312 C 4.1485235,2.9562481 4.9977514,3.8046013 4.9980469,4.8515625 4.998831,5.8992865 4.1492865,6.748831 3.1015625,6.7480469 2.0546013,6.7477514 1.2062481,5.8985235 1.2070312,4.8515625 1.2073268,3.8053642 2.0553642,2.9573267 3.1015625,2.9570312 Z M 26.865234,11.148438 c 1.047724,-7.85e-4 1.897269,0.84876 1.896485,1.896484 -2.96e-4,1.046961 -0.849524,1.895314 -1.896485,1.894531 -1.046198,-2.95e-4 -1.894235,-0.848333 -1.894531,-1.894531 -7.83e-4,-1.046961 0.84757,-1.896189 1.894531,-1.896484 z";
+    -fx-background-color: #71e016;
+    -fx-min-height: 24;
+    -fx-min-width: 36;
 }
 .regionStop{
     -fx-shape: "M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z";
