@@ -21,6 +21,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 
 #### Thanks for the great work done by our translators!
 
+* French by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 
 * Italian by [unbranched](https://github.com/unbranched)
 * Korean by [DDinghoya](https://github.com/DDinghoya)
 * Portuguese by [almircanella](https://github.com/almircanella)
@@ -90,7 +91,7 @@ Why when 'NET' once started it never ends?
 
 Because there is HTTP server inside of application. It can't determine the moment when all transmissions finishes (unless they failed). So you have to look on your NS screen and 'Interrupt' it once done.
 
-#### Tips&tricks
+### Tips&tricks
 ##### Linux: Add user to 'udev' rules to use NS not-from-root-account
 ```
 root # vim /etc/udev/rules.d/99-NS.rules
@@ -98,22 +99,22 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", GROUP="plug
 root # udevadm control --reload-rules && udevadm trigger
 ```
 
-#### Known bugs
+### Known bugs
 * Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't select anything on NS). Sometimes this issue also appears when network transmission started and nothing received from NS.
 
-#### Other notes
+### Other notes
 'Status' = 'Uploaded' that appears in the table does not mean that file has been installed. It means that it has been sent to NS without any issues! That's what this app about. 
 Handling successful/failed installation is a purpose of the other side application: TinFoil or GoldLeaf. And they don't provide any feedback interfaces so I can't detect success/failure.
 
 usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This should not impact anyone except users of macOS High Sierra (and Sierra, and El Capitan) where previous versions of NS-USBloader didn't work. 
 
-#### Translators!
+### Translators!
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
 Upload somewhere (pastebin? google drive? whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add. 
 
 NOTE: actually it's not gonna work in real, because we should stay in touch and I'll need you when add something that should be translated =(
 
-##### TODO (maybe):
+#### TODO (maybe):
 - [x] macOS QA v0.1  (Mojave)
 - [x] macOS QA v0.2.2 (Mojave)
 - [x] macOS QA v0.2.3-DEV (High Sierra)
