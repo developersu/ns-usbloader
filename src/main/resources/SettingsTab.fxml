@@ -87,7 +87,7 @@
                   <HBox alignment="CENTER_LEFT" spacing="5.0">
                      <children>
                         <Label text="%netTabLanguage" />
-                        <ChoiceBox fx:id="langCB" prefWidth="150.0" />
+                        <ChoiceBox fx:id="langCB" prefWidth="100.0" />
                         <Button fx:id="langBtn" mnemonicParsing="false" text="OK" />
                      </children>
                   </HBox>

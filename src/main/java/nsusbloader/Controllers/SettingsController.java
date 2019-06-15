@@ -13,10 +13,12 @@ import nsusbloader.AppPreferences;
 import nsusbloader.ServiceWindow;
 import nsusbloader.ModelControllers.UpdatesChecker;
 
-import javax.security.auth.callback.Callback;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class SettingsController implements Initializable {
 
@@ -189,15 +191,34 @@ public class SettingsController implements Initializable {
         tfXciSpprtCb.setSelected(AppPreferences.getInstance().getTfXCI());
 
         // Language settings area
-        URL resourceURL = this.getClass().getResource("/");
-        String[] filesList = new File(resourceURL.getFile()).list(); // Screw it. This WON'T produce NullPointerException
-
         ObservableList<String> langCBObsList = FXCollections.observableArrayList();
         langCBObsList.add("eng");
 
-        for (String jarFileName : filesList)
-            if (jarFileName.startsWith("locale_"))
-                langCBObsList.add(jarFileName.substring(7, 10));
+        File jarFile = new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
+
+        if(jarFile.isFile()) {  // Run with JAR file
+            try {
+                JarFile jar = new JarFile(jarFile);
+                Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
+                while (entries.hasMoreElements()) {
+                    String name = entries.nextElement().getName();
+                    if (name.startsWith("locale_"))
+                        langCBObsList.add(name.substring(7, 10));
+                }
+                jar.close();
+            }
+            catch (IOException ioe){
+                ioe.printStackTrace();  // TODO: think about better solution?
+            }
+        }
+        else {                                      // Run within IDE
+            URL resourceURL = this.getClass().getResource("/");
+            String[] filesList = new File(resourceURL.getFile()).list(); // Screw it. This WON'T produce NullPointerException
+
+            for (String jarFileName : filesList)
+                if (jarFileName.startsWith("locale_"))
+                    langCBObsList.add(jarFileName.substring(7, 10));
+        }
 
         langCB.setItems(langCBObsList);
         if (langCBObsList.contains(AppPreferences.getInstance().getLanguage()))
