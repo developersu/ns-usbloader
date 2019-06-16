@@ -15,7 +15,9 @@ import nsusbloader.ModelControllers.UpdatesChecker;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -194,9 +196,16 @@ public class SettingsController implements Initializable {
         ObservableList<String> langCBObsList = FXCollections.observableArrayList();
         langCBObsList.add("eng");
 
-        File jarFile = new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
+        File jarFile;
+        try{
+            jarFile = new File(URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "utf-8"));
+        }
+        catch (UnsupportedEncodingException uee){
+            uee.printStackTrace();
+            jarFile = null;
+        }
 
-        if(jarFile.isFile()) {  // Run with JAR file
+        if(jarFile != null && jarFile.isFile()) {  // Run with JAR file
             try {
                 JarFile jar = new JarFile(jarFile);
                 Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
