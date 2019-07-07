@@ -115,19 +115,25 @@ Upload somewhere (pastebin? google drive? whatever else). [Create new issue](htt
 NOTE: actually it's not gonna work in real, because we should stay in touch and I'll need you when add something that should be translated =(
 
 #### TODO (maybe):
-- [x] macOS QA v0.1  (Mojave)
-- [x] macOS QA v0.2.2 (Mojave)
-- [x] macOS QA v0.2.3-DEV (High Sierra)
-- [x] macOS QA v0.3
-- [x] Windows support
-- [x] code refactoring
-- [x] GoldLeaf support
-- [ ] XCI support
+- [ ] Android support (WIP)
 - [ ] File order sort (non-critical)
 - [ ] More deep file analyze before uploading.
-- [x] Network mode support for TinFoil
-- [x] 'Check for application updates' functionality
+- [ ] XCI support
 
+#### Support this app
+
+If you like this app, just give a star. 
+
+If you want to make a donation* (see below), refer to this page:
+
+[Yandex.Money](https://money.yandex.ru/to/410014301951665)
+
+PayPal: To-be-done.
+
+*Legal information:
+
+* [EN] Please note! This is non-commercial application. Any received money considered as a gift.
+* [RU] Пожалуйста обратите внимание! Это некоммерческое приложение. Перечисляя деньги вы совершаете акт дарения.
 
 ##### Thanks
 Appreciate assistance and support of both Vitaliy and Konstantin. Without you all this magic would not have happened.
