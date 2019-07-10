@@ -130,12 +130,12 @@ If you want to make a donation* (see below), refer to this page:
 
 [Yandex.Money](https://money.yandex.ru/to/410014301951665)
 
-PayPal: To-be-done.
+[PayPal](https://paypal.me/developersu)
 
 *Legal information:
 
 * [EN] Please note! This is non-commercial application. Any received money considered as a gift.
-* [RU] Пожалуйста обратите внимание! Это некоммерческое приложение. Перечисляя деньги вы совершаете дарение.
+* [RU] Пожалуйста обратите внимание! Это некоммерческое приложение. Перечисляя средства вы совершаете дарение.
 
 ##### Thanks
 Appreciate assistance and support of both Vitaliy and Konstantin. Without you all this magic would not have happened.
