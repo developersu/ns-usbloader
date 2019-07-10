@@ -486,18 +486,18 @@ public class UsbCommunications extends Task<Void> {
             byte[] readByte;
 
             // Go connect to GoldLeaf
-            if (writeToUsb(CMD_GLUC))
-                logPrinter.print("GL Initiating GoldLeaf connection: 1/2", EMsgType.PASS);
-            else {
+
+            if (!writeToUsb(CMD_GLUC)) {
                 logPrinter.print("GL Initiating GoldLeaf connection: 1/2", EMsgType.FAIL);
                 return false;
             }
-            if (writeToUsb(CMD_ConnectionRequest))
-                logPrinter.print("GL Initiating GoldLeaf connection: 2/2", EMsgType.PASS);
-            else {
+            logPrinter.print("GL Initiating GoldLeaf connection: 1/2", EMsgType.PASS);
+            if (!writeToUsb(CMD_ConnectionRequest)){
                 logPrinter.print("GL Initiating GoldLeaf connection: 2/2", EMsgType.FAIL);
                 return false;
             }
+            logPrinter.print("GL Initiating GoldLeaf connection: 2/2", EMsgType.PASS);
+
             while (true) {
                 readByte = readFromUsb();
                 if (readByte == null)
@@ -606,7 +606,7 @@ public class UsbCommunications extends Task<Void> {
                 }
                 logPrinter.print("    [2/4] File #"+i, EMsgType.PASS);
                 if (!writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getBodySize()+pfsElement.getNca(i).getNcaOffset()).array())) {   // offset. real.
-                    logPrinter.print("    [2/4] File #"+i, EMsgType.FAIL);
+                    logPrinter.print("    [3/4] File #"+i, EMsgType.FAIL);
                     return false;
                 }
                 logPrinter.print("    [3/4] File #"+i, EMsgType.PASS);

@@ -4,6 +4,8 @@
 
 NS-USBloader is a PC-side **[Adubbz/TinFoil](https://github.com/Adubbz/Tinfoil/)** (version 0.2.1; USB and Network) and **GoldLeaf** (USB) NSP installer. Replacement for default **usb_install_pc.py**, **remote_install_pc.py** *(never ever use this. even if you brave. no idea why it works.)* and **GoldTree**.
 
+[Click here for Android version ;)](https://github.com/developersu/ns-usbloader-mobile)
+
 With GUI and cookies. Works on Windows, macOS and Linux.
 
 Sometimes I add new posts about this project [on my home page](https://developersu.blogspot.com/search/label/NS-USBloader).
@@ -115,7 +117,7 @@ Upload somewhere (pastebin? google drive? whatever else). [Create new issue](htt
 NOTE: actually it's not gonna work in real, because we should stay in touch and I'll need you when add something that should be translated =(
 
 #### TODO (maybe):
-- [ ] Android support (WIP)
+- [x] [Android support](https://github.com/developersu/ns-usbloader-mobile)
 - [ ] File order sort (non-critical)
 - [ ] More deep file analyze before uploading.
 - [ ] XCI support
@@ -133,7 +135,7 @@ PayPal: To-be-done.
 *Legal information:
 
 * [EN] Please note! This is non-commercial application. Any received money considered as a gift.
-* [RU] Пожалуйста обратите внимание! Это некоммерческое приложение. Перечисляя деньги вы совершаете акт дарения.
+* [RU] Пожалуйста обратите внимание! Это некоммерческое приложение. Перечисляя деньги вы совершаете дарение.
 
 ##### Thanks
 Appreciate assistance and support of both Vitaliy and Konstantin. Without you all this magic would not have happened.
