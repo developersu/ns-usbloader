@@ -27,6 +27,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * Italian by [unbranched](https://github.com/unbranched)
 * Korean by [DDinghoya](https://github.com/DDinghoya)
 * Portuguese by [almircanella](https://github.com/almircanella)
+* Spanish by [/u/cokimaya007](https://www.reddit.com/u/cokimaya007) 
 
 ### System requirements
 
