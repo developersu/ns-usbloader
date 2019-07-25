@@ -144,8 +144,21 @@ public class UsbCommunications extends Task<Void> {
         if (result != LibUsb.SUCCESS) {
             logPrinter.print("Open NS USB device\n  Returned: "+UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
             if (result == LibUsb.ERROR_ACCESS)
-                logPrinter.print("Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!", EMsgType.INFO);
-            close();
+                logPrinter.print("Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!\n\n" +
+                        "Steps to set 'udev' rules:\n" +
+                        "root # vim /etc/udev/rules.d/99-NS.rules\n" +
+                        "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"057e\", ATTRS{idProduct}==\"3000\", GROUP=\"plugdev\"\n" +
+                        "root # udevadm control --reload-rules && udevadm trigger\n", EMsgType.INFO);
+            // Let's make a bit dirty workaround since such shit happened
+            if (contextNS != null) {
+                LibUsb.exit(contextNS);
+                logPrinter.print("Requested context close", EMsgType.INFO);
+            }
+
+            // Report status and close
+            logPrinter.update(nspMap, status);
+            logPrinter.print("\tEnd chain", EMsgType.INFO);
+            logPrinter.close();
             return null;
         }
         else

@@ -40,6 +40,13 @@ JRE/JDK 8u60 or higher.
 
 2. `root # java -jar /path/to/NS-USBloader.jar`
 
+3. Optional. Add user to 'udev' rules to use NS not-from-root-account
+```
+root # vim /etc/udev/rules.d/99-NS.rules
+SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", GROUP="plugdev"
+root # udevadm control --reload-rules && udevadm trigger
+```
+
 ##### macOS
 
 Double-click on downloaded .jar file. Follow instructions. Or see 'Linux' section.
@@ -53,7 +60,7 @@ Set 'Security & Privacy' settings if needed.
 * Connect NS to PC
 * Open Zadig
 * Click 'Options' and select 'List All Devices'
-* Select NS in dropdown, select 'libusbK (v3.0.7.0)' (version may vary), click 'Install WCID Driver'
+* Select NS in drop-down, select 'libusbK (v3.0.7.0)' (version may vary), click 'Install WCID Driver'
 * Check that in device list of you system you have 'libusbK USB Devices' folder and your NS inside of it
 * [Download and install Java JRE](http://java.com/download/) (8u60 or higher)
 * Get this application (JAR file) double-click on on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
@@ -93,14 +100,6 @@ That's where all logs dropped. Verbose information about transmissions comes her
 Why when 'NET' once started it never ends?
 
 Because there is HTTP server inside of application. It can't determine the moment when all transmissions finishes (unless they failed). So you have to look on your NS screen and 'Interrupt' it once done.
-
-### Tips&tricks
-##### Linux: Add user to 'udev' rules to use NS not-from-root-account
-```
-root # vim /etc/udev/rules.d/99-NS.rules
-SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", GROUP="plugdev"
-root # udevadm control --reload-rules && udevadm trigger
-```
 
 ### Known bugs
 * Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't select anything on NS). Sometimes this issue also appears when network transmission started and nothing received from NS.
