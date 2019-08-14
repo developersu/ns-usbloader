@@ -49,7 +49,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         }
         catch (UnsupportedEncodingException uee){
             isValid = false;
-            logPrinter.print("NET: Unsupported encoding for 'URLEncoder'. Internal issue you can't fix. Please report. . Returned:\n\t"+uee.getMessage(), EMsgType.FAIL);
+            logPrinter.print("NET: Unsupported encoding for 'URLEncoder'. Internal issue you can't fix. Please report.  Returned:\n\t"+uee.getMessage(), EMsgType.FAIL);
             for (File nspFile : filesList)
                 nspMap.put(nspFile.getName(), nspFile);
             close(EFileStatus.FAILED);

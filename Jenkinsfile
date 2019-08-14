@@ -15,7 +15,7 @@ pipeline {
     }
     post {
             always {
-                archiveArtifacts artifacts: 'target/*-jar-with-dependencies.jar', onlyIfSuccessful: true
+                archiveArtifacts artifacts: 'target/*.jar, target/*.exe', onlyIfSuccessful: true
             }
     }
 }

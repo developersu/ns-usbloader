@@ -8,6 +8,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import nsusbloader.AppPreferences;
+import nsusbloader.MediatorControl;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -49,6 +50,11 @@ public class FrontController implements Initializable {
                     nsIpTextField.setVisible(true);
                 }
             }
+            // Really bad disable-enable upload button function
+            if (tableFilesListController.isFilesForUploadListEmpty())
+                MediatorControl.getInstance().getContoller().disableUploadStopBtn(true);
+            else
+                MediatorControl.getInstance().getContoller().disableUploadStopBtn(false);
         });  // Add listener to notify tableView controller
         tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem());   // Notify tableView controller
 

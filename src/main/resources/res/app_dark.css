@@ -262,6 +262,7 @@
     -fx-background-color: #71e016;
 }
 
+.scroll-pane > .corner,
 .scroll-bar:horizontal,
 .scroll-bar:vertical {
     -fx-background-color: #2d2d2d;

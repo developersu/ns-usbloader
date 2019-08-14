@@ -23,7 +23,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class SettingsController implements Initializable {
-
+    @FXML
+    private CheckBox nspFilesFilterForGLCB;
     @FXML
     private CheckBox validateNSHostNameCb;
     @FXML
@@ -64,6 +65,8 @@ public class SettingsController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        nspFilesFilterForGLCB.setSelected(AppPreferences.getInstance().getNspFileFilterGL());
+
         validateNSHostNameCb.setSelected(AppPreferences.getInstance().getNsIpValidationNeeded());
 
         expertSettingsVBox.setDisable(!AppPreferences.getInstance().getExpertMode());
@@ -243,7 +246,7 @@ public class SettingsController implements Initializable {
         });
 
     }
-
+    public boolean getNSPFileFilterForGL(){return nspFilesFilterForGLCB.isSelected(); }
     public boolean getExpertModeSelected(){ return expertModeCb.isSelected(); }
     public boolean getAutoIpSelected(){ return autoDetectIpCb.isSelected(); }
     public boolean getRandPortSelected(){ return randPortCb.isSelected(); }

@@ -17,6 +17,7 @@ import nsusbloader.USB.UsbCommunications;
 import java.io.File;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -56,7 +57,10 @@ public class NSLMainController implements Initializable {
 
         MediatorControl.getInstance().setController(this);
 
-        uploadStopBtn.setDisable(true);
+        if (FrontTabController.getSelectedProtocol().equals("TinFoil"))
+            uploadStopBtn.setDisable(true);
+        else
+            uploadStopBtn.setDisable(false);
         selectNspBtn.setOnAction(e->{ selectFilesBtnAction(); });
         uploadStopBtn.setOnAction(e->{ uploadBtnAction(); });
 
@@ -128,23 +132,26 @@ public class NSLMainController implements Initializable {
         if ((workThread == null || !workThread.isAlive())){
             // Collect files
             List<File> nspToUpload;
-            if ((nspToUpload = FrontTabController.tableFilesListController.getFilesForUpload()) == null) {
+            if ((nspToUpload = FrontTabController.tableFilesListController.getFilesForUpload()) == null && FrontTabController.getSelectedProtocol().equals("TinFoil")) {
                 logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
                 return;
             }
             else {
-                logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
-                for (File item: nspToUpload)
-                    logArea.appendText("  "+item.getAbsolutePath()+"\n");
+                if ((nspToUpload = FrontTabController.tableFilesListController.getFilesForUpload()) != null){
+                    logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
+                    for (File item: nspToUpload)
+                        logArea.appendText("  "+item.getAbsolutePath()+"\n");
+                }
+                else {
+                    logArea.clear();
+                    nspToUpload = new LinkedList<>();
+                }
             }
             // If USB selected
             if (FrontTabController.getSelectedProtocol().equals("GoldLeaf") ||
-                    (
-                    FrontTabController.getSelectedProtocol().equals("TinFoil")
-                    && FrontTabController.getSelectedNetUsb().equals("USB")
-                    )
+                    ( FrontTabController.getSelectedProtocol().equals("TinFoil") && FrontTabController.getSelectedNetUsb().equals("USB") )
             ){
-                usbNetCommunications = new UsbCommunications(nspToUpload, FrontTabController.getSelectedProtocol());
+                usbNetCommunications = new UsbCommunications(nspToUpload, FrontTabController.getSelectedProtocol(), SettingsTabController.getNSPFileFilterForGL());
                 workThread = new Thread(usbNetCommunications);
                 workThread.setDaemon(true);
                 workThread.start();
@@ -217,7 +224,10 @@ public class NSLMainController implements Initializable {
      * Crunch. Now you see that I'm not a programmer.. This function called from NSTableViewController
      * */
     public void disableUploadStopBtn(boolean disable){
-        uploadStopBtn.setDisable(disable);
+        if (FrontTabController.getSelectedProtocol().equals("TinFoil"))
+            uploadStopBtn.setDisable(disable);
+        else
+            uploadStopBtn.setDisable(false);
     }
     /**
      * Drag-n-drop support (dragOver consumer)
@@ -285,7 +295,8 @@ public class NSLMainController implements Initializable {
                 SettingsTabController.getHostPort(),
                 SettingsTabController.getHostExtra(),
                 SettingsTabController.getAutoCheckForUpdates(),
-                SettingsTabController.getTfXCISupport()
+                SettingsTabController.getTfXCISupport(),
+                SettingsTabController.getNSPFileFilterForGL()
         );
     }
 }

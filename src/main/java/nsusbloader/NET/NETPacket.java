@@ -24,7 +24,7 @@ public class NETPacket {
                                             "Accept-Ranges: bytes\r\n"+
                                             "Content-Range: bytes %d-%d/%d\r\n"+
                                             "Content-Length: %d\r\n"+
-                                            "Last-Modified: Mon, 18 Mar 2019 12:57:33 GMT\r\n\r\n";
+                                            "Last-Modified: Thu, 01 Jan 1970 00:00:00 GMT\r\n\r\n";
     private static final String CODE_400 =
                                             "HTTP/1.0 400 invalid range\r\n"+
                                             "Server: NS-USBloader-"+NSLMain.appVersion+"\r\n" +

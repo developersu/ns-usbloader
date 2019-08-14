@@ -13,9 +13,10 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsController">
+<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsController">
             <VBox spacing="5.0">
                <children>
+         <CheckBox fx:id="nspFilesFilterForGLCB" mnemonicParsing="false" text="%netTabGLshowNSPonly" />
                   <CheckBox fx:id="validateNSHostNameCb" mnemonicParsing="false" text="%netTabValidateNSHostNameCb">
                      <VBox.margin>
                         <Insets />

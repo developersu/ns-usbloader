@@ -2,6 +2,8 @@
 
 ![License](https://img.shields.io/badge/License-GPLv3-blue.svg) [![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg)]() [![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg)]()
 
+[Support author](#support-this-app)
+
 NS-USBloader is a PC-side **[Adubbz/TinFoil](https://github.com/Adubbz/Tinfoil/)** (version 0.2.1; USB and Network) and **GoldLeaf** (USB) NSP installer. Replacement for default **usb_install_pc.py**, **remote_install_pc.py** *(never ever use this. even if you brave. no idea why it works.)* and **GoldTree**.
 
 [Click here for Android version ;)](https://github.com/developersu/ns-usbloader-mobile)
@@ -68,12 +70,14 @@ Set 'Security & Privacy' settings if needed.
 
 #### And how to use it?
 
-The first thing you should do it install TinFoil ([Adubbz](https://github.com/Adubbz/Tinfoil/)) or GoldLeaf ([XorTroll](https://github.com/XorTroll/Goldleaf)) on your NS. I recommend using TinFoil, but it ups to you. Take a look on app, find where is the option to install from USB and/or Network. Maybe [this article](https://developersu.blogspot.com/2019/02/ns-usbloader-en.html) will be helpful.
+The first thing you should do it install TinFoil ([Adubbz](https://github.com/Adubbz/Tinfoil/)) or GoldLeaf ([XorTroll](https://github.com/XorTroll/Goldleaf)) on your NS.
 
 Here is the version of 'not perfect but anyway' [tinfoil I use](https://cloud.mail.ru/public/DwbX/H8d2p3aYR).
 Ok, I'm almost sure that this version has bugs. I don't remember where I downloaded it. But it works for me somehow. 
 
 Let's rephrase, if you have working version of TinFoil **DO NOT** use this one. Ok. let's begin.
+
+Take a look on app, find where is the option to install from USB and/or Network. Maybe [this article](https://developersu.blogspot.com/2019/02/ns-usbloader-en.html) will be helpful.
 
 There are three tabs. First one is main.
 
@@ -85,13 +89,23 @@ Then you may drag-n-drop folder with NSPs OR files to application or use 'Select
 
 Table.
 
-There you can select checkbox for files that will be send to application (TF/GL). Since GoldLeaf allow you only one file transmission per time, only one file is available for selection. Also you can use space to select/un-select files and 'delete' button for deleting. By right-mouse-click you can see context menu where you can delete one OR all items from the table.
+There you can select checkbox for files that will be send to application (TF/GL). ~~Since GoldLeaf allow you only one file transmission per time, only one file is available for selection.~~ 
+
+Also you can use space to select/un-select files and 'delete' button for deleting. By right-mouse-click you can see context menu where you can delete one OR all items from the table.
+
+For GoldLeaf v0.6.1 and NS-USBloader v0.6 (and higher) you will have to use 'Explore content' -> 'Remote PC (via USB)' You will see two drives HOME:/ and VIRT:/. First drive is pointing to your home directory. Second one is reflection of what you've added to table (first application tab). Also VIRT:/ drive have limited functionality in comparison to HOME:/. E.g. you can't write files to this drive since it's not a drive. But don't worry, it won't make any impact on GoldLeaf or your NS if you try.
+
+Also, for GoldLeaf write files (from NS to PC): You have to 'Stop execution' properly before accessing files transferred from GL. Usually you have to wait 5sec or less. It will guarantee that your files properly written to PC.
+
+## NOTE: NS-USBloader v0.6 doesn't support writing files from NS to PC if file size is greater than 8mb
 
 ##### Second tab.
 
 Here you can configure settings for network file transmission. Usually you shouldn't change anything. But it you're cool hacker, go ahead! The most interesting option here is 'Don't serve requests'. Architecture of the TinFoil's NET part is working interesting way. When you select in TF network NSP transfer, application will wait at port 2000 for the information about where should it take files from. Like '192.168.1.5:6060/my file.nsp'. Usually NS-USBloader serves requests by implementing simplified HTTP server and bringing it up and so on. But if this option selected, you can define path to remote location of the files. For example if you set in settings '192.168.4.2:80/ROMS/NS/' and add in table file 'my file.nsp' then NS-USBloader will simply tell TinFoil "Hey, go take files from '192.168.4.2:80/ROMS/NS/my%20file.nsp' ". Of course you have to bring '192.168.4.2' host up and make file accessible from such address (just go install nginx). As I said, this feature is interesting, but I guess won't be popular.
 
-Also here you can check 'Auto-check for updates' or click button to verify if new version released or not.
+Also here you can:
+* Set 'Auto-check for updates' for checking for updates when application starts, or click button to verify if new version released immediately.
+* Set 'Show only *.nsp in GoldLeaf' to filter all files displayed at HOME:/ drive. So only NSP files will appear.
 
 ##### Third tab.
 
@@ -102,7 +116,7 @@ Why when 'NET' once started it never ends?
 Because there is HTTP server inside of application. It can't determine the moment when all transmissions finishes (unless they failed). So you have to look on your NS screen and 'Interrupt' it once done.
 
 ### Known bugs
-* Unable to interrupt transmission when libusb awaiting for read event (when user sent NSP list but didn't select anything on NS). Sometimes this issue also appears when network transmission started and nothing received from NS.
+* Unable to interrupt transmission when using TinFoil (when user sent NSP list but didn't select anything on NS). Sometimes this issue also appears when network transmission started and nothing received from NS.
 
 ### Other notes
 'Status' = 'Uploaded' that appears in the table does not mean that file has been installed. It means that it has been sent to NS without any issues! That's what this app about. 
@@ -112,9 +126,7 @@ usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This shou
 
 ### Translators!
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
-Upload somewhere (pastebin? google drive? whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add. 
-
-NOTE: actually it's not gonna work in real, because we should stay in touch and I'll need you when add something that should be translated =(
+Upload somewhere (create PR, use pastebin/google drive/whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add. 
 
 #### TODO (maybe):
 - [x] [Android support](https://github.com/developersu/ns-usbloader-mobile)
@@ -122,11 +134,11 @@ NOTE: actually it's not gonna work in real, because we should stay in touch and 
 - [ ] More deep file analyze before uploading.
 - [ ] XCI support
 
-#### Support this app
+## Support this app
 
 If you like this app, just give a star. 
 
-If you want to make a donation* (see below), refer to this page:
+Want to support development? Make a donation* (see below):
 
 [Yandex.Money](https://money.yandex.ru/to/410014301951665)
 

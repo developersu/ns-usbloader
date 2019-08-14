@@ -25,7 +25,8 @@ public class AppPreferences {
             String HostPort,
             String HostExtra,
             boolean autoCheck4Updates,
-            boolean tinfoilXciSupport
+            boolean tinfoilXciSupport,
+            boolean nspFileFilterForGl
             ){
         setProtocol(Protocol);
         setRecent(PreviouslyOpened);
@@ -41,6 +42,7 @@ public class AppPreferences {
         setHostExtra(HostExtra);
         setAutoCheckUpdates(autoCheck4Updates);
         setTfXCI(tinfoilXciSupport);
+        setNspFileFilterGL(nspFileFilterForGl);
     }
     public String getTheme(){
         String theme = preferences.get("THEME", "/res/app_dark.css");           // Don't let user to change settings manually
@@ -109,4 +111,7 @@ public class AppPreferences {
 
     public String getLanguage(){return preferences.get("USR_LANG", Locale.getDefault().getISO3Language());}
     public void setLanguage(String langStr){preferences.put("USR_LANG", langStr);}
+
+    public boolean getNspFileFilterGL(){return preferences.getBoolean("GL_NSP_FILTER", false); }
+    public void setNspFileFilterGL(boolean prop){preferences.putBoolean("GL_NSP_FILTER", prop);}
 }

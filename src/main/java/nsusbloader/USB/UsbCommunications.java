@@ -5,45 +5,48 @@ import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.RainbowHexDump;
-import nsusbloader.USB.PFS.PFSProvider;
 import org.usb4java.*;
 
+import javax.swing.plaf.synth.SynthEditorPaneUI;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
+import java.util.*;
+// TODO: add filter option to show only NSP files
 public class UsbCommunications extends Task<Void> {
     private final int DEFAULT_INTERFACE = 0;
 
     private LogPrinter logPrinter;
     private EFileStatus status = EFileStatus.FAILED;
 
-    private HashMap<String, File> nspMap;
+    private LinkedHashMap<String, File> nspMap;
 
     private Context contextNS;
     private DeviceHandle handlerNS;
 
     private String protocol;
-    /*
-    Ok, here is a story. We will pass to NS only file names, not full path. => see nspMap where 'key' is a file name.
-    File name itself should not be greater then 512 bytes, but in real world it's limited by OS to something like 256 bytes.
-    For sure, there could be FS that supports more then 256 and even more then 512 bytes. So if user decides to set name greater then 512 bytes, everything will ruin.
-    There is no extra validations for this situation.
-    Why we poking around 512 bytes? Because it's the maximum size of byte-array that USB endpoind of NS could return. And in runtime it returns the filename.
-    Therefore, the file name shouldn't be greater then 512. If file name + path-to-file is greater then 512 bytes, we can handle it: sending only file name instead of full path.
 
-    Since this application let user an ability (theoretically) to choose same files in different folders, the latest selected file will be added to the list and handled correctly.
-    I have no idea why he/she will make a decision to do that. Just in case, we're good in this point.
-     */
-    public UsbCommunications(List<File> nspList, String protocol){
+    private boolean nspFilterForGl;
+    private boolean proxyForGL = false;
+
+    /*
+        Ok, here is a story. We will pass to NS only file names, not full path. => see nspMap where 'key' is a file name.
+        File name itself should not be greater then 512 bytes, but in real world it's limited by OS to something like 256 bytes.
+        For sure, there could be FS that supports more then 256 and even more then 512 bytes. So if user decides to set name greater then 512 bytes, everything will ruin.
+        There is no extra validations for this situation.
+        Why we poking around 512 bytes? Because it's the maximum size of byte-array that USB endpoind of NS could return. And in runtime it returns the filename.
+        Therefore, the file name shouldn't be greater then 512. If file name + path-to-file is greater then 512 bytes, we can handle it: sending only file name instead of full path.
+
+        Since this application let user an ability (theoretically) to choose same files in different folders, the latest selected file will be added to the list and handled correctly.
+        I have no idea why he/she will make a decision to do that. Just in case, we're good in this point.
+         */
+    public UsbCommunications(List<File> nspList, String protocol, boolean filterNspFilesOnlyForGl){
         this.protocol = protocol;
-        this.nspMap = new HashMap<>();
+        this.nspFilterForGl = filterNspFilesOnlyForGl;
+        this.nspMap = new LinkedHashMap<>();
         for (File f: nspList)
             nspMap.put(f.getName(), f);
         this.logPrinter = new LogPrinter();
@@ -95,41 +98,6 @@ public class UsbCommunications extends Task<Void> {
             }
         }
         // Free device list.
-
-        ////////////////////////////////////////// DEBUG INFORMATION START ///////////////////////////////////////////
-        /*
-        ConfigDescriptor configDescriptor = new ConfigDescriptor();
-                //result = LibUsb.getConfigDescriptor(deviceNS, (byte)0x01, configDescriptor);
-        result = LibUsb.getActiveConfigDescriptor(deviceNS, configDescriptor);
-
-        switch (result){
-            case 0:
-                logPrinter.print("DBG: getActiveConfigDescriptor\n"+configDescriptor.dump(), EMsgType.PASS);
-                break;
-            case LibUsb.ERROR_NOT_FOUND:
-                logPrinter.print("DBG: getActiveConfigDescriptor: ERROR_NOT_FOUND", EMsgType.FAIL);
-                break;
-            default:
-                logPrinter.print("DBG: getActiveConfigDescriptor: "+result, EMsgType.FAIL);
-                break;
-        }
-
-        LibUsb.freeConfigDescriptor(configDescriptor);
-        //*/
-        /*
-         * So what did we learn?
-         * bConfigurationValue     1
-         * bInterfaceNumber = 0
-         * bEndpointAddress      0x81  EP 1 IN
-         * Transfer Type             Bulk
-         * bEndpointAddress      0x01  EP 1 OUT
-         * Transfer Type             Bulk
-         *
-         * Or simply run this on your *nix host:
-         * # lsusb -v -d 057e:3000
-         * */
-        ////////////////////////////////////////// DEBUG INFORMATION END /////////////////////////////////////////////
-
         if (deviceNS != null){
             logPrinter.print("NS in connected USB devices found", EMsgType.PASS);
         }
@@ -250,7 +218,7 @@ public class UsbCommunications extends Task<Void> {
         private boolean sendListOfNSP(){
             // Send list of NSP files:
             // Proceed "TUL0"
-            if (!writeToUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {  // new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x76, (byte) 0x30}
+            if (writeToUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {  // new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x76, (byte) 0x30}
                 logPrinter.print("TF Send list of files: handshake", EMsgType.FAIL);
                 return false;
             }
@@ -271,19 +239,19 @@ public class UsbCommunications extends Task<Void> {
 
             // Sending NSP list
             logPrinter.print("TF Send list of files", EMsgType.INFO);
-            if (!writeToUsb(nspListSize)) {                                           // size of the list we're going to transfer goes...
+            if (writeToUsb(nspListSize)) {                                           // size of the list we're going to transfer goes...
                 logPrinter.print("  [send list length]", EMsgType.FAIL);
                 return false;
             }
             logPrinter.print("  [send list length]", EMsgType.PASS);
 
-            if (!writeToUsb(new byte[8])) {                                           // 8 zero bytes goes...
+            if (writeToUsb(new byte[8])) {                                           // 8 zero bytes goes...
                 logPrinter.print("  [send padding]", EMsgType.FAIL);
                 return false;
             }
             logPrinter.print("  [send padding]", EMsgType.PASS);
 
-            if (!writeToUsb(nspListNames)) {                                           // list of the names goes...
+            if (writeToUsb(nspListNames)) {                                           // list of the names goes...
                 logPrinter.print("  [send list itself]", EMsgType.FAIL);
                 return false;
             }
@@ -404,7 +372,7 @@ public class UsbCommunications extends Task<Void> {
                         return false;
                     }
                     //write to USB
-                    if (!writeToUsb(bufferCurrent)) {
+                    if (writeToUsb(bufferCurrent)) {
                         logPrinter.print("TF Failure during NSP transmission.", EMsgType.FAIL);
                         return false;
                     }
@@ -442,7 +410,7 @@ public class UsbCommunications extends Task<Void> {
          * */
         private boolean sendResponse(byte[] rangeSize){                                 // This method as separate function itself for application needed as a cookie in the middle of desert.
             logPrinter.print("TF Sending response", EMsgType.INFO);
-            if (!writeToUsb(new byte[] { (byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30,    // 'TUC0'
+            if (writeToUsb(new byte[] { (byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30,    // 'TUC0'
                     (byte) 0x01,                                                // CMD_TYPE_RESPONSE = 1
                     (byte) 0x00, (byte) 0x00, (byte) 0x00,                      // kinda padding. Guys, didn't you want to use integer value for CMD semantic?
                     (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00} )       // Send integer value of '1' in Little-endian format.
@@ -451,12 +419,12 @@ public class UsbCommunications extends Task<Void> {
                 return false;
             }
             logPrinter.print("  [1/3]", EMsgType.PASS);
-            if(!writeToUsb(rangeSize)) {                                                          // Send EXACTLY what has been received
+            if(writeToUsb(rangeSize)) {                                                          // Send EXACTLY what has been received
                 logPrinter.print("  [2/3]", EMsgType.FAIL);
                 return false;
             }
             logPrinter.print("  [2/3]", EMsgType.PASS);
-            if(!writeToUsb(new byte[12])) {                                                       // kinda another one padding
+            if(writeToUsb(new byte[12])) {                                                       // kinda another one padding
                 logPrinter.print("  [3/3]", EMsgType.FAIL);
                 return false;
             }
@@ -469,244 +437,950 @@ public class UsbCommunications extends Task<Void> {
      * GoldLeaf processing
      * */
     private class GoldLeaf{
-        //                     CMD                                G     L     U     C
-        private final byte[] CMD_GLUC =               new byte[]{0x47, 0x4c, 0x55, 0x43};
-        private final byte[] CMD_ConnectionRequest =  new byte[]{0x00, 0x00, 0x00, 0x00};    // Write-only command
-        private final byte[] CMD_NSPName =            new byte[]{0x02, 0x00, 0x00, 0x00};    // Write-only command
-        private final byte[] CMD_NSPData =            new byte[]{0x04, 0x00, 0x00, 0x00};    // Write-only command
+        //                     CMD
+        private final byte[] CMD_GLCO_SUCCESS = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, 0x00, 0x00};         // used @ writeToUsb_GLCMD
+        private final byte[] CMD_GLCO_FAILURE = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x64, (byte) 0xcb, 0x00, 0x00};  // used @ writeToUsb_GLCMD
+        private final byte[] CMD_GLCI         = new byte[]{0x47, 0x4c, 0x43, 0x49};
 
-        private final byte[] CMD_ConnectionResponse = new byte[]{0x01, 0x00, 0x00, 0x00};
-        private final byte[] CMD_Start =              new byte[]{0x03, 0x00, 0x00, 0x00};
-        private final byte[] CMD_NSPContent =         new byte[]{0x05, 0x00, 0x00, 0x00};
-        private final byte[] CMD_NSPTicket =          new byte[]{0x06, 0x00, 0x00, 0x00};
-        private final byte[] CMD_Finish =             new byte[]{0x07, 0x00, 0x00, 0x00};
+        // System.out.println((356 & 0x1FF) | ((1 + 100) & 0x1FFF) << 9); // 52068 // 0x00 0x00 0xCB 0x64
+        private final byte[] GL_OBJ_TYPE_FILE = new byte[]{0x01, 0x00, 0x00, 0x00};
+        private final byte[] GL_OBJ_TYPE_DIR  = new byte[]{0x02, 0x00, 0x00, 0x00};
+
+        private String recentPath = null;
+        private String[] recentDirs = null;
+        private String[] recentFiles = null;
+
+        private String[] nspMapKeySetIndexes;
+
+        private String openReadFileNameAndPath;
+        private RandomAccessFile randAccessFile;
+
+        private HashMap<String, BufferedOutputStream> writeFilesMap;
 
         GoldLeaf(){
-            logPrinter.print("===========================================================================", EMsgType.INFO);
-            PFSProvider pfsElement = new PFSProvider(nspMap.get(nspMap.keySet().toArray()[0]), logPrinter);
-            if (!pfsElement.init()) {
-                logPrinter.print("GL File provided have incorrect structure and won't be uploaded", EMsgType.FAIL);
-                status = EFileStatus.INCORRECT_FILE_FAILED;
-                return;
-            }
-            logPrinter.print("GL File structure validated and it will be uploaded", EMsgType.PASS);
+            final byte CMD_GetDriveCount       = 0x00;
+            final byte CMD_GetDriveInfo        = 0x01;
+            final byte CMD_StatPath            = 0x02; // TODO: proxy done [proxy: in case if folder contains ENG+RUS+UKR file names works incorrect]
+            final byte CMD_GetFileCount        = 0x03;
+            final byte CMD_GetFile             = 0x04; // TODO: proxy done
+            final byte CMD_GetDirectoryCount   = 0x05;
+            final byte CMD_GetDirectory        = 0x06; // TODO: proxy done
+            final byte CMD_ReadFile            = 0x07; // TODO: no way to do poxy
+            final byte CMD_WriteFile           = 0x08; // TODO: add predictable behavior
+            final byte CMD_Create              = 0x09;
+            final byte CMD_Delete              = 0x0a;//10
+            final byte CMD_Rename              = 0x0b;//11
+            final byte CMD_GetSpecialPathCount = 0x0c;//12  // Special folders count;             simplified usage @ NS-UL
+            final byte CMD_GetSpecialPath      = 0x0d;//13  // Information about special folders; simplified usage @ NS-UL
+            final byte CMD_SelectFile          = 0x0e;//14  // WTF? Ignoring for now. For future: execute another thread within this(?) context for FileChooser
+            final byte CMD_Max                 = 0x0f;//15  // not used @ NS-UL & GT
 
-            if (initGoldLeafProtocol(pfsElement))
-                status = EFileStatus.UPLOADED;            // else - no change status that is already set to FAILED
-        }
-        private boolean initGoldLeafProtocol(PFSProvider pfsElement){
+            logPrinter.print("============= GoldLeaf =============\n\tVIRT:/ equals files added into the application\n\tHOME:/ equals "
+                    +System.getProperty("user.home"), EMsgType.INFO);
+            // Let's collect file names to the array to simplify our life
+            writeFilesMap = new HashMap<>();
+            int i = 0;
+            nspMapKeySetIndexes = new String[nspMap.size()];
+            for (String fileName : nspMap.keySet())
+                nspMapKeySetIndexes[i++] = fileName;
+
+            status = EFileStatus.UNKNOWN;
+
             // Go parse commands
             byte[] readByte;
+            int someLength;
+            while (! isCancelled()) {                          // Till user interrupted process.
+                readByte = readGL();
 
-            // Go connect to GoldLeaf
+                if (readByte == null)              // Issue @ readFromUsbGL method
+                    return;
+                else if(readByte.length < 4096) {           // Just timeout of waiting for reply; continue loop
+                    closeOpenedReadFilesGl();
+                    continue;
+                }
 
-            if (!writeToUsb(CMD_GLUC)) {
-                logPrinter.print("GL Initiating GoldLeaf connection: 1/2", EMsgType.FAIL);
-                return false;
+                //RainbowHexDump.hexDumpUTF8(readByte);   // TODO: DEBUG
+                //System.out.println("CHOICE: "+readByte[4]); // TODO: DEBUG
+
+                if (Arrays.equals(Arrays.copyOfRange(readByte, 0,4), CMD_GLCI)) {
+                    switch (readByte[4]) {
+                        case CMD_GetDriveCount:
+                            if (getDriveCount())
+                                return;
+                            break;
+                        case CMD_GetDriveInfo:
+                            if (getDriveInfo(arrToIntLE(readByte,8)))
+                                return;
+                            break;
+                        case CMD_GetSpecialPathCount:
+                            if (getSpecialPathCount())
+                                return;
+                            break;
+                        case CMD_GetSpecialPath:
+                            if (getSpecialPath(arrToIntLE(readByte,8)))
+                                return;
+                            break;
+                        case CMD_GetDirectoryCount:
+                            if (getDirectoryOrFileCount(new String(readByte, 12, arrToIntLE(readByte, 8), StandardCharsets.UTF_8), true))
+                                return;
+                            break;
+                        case CMD_GetFileCount:
+                            if (getDirectoryOrFileCount(new String(readByte, 12, arrToIntLE(readByte, 8), StandardCharsets.UTF_8), false))
+                                return;
+                            break;
+                        case CMD_GetDirectory:
+                            someLength = arrToIntLE(readByte, 8);
+                            if (getDirectory(new String(readByte, 12, someLength, StandardCharsets.UTF_8), arrToIntLE(readByte, someLength+12)))
+                                return;
+                            break;
+                        case CMD_GetFile:
+                            someLength = arrToIntLE(readByte, 8);
+                            if (getFile(new String(readByte, 12, someLength, StandardCharsets.UTF_8), arrToIntLE(readByte, someLength+12)))
+                                return;
+                            break;
+                        case CMD_StatPath:
+                            if (statPath(new String(readByte, 12, arrToIntLE(readByte, 8), StandardCharsets.UTF_8)))
+                                return;
+                            break;
+                        case CMD_Rename:
+                            someLength = arrToIntLE(readByte, 12);
+                            if (rename(new String(readByte, 16, someLength, StandardCharsets.UTF_8),
+                                    new String(readByte, 16+someLength+4, arrToIntLE(readByte, 16+someLength), StandardCharsets.UTF_8)))
+                                return;
+                            break;
+                        case CMD_Delete:
+                            if (delete(new String(readByte, 16, arrToIntLE(readByte, 12), StandardCharsets.UTF_8)))
+                                return;
+                            break;
+                        case CMD_Create:
+                            if (create(new String(readByte, 16, arrToIntLE(readByte, 12), StandardCharsets.UTF_8), readByte[8]))
+                                return;
+                            break;
+                        case CMD_ReadFile:
+                            someLength = arrToIntLE(readByte, 8);
+                            if (readFile(new String(readByte, 12, someLength, StandardCharsets.UTF_8),
+                                    arrToLongLE(readByte, 12+someLength),
+                                    arrToLongLE(readByte, 12+someLength+8)))
+                                return;
+                            break;
+                        case CMD_WriteFile:
+                            someLength = arrToIntLE(readByte, 8);
+                            if (writeFile(new String(readByte, 12, someLength, StandardCharsets.UTF_8),
+                                    arrToLongLE(readByte, 12+someLength)))
+                                return;
+                            break;
+                        default:
+                            writeGL_FAIL("GL Unknown command: "+readByte[4]+" [it's a very bad sign]");
+                    }
+                }
             }
-            logPrinter.print("GL Initiating GoldLeaf connection: 1/2", EMsgType.PASS);
-            if (!writeToUsb(CMD_ConnectionRequest)){
-                logPrinter.print("GL Initiating GoldLeaf connection: 2/2", EMsgType.FAIL);
-                return false;
+            // Close (and flush) all opened streams.
+            if (writeFilesMap.size() != 0){
+                for (BufferedOutputStream fBufOutStream: writeFilesMap.values()){
+                    try{
+                        fBufOutStream.close();
+                    }catch (IOException ignored){}
+                }
             }
-            logPrinter.print("GL Initiating GoldLeaf connection: 2/2", EMsgType.PASS);
+            closeOpenedReadFilesGl();
+        }
 
-            while (true) {
-                readByte = readFromUsb();
-                if (readByte == null)
+        /**
+         * Close files opened for read/write
+         */
+        private void closeOpenedReadFilesGl(){
+            if (openReadFileNameAndPath != null){     // Perfect time to close our opened files
+                try{
+                    randAccessFile.close();
+                }
+                catch (IOException ignored){}
+                openReadFileNameAndPath = null;
+                randAccessFile = null;
+            }
+        }
+        /**
+         * Handle GetDriveCount
+         * @return true if failed
+         *         false if everything is ok
+         */
+        private boolean getDriveCount(){
+            // Let's declare 2 drives
+            byte[] drivesCnt = intToArrLE(2);//2
+            // Write count of drives
+            if (writeGL_PASS(drivesCnt)) {
+                logPrinter.print("GL Handle 'ListDrives' command", EMsgType.FAIL);
+                return true;
+            }
+            return false;
+        }
+        /**
+         * Handle GetDriveInfo
+         * @return true if failed
+         *         false if everything is ok
+         */
+        private boolean getDriveInfo(int driveNo){
+            if (driveNo < 0 || driveNo > 1){
+                return writeGL_FAIL("GL Handle 'GetDriveInfo' command [no such drive]");
+            }
+
+            byte[] driveLabel,
+                    driveLabelLen,
+                    driveLetter,
+                    driveLetterLen,
+                    totalFreeSpace,
+                    totalSize;
+            long totalSizeLong = 0;
+
+            // 0 == VIRTUAL DRIVE
+            if (driveNo == 0){
+                driveLabel = "Virtual".getBytes(StandardCharsets.UTF_8);
+                driveLabelLen = intToArrLE(driveLabel.length);
+                driveLetter = "VIRT".getBytes(StandardCharsets.UTF_8);      // TODO: Consider moving to class field declaration
+                driveLetterLen = intToArrLE(driveLetter.length);
+                totalFreeSpace = new byte[4];
+                for (File nspFile : nspMap.values()){
+                    totalSizeLong += nspFile.length();
+                }
+                totalSize = Arrays.copyOfRange(longToArrLE(totalSizeLong), 0, 4);  // Dirty hack; now for GL!
+            }
+            else { //1 == User home dir
+                driveLabel = "Home".getBytes(StandardCharsets.UTF_8);
+                driveLabelLen = intToArrLE(driveLabel.length);
+                driveLetter = "HOME".getBytes(StandardCharsets.UTF_8);
+                driveLetterLen = intToArrLE(driveLetter.length);
+                File userHomeDir = new File(System.getProperty("user.home"));
+                long totalFreeSpaceLong = userHomeDir.getFreeSpace();
+                totalFreeSpace = Arrays.copyOfRange(longToArrLE(totalFreeSpaceLong), 0, 4);  // Dirty hack; now for GL!;
+                totalSizeLong = userHomeDir.getTotalSpace();
+                totalSize = Arrays.copyOfRange(longToArrLE(totalSizeLong), 0, 4);  // Dirty hack; now for GL!
+            }
+
+            List<byte[]> command = new LinkedList<>();
+            command.add(driveLabelLen);
+            command.add(driveLabel);
+            command.add(driveLetterLen);
+            command.add(driveLetter);
+            command.add(totalFreeSpace);
+            command.add(totalSize);
+
+            if (writeGL_PASS(command)) {
+                logPrinter.print("GL Handle 'GetDriveInfo' command", EMsgType.FAIL);
+                return true;
+            }
+
+            return false;
+        }
+        /**
+         * Handle SpecialPathCount
+         *  @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean getSpecialPathCount(){
+            // Let's declare nothing =)
+            byte[] virtDrivesCnt = intToArrLE(0);
+            // Write count of special paths
+            if (writeGL_PASS(virtDrivesCnt)) {
+                logPrinter.print("GL Handle 'SpecialPathCount' command", EMsgType.FAIL);
+                return true;
+            }
+            return false;
+        }
+        /**
+         * Handle SpecialPath
+         *  @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean getSpecialPath(int virtDriveNo){
+            return writeGL_FAIL("GL Handle 'SpecialPath' command [not supported]");
+        }
+        /**
+         * Handle GetDirectoryCount & GetFileCount
+         *  @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean getDirectoryOrFileCount(String path, boolean isGetDirectoryCount) {
+            if (path.equals("VIRT:/")) {
+                if (isGetDirectoryCount){
+                    if (writeGL_PASS()) {
+                        logPrinter.print("GL Handle 'GetDirectoryCount' command", EMsgType.FAIL);
+                        return true;
+                    }
+                }
+                else {
+                    if (writeGL_PASS(intToArrLE(nspMap.size()))) {
+                        logPrinter.print("GL Handle 'GetFileCount' command Count = "+nspMap.size(), EMsgType.FAIL);
+                        return true;
+                    }
+                }
+            }
+            else if (path.startsWith("HOME:/")){
+                // Let's make it normal path
+                path = path.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
+                        .replaceAll("/", File.separator); // HANDLE 'PATH' SEPARATOR FOR WINDOWS
+                // Open it
+                File pathDir = new File(path);
+
+                // Make sure it's exists and it's path
+                if ((! pathDir.exists() ) || (! pathDir.isDirectory()) ){
+                    return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [doesn't exist or not a folder]");
+                }
+                // Save recent dir path
+                this.recentPath = path;
+                String[] filesOrDirs;
+                // Now collecting every folder or file inside
+                if (isGetDirectoryCount){
+                    filesOrDirs = pathDir.list((current, name) -> {
+                        File dir = new File(current, name);
+                        return (dir.isDirectory() && ! dir.getName().startsWith("."));      // TODO: FIX FOR WIN ?
+                    });
+                }
+                else {
+                    if (nspFilterForGl){
+                        filesOrDirs = pathDir.list((current, name) -> {
+                            File dir = new File(current, name);
+                            return (! dir.isDirectory() && name.endsWith(".nsp"));      // TODO: FIX FOR WIN ?
+                        });
+                    }
+                    else {
+                        filesOrDirs = pathDir.list((current, name) -> {
+                            File dir = new File(current, name);
+                            return (! dir.isDirectory() && (! name.startsWith(".")));      // TODO: MOVE TO PROD
+                        });
+                    }
+                }
+                // If somehow there are no folders, let's say 0;
+                if (filesOrDirs == null){
+                    if (writeGL_PASS()) {
+                        logPrinter.print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.FAIL);
+                        return true;
+                    }
+                    //logPrinter.print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.PASS);
                     return false;
-                if (Arrays.equals(readByte, CMD_GLUC)) {
-                    readByte = readFromUsb();
-                    if (readByte == null)
+                }
+                // Sorting is mandatory
+                Arrays.sort(filesOrDirs, String.CASE_INSENSITIVE_ORDER);
+
+                if (isGetDirectoryCount)
+                    this.recentDirs = filesOrDirs;
+                else
+                    this.recentFiles = filesOrDirs;
+
+                // Otherwise, let's tell how may folders are in there
+                if (writeGL_PASS(intToArrLE(filesOrDirs.length))) {
+                    logPrinter.print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.FAIL);
+                    return true;
+                }
+            }
+            // If requested drive is not VIRT and not HOME then reply error
+            else {
+                return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request]");
+            }
+            return false;
+        }
+        /**
+         * Handle GetDirectory
+         * @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean getDirectory(String dirName, int subDirNo){
+            if (dirName.startsWith("HOME:/")) {
+                dirName = dirName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
+                        .replaceAll("/", File.separator);
+
+                List<byte[]> command = new LinkedList<>();
+
+                if (dirName.equals(recentPath) && recentDirs != null && recentDirs.length != 0){
+                    command.add(intToArrLE(recentDirs[subDirNo].getBytes(StandardCharsets.UTF_8).length));
+                    command.add(recentDirs[subDirNo].getBytes(StandardCharsets.UTF_8));
+                }
+                else {
+                    File pathDir = new File(dirName);
+                    // Make sure it's exists and it's path
+                    if ((! pathDir.exists() ) || (! pathDir.isDirectory()) )
+                        return writeGL_FAIL("GL Handle 'GetDirectory' command [doesn't exist or not a folder]");
+                    this.recentPath = dirName;
+                    // Now collecting every folder or file inside
+                    this.recentDirs = pathDir.list((current, name) -> {
+                        File dir = new File(current, name);
+                        return (dir.isDirectory() && ! dir.getName().startsWith("."));      // TODO: FIX FOR WIN ?
+                    });
+                    // Check that we still don't have any fuckups
+                    if (this.recentDirs != null && this.recentDirs.length > subDirNo){
+                        Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);
+                        byte[] dirBytesName = recentDirs[subDirNo].getBytes(StandardCharsets.UTF_8);
+                        command.add(intToArrLE(dirBytesName.length));
+                        command.add(dirBytesName);
+                    }
+                    else
+                        return writeGL_FAIL("GL Handle 'GetDirectory' command [doesn't exist or not a folder]");
+                }
+                if (proxyForGL)
+                    return proxyGetDirFile(true);
+                else {
+                    if (writeGL_PASS(command)) {
+                        logPrinter.print("GL Handle 'GetDirectory' command.", EMsgType.FAIL);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            // VIRT:// and any other
+            return writeGL_FAIL("GL Handle 'GetDirectory' command for virtual drive [no folders support]");
+        }
+        /**
+         * Handle GetFile
+         * @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean getFile(String dirName, int subDirNo){
+            List<byte[]> command = new LinkedList<>();
+
+            if (dirName.startsWith("HOME:/")) {
+                dirName = dirName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
+                        .replaceAll("/", File.separator);
+
+                if (dirName.equals(recentPath) && recentFiles != null && recentFiles.length != 0){
+                    byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_8);
+
+                    command.add(intToArrLE(fileNameBytes.length));
+                    command.add(fileNameBytes);
+                }
+                else {
+                    File pathDir = new File(dirName);
+                    // Make sure it's exists and it's path
+                    if ((! pathDir.exists() ) || (! pathDir.isDirectory()) )
+                        writeGL_FAIL("GL Handle 'GetFile' command [doesn't exist or not a folder]");
+                    this.recentPath = dirName;
+                    // Now collecting every folder or file inside
+                    if (nspFilterForGl){
+                        this.recentFiles = pathDir.list((current, name) -> {
+                            File dir = new File(current, name);
+                            return (! dir.isDirectory() && name.endsWith(".nsp"));      // TODO: FIX FOR WIN ? MOVE TO PROD
+                        });
+                    }
+                    else {
+                        this.recentFiles = pathDir.list((current, name) -> {
+                            File dir = new File(current, name);
+                            return (! dir.isDirectory() && (! name.startsWith(".")));    // TODO: FIX FOR WIN
+                        });
+                    }
+                    // Check that we still don't have any fuckups
+                    if (this.recentFiles != null && this.recentFiles.length > subDirNo){
+                        Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);        // TODO: NOTE: array sorting is an overhead for using poxy loops
+                        byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_8);
+                        command.add(intToArrLE(fileNameBytes.length));
+                        command.add(fileNameBytes);
+                    }
+                    else
+                        return writeGL_FAIL("GL Handle 'GetFile' command [doesn't exist or not a folder]");
+                }
+                if (proxyForGL)
+                    return proxyGetDirFile(false);
+                else {
+                    if (writeGL_PASS(command)) {
+                        logPrinter.print("GL Handle 'GetFile' command.", EMsgType.FAIL);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            else if (dirName.equals("VIRT:/")){
+                if (nspMap.size() != 0){    // therefore nspMapKeySetIndexes also != 0
+                    byte[] fileNameBytes = nspMapKeySetIndexes[subDirNo].getBytes(StandardCharsets.UTF_8);
+                    command.add(intToArrLE(fileNameBytes.length));
+                    command.add(fileNameBytes);
+
+                    if (writeGL_PASS(command)) {
+                        logPrinter.print("GL Handle 'GetFile' command.", EMsgType.FAIL);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            //  any other cases
+            return writeGL_FAIL("GL Handle 'GetFile' command for virtual drive [no folders support]");
+        }
+        /**
+         * Handle StatPath
+         * @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean statPath(String filePath){
+            //System.out.println(filePath+recentDirs[0]);   // TODO: DEBUG
+            List<byte[]> command = new LinkedList<>();
+
+            if (filePath.startsWith("HOME:/")){
+                filePath = filePath.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
+                        .replaceAll("/", File.separator);
+
+                if (proxyForGL)
+                    return proxyStatPath(filePath); // dirty name
+
+                File fileDirElement = new File(filePath);
+                if (fileDirElement.exists()){
+                    if (fileDirElement.isDirectory())
+                        command.add(GL_OBJ_TYPE_DIR);
+                    else {
+                        command.add(GL_OBJ_TYPE_FILE);
+                        command.add(longToArrLE(fileDirElement.length()));
+                    }
+                    if (writeGL_PASS(command)) {
+                        logPrinter.print("GL Handle 'StatPath' command.", EMsgType.FAIL);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            else if (filePath.startsWith("VIRT:/")) {
+                filePath = filePath.replaceFirst("VIRT:/", "");
+
+                if (nspMap.containsKey(filePath)){
+                    command.add(GL_OBJ_TYPE_FILE);                              // THIS IS INT
+                    command.add(longToArrLE(nspMap.get(filePath).length()));    // YES, THIS IS LONG!
+                    if (writeGL_PASS(command)) {
+                        logPrinter.print("GL Handle 'StatPath' command.", EMsgType.FAIL);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            return writeGL_FAIL("GL Handle 'StatPath' command [no such folder] - "+filePath);
+        }
+        /**
+         * Handle 'Rename' that is actually 'mv'
+         * @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean rename(String fileName, String newFileName){
+            if (fileName.startsWith("HOME:/")){
+                // This shit takes too much time to explain, but such behaviour won't let GL to fail
+                this.recentPath = null;
+                this.recentFiles = null;
+                this.recentDirs = null;
+                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator).replaceAll("/", File.separator);
+                newFileName = newFileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator).replaceAll("/", File.separator);
+                File currentFile = new File(fileName);
+                File newFile = new File(newFileName);
+                if (! newFile.exists()){        // Else, report error
+                    try {
+                        if (currentFile.renameTo(newFile)){
+                            if (writeGL_PASS()) {
+                                logPrinter.print("GL Handle 'Rename' command.", EMsgType.FAIL);
+                                return true;
+                            }
+                            return false;
+                        }
+                    }
+                    catch (SecurityException ignored){} // Ah, leave it
+                }
+            }
+            // For VIRT:/ and others we don't serve requests
+            return writeGL_FAIL("GL Handle 'Rename' command [not supported for virtual drive/wrong drive/file with such name already exists/read-only directory]");
+        }
+        /**
+         * Handle 'Delete'
+         * @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean delete(String fileName) {
+            if (fileName.startsWith("HOME:/")) {
+                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator).replaceAll("/", File.separator);
+                File fileToDel = new File(fileName);
+                try {
+                    if (fileToDel.delete()){
+                        if (writeGL_PASS()) {
+                            logPrinter.print("GL Handle 'Rename' command.", EMsgType.FAIL);
+                            return true;
+                        }
                         return false;
-                    if (Arrays.equals(readByte, CMD_ConnectionResponse)) {
-                        if (!handleConnectionResponse(pfsElement))
-                            return false;
-                        else
-                            continue;
-                    }
-                    if (Arrays.equals(readByte, CMD_Start)) {
-                        if (!handleStart(pfsElement))
-                            return false;
-                        else
-                            continue;
-                    }
-                    if (Arrays.equals(readByte, CMD_NSPContent)) {
-                        if (!handleNSPContent(pfsElement, true))
-                            return false;
-                        else
-                            continue;
-                    }
-                    if (Arrays.equals(readByte, CMD_NSPTicket)) {
-                        if (!handleNSPContent(pfsElement, false))
-                            return false;
-                        else
-                            continue;
-                    }
-                    if (Arrays.equals(readByte, CMD_Finish)) {
-                        logPrinter.print("GL Closing GoldLeaf connection: Transfer successful.", EMsgType.PASS);
-                        break;
                     }
                 }
+                catch (SecurityException ignored){} // Ah, leave it
             }
-            return true;
+            // For VIRT:/ and others we don't serve requests
+            return writeGL_FAIL("GL Handle 'Delete' command [not supported for virtual drive/wrong drive/read-only directory]");
         }
         /**
-         * ConnectionResponse command handler
+         * Handle 'Create'
+         * @param type 1 for file
+         *             2 for folder
+         * @param fileName full path including new file name in the end
+         * @return true if failed
+         *          false if everything is ok
          * */
-        private boolean handleConnectionResponse(PFSProvider pfsElement){
-            logPrinter.print("GL 'ConnectionResponse' command:", EMsgType.INFO);
-            if (!writeToUsb(CMD_GLUC)) {
-                logPrinter.print("  [1/4]", EMsgType.FAIL);
-                return false;
+        private boolean create(String fileName, byte type) {
+            if (fileName.startsWith("HOME:/")) {
+                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator).replaceAll("/", File.separator);
+                File fileToCreate = new File(fileName);
+                boolean result = false;
+                if (type == 1){
+                    try {
+                        result = fileToCreate.createNewFile();
+                    }
+                    catch (SecurityException | IOException ignored){}
+                }
+                else if (type == 2){
+                    try {
+                        result = fileToCreate.mkdir();
+                    }
+                    catch (SecurityException ignored){}
+                }
+                if (result){
+                    if (writeGL_PASS()) {
+                        logPrinter.print("GL Handle 'Create' command.", EMsgType.FAIL);
+                        return true;
+                    }
+                    //logPrinter.print("GL Handle 'Create' command.", EMsgType.PASS);
+                    return false;
+                }
             }
-            logPrinter.print("  [1/4]", EMsgType.PASS);
-            if (!writeToUsb(CMD_NSPName)) {
-                logPrinter.print("  [2/4]", EMsgType.FAIL);
-                return false;
-            }
-            logPrinter.print("  [2/4]", EMsgType.PASS);
-
-            if (!writeToUsb(pfsElement.getBytesNspFileNameLength())) {
-                logPrinter.print("  [3/4]", EMsgType.FAIL);
-                return false;
-            }
-            logPrinter.print("  [3/4]", EMsgType.PASS);
-
-            if (!writeToUsb(pfsElement.getBytesNspFileName())) {
-                logPrinter.print("  [4/4]", EMsgType.FAIL);
-                return false;
-            }
-            logPrinter.print("  [4/4]", EMsgType.PASS);
-
-            return true;
+            // For VIRT:/ and others we don't serve requests
+            return writeGL_FAIL("GL Handle 'Delete' command [not supported for virtual drive/wrong drive/read-only directory]");
         }
+
         /**
-         * Start command handler
+         * Handle 'ReadFile'
+         * @param fileName full path including new file name in the end
+         * @param offset requested offset
+         * @param size requested size
+         * @return true if failed
+         *          false if everything is ok
          * */
-        private boolean handleStart(PFSProvider pfsElement){
-            logPrinter.print("GL Handle 'Start' command:", EMsgType.INFO);
-            if (!writeToUsb(CMD_GLUC)) {
-                logPrinter.print("  [Send command prepare]", EMsgType.FAIL);
-                return false;
-            }
-            logPrinter.print("  [Send command prepare]", EMsgType.PASS);
-
-            if (!writeToUsb(CMD_NSPData)) {
-                logPrinter.print("  [Send command]", EMsgType.FAIL);
-                return false;
-            }
-            logPrinter.print("  [Send command]", EMsgType.PASS);
-
-            if (!writeToUsb(pfsElement.getBytesCountOfNca())) {
-                logPrinter.print("  [Send length]", EMsgType.FAIL);
-                return false;
-            }
-            logPrinter.print("  [Send length]", EMsgType.PASS);
-
-            int ncaCount = pfsElement.getIntCountOfNca();
-            logPrinter.print("  [Send information for "+ncaCount+" files]", EMsgType.INFO);
-            for (int i = 0; i < ncaCount; i++){
-                if (!writeToUsb(pfsElement.getNca(i).getNcaFileNameLength())) {
-                    logPrinter.print("    [1/4] File #"+i, EMsgType.FAIL);
-                    return false;
+        private boolean readFile(String fileName, long offset, long size) {
+            System.out.println(fileName+" "+offset+" "+size+" ");       // TODO: DEBUG
+            if (fileName.startsWith("VIRT:/")){
+                // Let's find out which file requested
+                String fNamePath = nspMap.get(fileName.substring(6)).getAbsolutePath();     // NOTE: 6 = "VIRT:/".length
+                // If we don't have this file opened, let's open it
+                if (openReadFileNameAndPath == null || (! openReadFileNameAndPath.equals(fNamePath))) {
+                    // Try close what opened
+                    try{
+                        randAccessFile.close();
+                    }catch (IOException ignored){}
+                    try{
+                        randAccessFile = new RandomAccessFile(nspMap.get(fileName.substring(6)), "r");
+                        openReadFileNameAndPath = fNamePath;
+                    }
+                    catch (IOException ioe){                // TODO: MOVE THIS SHIT TO METHOD ALREADY!
+                        return writeGL_FAIL("GL Handle 'ReadFile' command\n\t"+ioe.getMessage());
+                    }
                 }
-                logPrinter.print("    [1/4] File #"+i, EMsgType.PASS);
-
-                if (!writeToUsb(pfsElement.getNca(i).getNcaFileName())) {
-                    logPrinter.print("    [2/4] File #"+i, EMsgType.FAIL);
-                    return false;
-                }
-                logPrinter.print("    [2/4] File #"+i, EMsgType.PASS);
-                if (!writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getBodySize()+pfsElement.getNca(i).getNcaOffset()).array())) {   // offset. real.
-                    logPrinter.print("    [3/4] File #"+i, EMsgType.FAIL);
-                    return false;
-                }
-                logPrinter.print("    [3/4] File #"+i, EMsgType.PASS);
-                if (!writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getNca(i).getNcaSize()).array())) {  // size
-                    logPrinter.print("    [4/4] File #"+i, EMsgType.FAIL);
-                    return false;
-                }
-                logPrinter.print("    [4/4] File #"+i, EMsgType.PASS);
-            }
-            return true;
-        }
-        /**
-         * NSPContent command handler
-         * isItRawRequest - if True, just ask NS what's needed
-         *                - if False, send ticket
-         * */
-        private boolean handleNSPContent(PFSProvider pfsElement, boolean isItRawRequest){
-            int requestedNcaID;
-
-            if (isItRawRequest) {
-                logPrinter.print("GL Handle 'Content' command", EMsgType.INFO);
-                byte[] readByte = readFromUsb();
-                if (readByte == null || readByte.length != 4) {
-                    logPrinter.print("  [Read requested ID]", EMsgType.FAIL);
-                    return false;
-                }
-                requestedNcaID = ByteBuffer.wrap(readByte).order(ByteOrder.LITTLE_ENDIAN).getInt();
-                logPrinter.print("  [Read requested ID = "+requestedNcaID+" ]", EMsgType.PASS);
             }
             else {
-                requestedNcaID = pfsElement.getNcaTicketID();
-                logPrinter.print("GL Handle 'Ticket' command (ID = "+requestedNcaID+" )", EMsgType.INFO);
-            }
-
-            long realNcaOffset = pfsElement.getNca(requestedNcaID).getNcaOffset()+pfsElement.getBodySize();
-            long realNcaSize = pfsElement.getNca(requestedNcaID).getNcaSize();
-
-            long readFrom = 0;
-
-            int readPice = 8388608; // 8mb NOTE: consider switching to 1mb 1048576
-            byte[] readBuf;
-            File nspFile = nspMap.get(pfsElement.getStringNspFileName());       // wuuuut ( >< )
-            try{
-                BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspFile));      // TODO: refactor?
-                if (bufferedInStream.skip(realNcaOffset) != realNcaOffset)
-                    return false;
-
-                while (readFrom < realNcaSize){
-
-                    if (isCancelled())     // Check if user interrupted process.
-                        return false;
-
-                    if (realNcaSize - readFrom < readPice)
-                        readPice = Math.toIntExact(realNcaSize - readFrom);    // it's safe, I guarantee
-                    readBuf = new byte[readPice];
-                    if (bufferedInStream.read(readBuf) != readPice)
-                        return false;
-                    //System.out.println("S: "+readFrom+" T: "+realNcaSize+" P: "+readPice);    //  DEBUG
-                    if (!writeToUsb(readBuf))
-                        return false;
-                    //-----------------------------------------/
-                    try {
-                        logPrinter.updateProgress((readFrom+readPice)/(realNcaSize/100.0) / 100.0);
-                    }catch (InterruptedException ie){
-                        getException().printStackTrace();               // TODO: Do something with this
-                    }
-                    //-----------------------------------------/
-                    readFrom += readPice;
-                }
-                bufferedInStream.close();
-                //-----------------------------------------/
+                // Let's find out which file requested
+                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
+                        .replaceAll("/", File.separator);
+                // Try close what opened
                 try{
-                    logPrinter.updateProgress(1.0);
+                    randAccessFile.close();
+                }catch (IOException ignored){}
+                // If we don't have this file opened, let's open it
+                if (openReadFileNameAndPath == null || (! openReadFileNameAndPath.equals(fileName))) {
+                    try{
+                        randAccessFile = new RandomAccessFile(fileName, "r");
+                        openReadFileNameAndPath = fileName;
+                    }catch (IOException ioe){
+                        return writeGL_FAIL("GL Handle 'ReadFile' command\n\t"+ioe.getMessage());
+                    }
                 }
-                catch (InterruptedException ie){
-                    getException().printStackTrace();               // TODO: Do something with this
-                }
-                //-----------------------------------------/
             }
-            catch (IOException ioe){
-                logPrinter.print("  Failed to read NCA ID "+requestedNcaID+". IO Exception:\n  "+ioe.getMessage(), EMsgType.FAIL);
-                ioe.printStackTrace();
+            //----------------------- Actual transfer chain ------------------------
+            try{
+                randAccessFile.seek(offset);
+                byte[] chunk = new byte[(int)size]; // WTF MAN?
+                // Let's find out how much bytes we got
+                int bytesRead = randAccessFile.read(chunk);
+                // Let's tell as a command about our result.
+                if (writeGL_PASS(intToArrLE(bytesRead))) {
+                    logPrinter.print("GL Handle 'ReadFile' command [1/?]", EMsgType.FAIL);
+                    return true;
+                }
+                if (bytesRead > 8388608){
+                    // Let's bypass bytes we read part 1
+                    if (writeToUsb(Arrays.copyOfRange(chunk, 0, 8388608))) {
+                        logPrinter.print("GL Handle 'ReadFile' command [2/3]", EMsgType.FAIL);
+                        return true;
+                    }
+                    // Let's bypass bytes we read part 2
+                    if (writeToUsb(Arrays.copyOfRange(chunk, 8388608, chunk.length))) {
+                        logPrinter.print("GL Handle 'ReadFile' command [2/3]", EMsgType.FAIL);
+                        return true;
+                    }
+                    return false;
+                }
+                // Let's bypass bytes we read total
+                if (writeToUsb(chunk)) {
+                    logPrinter.print("GL Handle 'ReadFile' command [2/2]", EMsgType.FAIL);
+                    return true;
+                }
                 return false;
             }
-            return true;
+            catch (IOException ioe){
+                try{
+                    randAccessFile.close();
+                }
+                catch (IOException ioee){
+                    logPrinter.print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioee.getMessage(), EMsgType.WARNING);
+                }
+                openReadFileNameAndPath = null;
+                randAccessFile = null;
+                return writeGL_FAIL("GL Handle 'ReadFile' command\n\t"+ioe.getMessage());
+            }
         }
+        /**
+         * Handle 'WriteFile'
+         * @param fileName full path including new file name in the end
+         * @param size requested size
+         * @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean writeFile(String fileName, long size) {
+            if (fileName.startsWith("VIRT:/")){
+                return writeGL_FAIL("GL Handle 'WriteFile' command [not supported for virtual drive]");
+            }
+            else {
+                if ((int)size > 8388608){
+                    logPrinter.print("GL Handle 'WriteFile' command [Files greater than 8mb are not supported]", EMsgType.FAIL);
+                    return true;
+                }
+
+                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
+                        .replaceAll("/", File.separator);
+                // Check if we didn't see this (or any) file during this session
+                if (writeFilesMap.size() == 0 || (! writeFilesMap.containsKey(fileName))){
+                    // Open what we have to open
+                    File writeFile = new File(fileName);
+                    // If this file exists GL will take care
+                    // Otherwise, let's add it
+                    try{
+                        BufferedOutputStream writeFileBufOutStream = new BufferedOutputStream(new FileOutputStream(writeFile, true));
+                        writeFilesMap.put(fileName, writeFileBufOutStream);
+                    } catch (IOException ioe){
+                        return writeGL_FAIL("GL Handle 'WriteFile' command [IOException]\n\t"+ioe.getMessage());
+                    }
+                }
+                // Now we have stream
+                BufferedOutputStream myStream = writeFilesMap.get(fileName);
+
+                byte[] transferredData;
+
+                if ((transferredData = readGL_file()) == null){
+                    logPrinter.print("GL Handle 'WriteFile' command [1/1]", EMsgType.FAIL);
+                    return true;
+                }
+                try{
+                    myStream.write(transferredData, 0, transferredData.length);
+                }
+                catch (IOException ioe){
+                    return writeGL_FAIL("GL Handle 'WriteFile' command [1/1]\n\t"+ioe.getMessage());
+                }
+                System.out.println("READ COMLETE");
+                // Report we're good
+                if (writeGL_PASS()) {
+                    logPrinter.print("GL Handle 'WriteFile' command", EMsgType.FAIL);
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        /*----------------------------------------------------*/
+        /*           GL READ/WRITE USB SPECIFIC               */
+        /*----------------------------------------------------*/
+
+        /**
+         * Write new command. Shitty implementation.
+         * */
+        private boolean writeGL_PASS(byte[] message){
+            ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
+            writeBuffer.put(CMD_GLCO_SUCCESS);
+            writeBuffer.put(message);
+            return writeToUsb(writeBuffer.array());
+        }
+        private boolean writeGL_PASS(){
+            return writeToUsb(Arrays.copyOf(CMD_GLCO_SUCCESS, 4096));
+        }
+        private boolean writeGL_PASS(List<byte[]> messages){
+            ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
+            writeBuffer.put(CMD_GLCO_SUCCESS);
+            for (byte[] arr : messages)
+                writeBuffer.put(arr);
+            return writeToUsb(writeBuffer.array());
+        }
+
+        private boolean writeGL_FAIL(String reportToUImsg){
+            if (writeToUsb(Arrays.copyOf(CMD_GLCO_FAILURE, 4096))){
+                logPrinter.print(reportToUImsg, EMsgType.WARNING);
+                return true;
+            }
+            logPrinter.print(reportToUImsg, EMsgType.FAIL);
+            return false;
+        }
+        private byte[] readGL(){
+            ByteBuffer readBuffer = ByteBuffer.allocateDirect(4096);    // GL really?
+            // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
+            IntBuffer readBufTransferred = IntBuffer.allocate(1);
+
+            int result;
+            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 5000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+
+            if (result != LibUsb.SUCCESS && result != LibUsb.ERROR_TIMEOUT){
+                logPrinter.print("GL Data transfer (read) issue\n  Returned: "+UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
+                logPrinter.print("Execution stopped", EMsgType.FAIL);
+                return null;
+            }
+            else {
+                int trans = readBufTransferred.get();
+                byte[] receivedBytes = new byte[trans];
+                readBuffer.get(receivedBytes);
+                return receivedBytes;
+            }
+        }
+        private byte[] readGL_file(){
+            ByteBuffer readBuffer = ByteBuffer.allocateDirect(8388608); // Just don't ask..
+            // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
+            IntBuffer readBufTransferred = IntBuffer.allocate(1);   // Works for 8mb
+
+            int result;
+            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+
+            if (result != LibUsb.SUCCESS && result != LibUsb.ERROR_TIMEOUT){
+                logPrinter.print("GL Data transfer (read) issue\n  Returned: "+UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
+                logPrinter.print("Execution stopped", EMsgType.FAIL);
+                return null;
+            }
+            else {
+                int trans = readBufTransferred.get();
+                byte[] receivedBytes = new byte[trans];
+                readBuffer.get(receivedBytes);
+                return receivedBytes;
+            }
+        }
+        /*----------------------------------------------------*/
+        /*                     GL HELPERS                     */
+        /*----------------------------------------------------*/
+
+        /**
+         * Convert INT (Little endian) value to bytes-array representation
+         * */
+        private byte[] intToArrLE(int value){
+            ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+            byteBuffer.putInt(value);
+            return byteBuffer.array();
+        }
+        /**
+         * Convert LONG (Little endian) value to bytes-array representation
+         * */
+        private byte[] longToArrLE(long value){
+            ByteBuffer byteBuffer = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+            byteBuffer.putLong(value);
+            return byteBuffer.array();
+        }
+        /**
+         * Convert bytes-array to INT value (Little endian)
+         * */
+        private int arrToIntLE(byte[] byteArrayWithInt, int intStartPosition){
+            return ByteBuffer.wrap(byteArrayWithInt).order(ByteOrder.LITTLE_ENDIAN).getInt(intStartPosition);
+        }
+        /**
+         * Convert bytes-array to LONG value (Little endian)
+         * */
+        private long arrToLongLE(byte[] byteArrayWithLong, int intStartPosition){
+            return ByteBuffer.wrap(byteArrayWithLong).order(ByteOrder.LITTLE_ENDIAN).getLong(intStartPosition);
+        }
+
+        /*----------------------------------------------------*/
+        /*                     GL EXPERIMENTAL PART           */
+        /*----------------------------------------------------*/
+
+        private boolean proxyStatPath(String path) {
+            ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
+            List<byte[]> fileBytesSize = new LinkedList<>();
+            if ((recentDirs.length == 0) && (recentFiles.length == 0)) {
+                return writeGL_FAIL("proxyStatPath");
+            }
+            if (recentDirs.length > 0){
+                writeBuffer.put(CMD_GLCO_SUCCESS);
+                writeBuffer.put(GL_OBJ_TYPE_DIR);
+                byte[] resultingDir = writeBuffer.array();
+                writeToUsb(resultingDir);
+                for (int i = 1; i < recentDirs.length; i++) {
+                    readGL();
+                    writeToUsb(resultingDir);
+                }
+            }
+            if (recentFiles.length > 0){
+                path = path.replaceAll(recentDirs[0]+"$", "");  // Remove the name from path
+                for (String fileName : recentFiles){
+                    File f = new File(path+fileName);
+                    fileBytesSize.add(longToArrLE(f.length()));
+                }
+                writeBuffer.clear();
+                for (int i = 0; i < recentFiles.length; i++){
+                    readGL();
+                    writeBuffer.clear();
+                    writeBuffer.put(CMD_GLCO_SUCCESS);
+                    writeBuffer.put(GL_OBJ_TYPE_FILE);
+                    writeBuffer.put(fileBytesSize.get(i));
+                    writeToUsb(writeBuffer.array());
+                }
+            }
+            return false;
+        }
+
+        private boolean proxyGetDirFile(boolean forDirs){
+            ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
+            List<byte[]> dirBytesNameSize = new LinkedList<>();
+            List<byte[]> dirBytesName = new LinkedList<>();
+            if (forDirs) {
+                if (recentDirs.length <= 0)
+                    return writeGL_FAIL("proxyGetDirFile");
+                for (String dirName : recentDirs) {
+                    byte[] name = dirName.getBytes(StandardCharsets.UTF_8);
+                    dirBytesNameSize.add(intToArrLE(name.length));
+                    dirBytesName.add(name);
+                }
+                writeBuffer.put(CMD_GLCO_SUCCESS);
+                writeBuffer.put(dirBytesNameSize.get(0));
+                writeBuffer.put(dirBytesName.get(0));
+                writeToUsb(writeBuffer.array());
+                writeBuffer.clear();
+                for (int i = 1; i < recentDirs.length; i++){
+                    readGL();
+                    writeBuffer.put(CMD_GLCO_SUCCESS);
+                    writeBuffer.put(dirBytesNameSize.get(i));
+                    writeBuffer.put(dirBytesName.get(i));
+                    writeToUsb(writeBuffer.array());
+                    writeBuffer.clear();
+                }
+            }
+            else {
+                if (recentDirs.length <= 0)
+                    return writeGL_FAIL("proxyGetDirFile");
+                for (String dirName : recentFiles){
+                    byte[] name = dirName.getBytes(StandardCharsets.UTF_8);
+                    dirBytesNameSize.add(intToArrLE(name.length));
+                    dirBytesName.add(name);
+                }
+                writeBuffer.put(CMD_GLCO_SUCCESS);
+                writeBuffer.put(dirBytesNameSize.get(0));
+                writeBuffer.put(dirBytesName.get(0));
+                writeToUsb(writeBuffer.array());
+                writeBuffer.clear();
+                for (int i = 1; i < recentFiles.length; i++){
+                    readGL();
+                    writeBuffer.put(CMD_GLCO_SUCCESS);
+                    writeBuffer.put(dirBytesNameSize.get(i));
+                    writeBuffer.put(dirBytesName.get(i));
+                    writeToUsb(writeBuffer.array());
+                    writeBuffer.clear();
+                }
+            }
+            return false;
+        }
+
     }
+
     //------------------------------------------------------------------------------------------------------------------
     /**
      * Correct exit
@@ -738,8 +1412,8 @@ public class UsbCommunications extends Task<Void> {
     }
     /**
      * Sending any byte array to USB device
-     * @return 'true' if no issues
-     *          'false' if errors happened
+     * @return 'false' if no issues
+     *          'true' if errors happened
      * */
     private boolean writeToUsb(byte[] message){
         ByteBuffer writeBuffer = ByteBuffer.allocateDirect(message.length);   //writeBuffer.order() equals BIG_ENDIAN;
@@ -751,14 +1425,15 @@ public class UsbCommunications extends Task<Void> {
         if (result != LibUsb.SUCCESS){
             logPrinter.print("Data transfer (write) issue\n  Returned: "+ UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
             logPrinter.print("Execution stopped", EMsgType.FAIL);
-            return false;
-        }else {
+            return true;
+        }
+        else {
             if (writeBufTransferred.get() != message.length){
                 logPrinter.print("Data transfer (write) issue\n  Requested: "+message.length+"\n  Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
-                return false;
+                return true;
             }
             else {
-                return true;
+                return false;
             }
         }
     }
@@ -768,7 +1443,7 @@ public class UsbCommunications extends Task<Void> {
      *         'null' if read failed
      * */
     private byte[] readFromUsb(){
-        ByteBuffer readBuffer = ByteBuffer.allocateDirect(512);//      //readBuffer.order() equals BIG_ENDIAN; DON'T TOUCH. And we will always allocate readBuffer for max-size endpoint supports (512 bytes)
+        ByteBuffer readBuffer = ByteBuffer.allocateDirect(512);
                                                                     // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
 
