@@ -7,7 +7,6 @@ import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.RainbowHexDump;
 import org.usb4java.*;
 
-import javax.swing.plaf.synth.SynthEditorPaneUI;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -440,7 +439,6 @@ public class UsbCommunications extends Task<Void> {
         //                     CMD
         private final byte[] CMD_GLCO_SUCCESS = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, 0x00, 0x00};         // used @ writeToUsb_GLCMD
         private final byte[] CMD_GLCO_FAILURE = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x64, (byte) 0xcb, 0x00, 0x00};  // used @ writeToUsb_GLCMD
-        private final byte[] CMD_GLCI         = new byte[]{0x47, 0x4c, 0x43, 0x49};
 
         // System.out.println((356 & 0x1FF) | ((1 + 100) & 0x1FFF) << 9); // 52068 // 0x00 0x00 0xCB 0x64
         private final byte[] GL_OBJ_TYPE_FILE = new byte[]{0x01, 0x00, 0x00, 0x00};
@@ -456,6 +454,9 @@ public class UsbCommunications extends Task<Void> {
         private RandomAccessFile randAccessFile;
 
         private HashMap<String, BufferedOutputStream> writeFilesMap;
+
+        private boolean isWindows;
+        private String homePath;
 
         GoldLeaf(){
             final byte CMD_GetDriveCount       = 0x00;
@@ -475,6 +476,8 @@ public class UsbCommunications extends Task<Void> {
             final byte CMD_SelectFile          = 0x0e;//14  // WTF? Ignoring for now. For future: execute another thread within this(?) context for FileChooser
             final byte CMD_Max                 = 0x0f;//15  // not used @ NS-UL & GT
 
+            final byte[] CMD_GLCI = new byte[]{0x47, 0x4c, 0x43, 0x49};
+
             logPrinter.print("============= GoldLeaf =============\n\tVIRT:/ equals files added into the application\n\tHOME:/ equals "
                     +System.getProperty("user.home"), EMsgType.INFO);
             // Let's collect file names to the array to simplify our life
@@ -485,6 +488,10 @@ public class UsbCommunications extends Task<Void> {
                 nspMapKeySetIndexes[i++] = fileName;
 
             status = EFileStatus.UNKNOWN;
+
+            isWindows = System.getProperty("os.name").contains("Windows");
+
+            homePath = System.getProperty("user.home")+File.separator;
 
             // Go parse commands
             byte[] readByte;
@@ -715,15 +722,13 @@ public class UsbCommunications extends Task<Void> {
             }
             else if (path.startsWith("HOME:/")){
                 // Let's make it normal path
-                path = path.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
-                        .replaceAll("/", File.separator); // HANDLE 'PATH' SEPARATOR FOR WINDOWS
+                path = updateHomePath(path);
                 // Open it
                 File pathDir = new File(path);
 
                 // Make sure it's exists and it's path
-                if ((! pathDir.exists() ) || (! pathDir.isDirectory()) ){
+                if ((! pathDir.exists() ) || (! pathDir.isDirectory()) )
                     return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [doesn't exist or not a folder]");
-                }
                 // Save recent dir path
                 this.recentPath = path;
                 String[] filesOrDirs;
@@ -731,20 +736,20 @@ public class UsbCommunications extends Task<Void> {
                 if (isGetDirectoryCount){
                     filesOrDirs = pathDir.list((current, name) -> {
                         File dir = new File(current, name);
-                        return (dir.isDirectory() && ! dir.getName().startsWith("."));      // TODO: FIX FOR WIN ?
+                        return (dir.isDirectory() && ! dir.isHidden());      // TODO: FIX FOR WIN ?
                     });
                 }
                 else {
                     if (nspFilterForGl){
                         filesOrDirs = pathDir.list((current, name) -> {
                             File dir = new File(current, name);
-                            return (! dir.isDirectory() && name.endsWith(".nsp"));      // TODO: FIX FOR WIN ?
+                            return (! dir.isDirectory() && name.toLowerCase().endsWith(".nsp"));      // TODO: FIX FOR WIN ?
                         });
                     }
                     else {
                         filesOrDirs = pathDir.list((current, name) -> {
                             File dir = new File(current, name);
-                            return (! dir.isDirectory() && (! name.startsWith(".")));      // TODO: MOVE TO PROD
+                            return (! dir.isDirectory() && (! dir.isHidden()));      // TODO: MOVE TO PROD
                         });
                     }
                 }
@@ -764,7 +769,6 @@ public class UsbCommunications extends Task<Void> {
                     this.recentDirs = filesOrDirs;
                 else
                     this.recentFiles = filesOrDirs;
-
                 // Otherwise, let's tell how may folders are in there
                 if (writeGL_PASS(intToArrLE(filesOrDirs.length))) {
                     logPrinter.print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.FAIL);
@@ -784,8 +788,7 @@ public class UsbCommunications extends Task<Void> {
          * */
         private boolean getDirectory(String dirName, int subDirNo){
             if (dirName.startsWith("HOME:/")) {
-                dirName = dirName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
-                        .replaceAll("/", File.separator);
+                dirName = updateHomePath(dirName);
 
                 List<byte[]> command = new LinkedList<>();
 
@@ -802,7 +805,7 @@ public class UsbCommunications extends Task<Void> {
                     // Now collecting every folder or file inside
                     this.recentDirs = pathDir.list((current, name) -> {
                         File dir = new File(current, name);
-                        return (dir.isDirectory() && ! dir.getName().startsWith("."));      // TODO: FIX FOR WIN ?
+                        return (dir.isDirectory() && ! dir.isHidden());      // TODO: FIX FOR WIN ?
                     });
                     // Check that we still don't have any fuckups
                     if (this.recentDirs != null && this.recentDirs.length > subDirNo){
@@ -836,8 +839,7 @@ public class UsbCommunications extends Task<Void> {
             List<byte[]> command = new LinkedList<>();
 
             if (dirName.startsWith("HOME:/")) {
-                dirName = dirName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
-                        .replaceAll("/", File.separator);
+                dirName = updateHomePath(dirName);
 
                 if (dirName.equals(recentPath) && recentFiles != null && recentFiles.length != 0){
                     byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_8);
@@ -855,13 +857,13 @@ public class UsbCommunications extends Task<Void> {
                     if (nspFilterForGl){
                         this.recentFiles = pathDir.list((current, name) -> {
                             File dir = new File(current, name);
-                            return (! dir.isDirectory() && name.endsWith(".nsp"));      // TODO: FIX FOR WIN ? MOVE TO PROD
+                            return (! dir.isDirectory() && name.toLowerCase().endsWith(".nsp"));      // TODO: FIX FOR WIN ? MOVE TO PROD
                         });
                     }
                     else {
                         this.recentFiles = pathDir.list((current, name) -> {
                             File dir = new File(current, name);
-                            return (! dir.isDirectory() && (! name.startsWith(".")));    // TODO: FIX FOR WIN
+                            return (! dir.isDirectory() && (! dir.isHidden()));    // TODO: FIX FOR WIN
                         });
                     }
                     // Check that we still don't have any fuckups
@@ -889,7 +891,6 @@ public class UsbCommunications extends Task<Void> {
                     byte[] fileNameBytes = nspMapKeySetIndexes[subDirNo].getBytes(StandardCharsets.UTF_8);
                     command.add(intToArrLE(fileNameBytes.length));
                     command.add(fileNameBytes);
-
                     if (writeGL_PASS(command)) {
                         logPrinter.print("GL Handle 'GetFile' command.", EMsgType.FAIL);
                         return true;
@@ -906,13 +907,10 @@ public class UsbCommunications extends Task<Void> {
          *          false if everything is ok
          * */
         private boolean statPath(String filePath){
-            //System.out.println(filePath+recentDirs[0]);   // TODO: DEBUG
             List<byte[]> command = new LinkedList<>();
 
             if (filePath.startsWith("HOME:/")){
-                filePath = filePath.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
-                        .replaceAll("/", File.separator);
-
+                filePath = updateHomePath(filePath);
                 if (proxyForGL)
                     return proxyStatPath(filePath); // dirty name
 
@@ -933,7 +931,6 @@ public class UsbCommunications extends Task<Void> {
             }
             else if (filePath.startsWith("VIRT:/")) {
                 filePath = filePath.replaceFirst("VIRT:/", "");
-
                 if (nspMap.containsKey(filePath)){
                     command.add(GL_OBJ_TYPE_FILE);                              // THIS IS INT
                     command.add(longToArrLE(nspMap.get(filePath).length()));    // YES, THIS IS LONG!
@@ -957,8 +954,9 @@ public class UsbCommunications extends Task<Void> {
                 this.recentPath = null;
                 this.recentFiles = null;
                 this.recentDirs = null;
-                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator).replaceAll("/", File.separator);
-                newFileName = newFileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator).replaceAll("/", File.separator);
+                fileName = updateHomePath(fileName);
+                newFileName = updateHomePath(newFileName);
+
                 File currentFile = new File(fileName);
                 File newFile = new File(newFileName);
                 if (! newFile.exists()){        // Else, report error
@@ -984,7 +982,8 @@ public class UsbCommunications extends Task<Void> {
          * */
         private boolean delete(String fileName) {
             if (fileName.startsWith("HOME:/")) {
-                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator).replaceAll("/", File.separator);
+                fileName = updateHomePath(fileName);
+
                 File fileToDel = new File(fileName);
                 try {
                     if (fileToDel.delete()){
@@ -1010,7 +1009,7 @@ public class UsbCommunications extends Task<Void> {
          * */
         private boolean create(String fileName, byte type) {
             if (fileName.startsWith("HOME:/")) {
-                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator).replaceAll("/", File.separator);
+                fileName = updateHomePath(fileName);
                 File fileToCreate = new File(fileName);
                 boolean result = false;
                 if (type == 1){
@@ -1047,35 +1046,39 @@ public class UsbCommunications extends Task<Void> {
          *          false if everything is ok
          * */
         private boolean readFile(String fileName, long offset, long size) {
-            System.out.println(fileName+" "+offset+" "+size+" ");       // TODO: DEBUG
             if (fileName.startsWith("VIRT:/")){
                 // Let's find out which file requested
                 String fNamePath = nspMap.get(fileName.substring(6)).getAbsolutePath();     // NOTE: 6 = "VIRT:/".length
                 // If we don't have this file opened, let's open it
                 if (openReadFileNameAndPath == null || (! openReadFileNameAndPath.equals(fNamePath))) {
                     // Try close what opened
-                    try{
-                        randAccessFile.close();
-                    }catch (IOException ignored){}
+                    if (openReadFileNameAndPath != null){
+                        try{
+                            randAccessFile.close();
+                        }catch (IOException ignored){}
+                    }
+                    // Open what has to be opened
                     try{
                         randAccessFile = new RandomAccessFile(nspMap.get(fileName.substring(6)), "r");
                         openReadFileNameAndPath = fNamePath;
                     }
-                    catch (IOException ioe){                // TODO: MOVE THIS SHIT TO METHOD ALREADY!
+                    catch (IOException ioe){
                         return writeGL_FAIL("GL Handle 'ReadFile' command\n\t"+ioe.getMessage());
                     }
                 }
             }
             else {
                 // Let's find out which file requested
-                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
-                        .replaceAll("/", File.separator);
-                // Try close what opened
-                try{
-                    randAccessFile.close();
-                }catch (IOException ignored){}
+                fileName = updateHomePath(fileName);
                 // If we don't have this file opened, let's open it
                 if (openReadFileNameAndPath == null || (! openReadFileNameAndPath.equals(fileName))) {
+                    // Try close what opened
+                    if (openReadFileNameAndPath != null){
+                        try{
+                            randAccessFile.close();
+                        }catch (IOException ignored){}
+                    }
+                    // Open what has to be opened
                     try{
                         randAccessFile = new RandomAccessFile(fileName, "r");
                         openReadFileNameAndPath = fileName;
@@ -1090,27 +1093,30 @@ public class UsbCommunications extends Task<Void> {
                 byte[] chunk = new byte[(int)size]; // WTF MAN?
                 // Let's find out how much bytes we got
                 int bytesRead = randAccessFile.read(chunk);
+                // Let's check that we read expected size
+                if (bytesRead != (int)size)
+                    return writeGL_FAIL("GL Handle 'ReadFile' command [CMD] Requested = "+size+" Read from file = "+bytesRead);
                 // Let's tell as a command about our result.
-                if (writeGL_PASS(intToArrLE(bytesRead))) {
-                    logPrinter.print("GL Handle 'ReadFile' command [1/?]", EMsgType.FAIL);
+                if (writeGL_PASS(longToArrLE(size))) {
+                    logPrinter.print("GL Handle 'ReadFile' command [CMD]", EMsgType.FAIL);
                     return true;
                 }
                 if (bytesRead > 8388608){
                     // Let's bypass bytes we read part 1
                     if (writeToUsb(Arrays.copyOfRange(chunk, 0, 8388608))) {
-                        logPrinter.print("GL Handle 'ReadFile' command [2/3]", EMsgType.FAIL);
+                        logPrinter.print("GL Handle 'ReadFile' command [Data 1/2]", EMsgType.FAIL);
                         return true;
                     }
                     // Let's bypass bytes we read part 2
                     if (writeToUsb(Arrays.copyOfRange(chunk, 8388608, chunk.length))) {
-                        logPrinter.print("GL Handle 'ReadFile' command [2/3]", EMsgType.FAIL);
+                        logPrinter.print("GL Handle 'ReadFile' command [Data 2/2]", EMsgType.FAIL);
                         return true;
                     }
                     return false;
                 }
                 // Let's bypass bytes we read total
                 if (writeToUsb(chunk)) {
-                    logPrinter.print("GL Handle 'ReadFile' command [2/2]", EMsgType.FAIL);
+                    logPrinter.print("GL Handle 'ReadFile' command [Data 1/1]", EMsgType.FAIL);
                     return true;
                 }
                 return false;
@@ -1144,8 +1150,7 @@ public class UsbCommunications extends Task<Void> {
                     return true;
                 }
 
-                fileName = fileName.replaceFirst("HOME:/", System.getProperty("user.home")+File.separator)
-                        .replaceAll("/", File.separator);
+                fileName = updateHomePath(fileName);
                 // Check if we didn't see this (or any) file during this session
                 if (writeFilesMap.size() == 0 || (! writeFilesMap.containsKey(fileName))){
                     // Open what we have to open
@@ -1174,7 +1179,6 @@ public class UsbCommunications extends Task<Void> {
                 catch (IOException ioe){
                     return writeGL_FAIL("GL Handle 'WriteFile' command [1/1]\n\t"+ioe.getMessage());
                 }
-                System.out.println("READ COMLETE");
                 // Report we're good
                 if (writeGL_PASS()) {
                     logPrinter.print("GL Handle 'WriteFile' command", EMsgType.FAIL);
@@ -1259,7 +1263,15 @@ public class UsbCommunications extends Task<Void> {
         /*----------------------------------------------------*/
         /*                     GL HELPERS                     */
         /*----------------------------------------------------*/
-
+        /**
+         * Convert path received from GL to normal
+         */
+        private String updateHomePath(String glPath){
+            if (isWindows)
+                glPath = glPath.replaceAll("/", "\\\\");
+            glPath = homePath+glPath.substring(6);    // Do not use replaceAll since it will consider \ as special directive
+            return glPath;
+        }
         /**
          * Convert INT (Little endian) value to bytes-array representation
          * */
@@ -1444,7 +1456,7 @@ public class UsbCommunications extends Task<Void> {
      * */
     private byte[] readFromUsb(){
         ByteBuffer readBuffer = ByteBuffer.allocateDirect(512);
-                                                                    // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
+        // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
 
         int result;
