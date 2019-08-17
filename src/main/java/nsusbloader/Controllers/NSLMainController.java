@@ -48,12 +48,12 @@ public class NSLMainController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         this.resourceBundle = rb;
-        logArea.setText(rb.getString("logsGreetingsMessage")+" "+ NSLMain.appVersion+"!\n");
+        logArea.setText(rb.getString("tab3_Txt_GreetingsMessage")+" "+ NSLMain.appVersion+"!\n");
         if (System.getProperty("os.name").toLowerCase().startsWith("lin"))
             if (!System.getProperty("user.name").equals("root"))
-                logArea.appendText(rb.getString("logsEnteredAsMsg1")+System.getProperty("user.name")+"\n"+rb.getString("logsEnteredAsMsg2") + "\n");
+                logArea.appendText(rb.getString("tab3_Txt_EnteredAsMsg1")+System.getProperty("user.name")+"\n"+rb.getString("tab3_Txt_EnteredAsMsg2") + "\n");
 
-        logArea.appendText(rb.getString("logsGreetingsMessage2")+"\n");
+        logArea.appendText(rb.getString("tab3_Txt_GreetingsMessage2")+"\n");
 
         MediatorControl.getInstance().setController(this);
 
@@ -104,7 +104,7 @@ public class NSLMainController implements Initializable {
     private void selectFilesBtnAction(){
         List<File> filesList;
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle(resourceBundle.getString("btnFileOpen"));
+        fileChooser.setTitle(resourceBundle.getString("btn_OpenFile"));
 
         File validator = new File(previouslyOpenedPath);
         if (validator.exists())
@@ -133,12 +133,12 @@ public class NSLMainController implements Initializable {
             // Collect files
             List<File> nspToUpload;
             if ((nspToUpload = FrontTabController.tableFilesListController.getFilesForUpload()) == null && FrontTabController.getSelectedProtocol().equals("TinFoil")) {
-                logArea.setText(resourceBundle.getString("logsNoFolderFileSelected"));
+                logArea.setText(resourceBundle.getString("tab3_Txt_NoFolderOrFileSelected"));
                 return;
             }
             else {
                 if ((nspToUpload = FrontTabController.tableFilesListController.getFilesForUpload()) != null){
-                    logArea.setText(resourceBundle.getString("logsFilesToUploadTitle")+"\n");
+                    logArea.setText(resourceBundle.getString("tab3_Txt_FilesToUploadTitle")+"\n");
                     for (File item: nspToUpload)
                         logArea.appendText("  "+item.getAbsolutePath()+"\n");
                 }
@@ -199,7 +199,7 @@ public class NSLMainController implements Initializable {
             selectNspBtn.setDisable(true);
             uploadStopBtn.setOnAction(e->{ stopBtnAction(); });
 
-            uploadStopBtn.setText(resourceBundle.getString("btnStop"));
+            uploadStopBtn.setText(resourceBundle.getString("btn_Stop"));
 
             btnUpStopImage.getStyleClass().remove("regionUpload");
             btnUpStopImage.getStyleClass().add("regionStop");
@@ -211,7 +211,7 @@ public class NSLMainController implements Initializable {
             selectNspBtn.setDisable(false);
             uploadStopBtn.setOnAction(e->{ uploadBtnAction(); });
 
-            uploadStopBtn.setText(resourceBundle.getString("btnUpload"));
+            uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
 
             btnUpStopImage.getStyleClass().remove("regionStop");
             btnUpStopImage.getStyleClass().add("regionUpload");

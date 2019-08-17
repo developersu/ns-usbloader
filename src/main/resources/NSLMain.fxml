@@ -59,7 +59,7 @@
             </ProgressBar>
             <HBox alignment="TOP_CENTER" VBox.vgrow="NEVER">
                <children>
-                  <Button fx:id="selectNspBtn" contentDisplay="TOP" mnemonicParsing="false" prefHeight="60.0" text="%btnFileOpen">
+                  <Button fx:id="selectNspBtn" contentDisplay="TOP" mnemonicParsing="false" prefHeight="60.0" text="%btn_OpenFile">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>
@@ -68,7 +68,7 @@
                      </graphic>
                   </Button>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <Button fx:id="uploadStopBtn" contentDisplay="TOP" mnemonicParsing="false" prefHeight="60.0" prefWidth="130.0" text="%btnUpload">
+                  <Button fx:id="uploadStopBtn" contentDisplay="TOP" mnemonicParsing="false" prefHeight="60.0" prefWidth="130.0" text="%btn_Upload">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>

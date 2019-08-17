@@ -22,7 +22,7 @@
                <items>
                   <ChoiceBox fx:id="choiceProtocol" prefWidth="120.0" />
                   <ChoiceBox fx:id="choiceNetUsb" prefWidth="75.0" />
-                  <Label fx:id="nsIpLbl" text="%NSIPlable" visible="false" />
+                  <Label fx:id="nsIpLbl" text="%tab1_Lbl_NSIP" visible="false" />
                   <TextField fx:id="nsIpTextField" prefWidth="135.0" promptText="XXX.XXX.XXX.XXX" visible="false" />
                   <Pane HBox.hgrow="ALWAYS" />
                   <Button fx:id="switchThemeBtn" mnemonicParsing="false" />

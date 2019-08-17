@@ -60,10 +60,10 @@ public class NSTableViewController implements Initializable {
             }
         });
 
-        TableColumn<NSLRowModel, String> statusColumn = new TableColumn<>(resourceBundle.getString("tableStatusLbl"));
-        TableColumn<NSLRowModel, String> fileNameColumn = new TableColumn<>(resourceBundle.getString("tableFileNameLbl"));
-        TableColumn<NSLRowModel, String> fileSizeColumn = new TableColumn<>(resourceBundle.getString("tableSizeLbl"));
-        TableColumn<NSLRowModel, Boolean> uploadColumn = new TableColumn<>(resourceBundle.getString("tableUploadLbl"));
+        TableColumn<NSLRowModel, String> statusColumn = new TableColumn<>(resourceBundle.getString("tab1_table_Lbl_Status"));
+        TableColumn<NSLRowModel, String> fileNameColumn = new TableColumn<>(resourceBundle.getString("tab1_table_Lbl_FileName"));
+        TableColumn<NSLRowModel, String> fileSizeColumn = new TableColumn<>(resourceBundle.getString("tab1_table_Lbl_Size"));
+        TableColumn<NSLRowModel, Boolean> uploadColumn = new TableColumn<>(resourceBundle.getString("tab1_table_Lbl_Upload"));
 
         statusColumn.setEditable(false);
         fileNameColumn.setEditable(false);
@@ -122,7 +122,7 @@ public class NSTableViewController implements Initializable {
                     public TableRow<NSLRowModel> call(TableView<NSLRowModel> nslRowModelTableView) {
                         final TableRow<NSLRowModel> row = new TableRow<>();
                         ContextMenu contextMenu = new ContextMenu();
-                        MenuItem deleteMenuItem = new MenuItem(resourceBundle.getString("contextMenuBtnDelete"));
+                        MenuItem deleteMenuItem = new MenuItem(resourceBundle.getString("tab1_table_contextMenu_Btn_BtnDelete"));
                         deleteMenuItem.setOnAction(new EventHandler<ActionEvent>() {
                             @Override
                             public void handle(ActionEvent actionEvent) {
@@ -132,7 +132,7 @@ public class NSTableViewController implements Initializable {
                                 table.refresh();
                             }
                         });
-                        MenuItem deleteAllMenuItem = new MenuItem(resourceBundle.getString("contextMenuBtnDeleteAll"));
+                        MenuItem deleteAllMenuItem = new MenuItem(resourceBundle.getString("tab1_table_contextMenu_Btn_DeleteAll"));
                         deleteAllMenuItem.setOnAction(new EventHandler<ActionEvent>() {
                             @Override
                             public void handle(ActionEvent actionEvent) {
