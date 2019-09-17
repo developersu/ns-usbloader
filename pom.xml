@@ -8,7 +8,7 @@
     <name>NS-USBloader</name>
 
     <artifactId>ns-usbloader</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.7-SNAPSHOT</version>
 
     <url>https://github.com/developersu/ns-usbloader/</url>
     <description>
@@ -218,11 +218,11 @@
                                 <minVersion>1.8</minVersion>
                             </jre>
                             <versionInfo>
-                                <fileVersion>0.6.1.0</fileVersion>
+                                <fileVersion>0.7.0.0</fileVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
                                 <fileDescription>TinFoil and GoldLeaf installer for your NS</fileDescription>
                                 <copyright>GNU General Public License v3, 2019 ${organization.name}. Russia/LPR.</copyright>
-                                <productVersion>0.6.1.0</productVersion>
+                                <productVersion>0.7.0.0</productVersion>
                                 <txtProductVersion>${project.version}</txtProductVersion>
                                 <companyName>${organization.name}</companyName>
                                 <productName>${project.name}</productName>

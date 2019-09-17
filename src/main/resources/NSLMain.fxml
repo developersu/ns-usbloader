@@ -68,7 +68,7 @@
                      </graphic>
                   </Button>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <Button fx:id="uploadStopBtn" contentDisplay="TOP" mnemonicParsing="false" prefHeight="60.0" prefWidth="130.0" text="%btn_Upload">
+                  <Button fx:id="uploadStopBtn" contentDisplay="TOP" mnemonicParsing="false" prefHeight="60.0" text="%btn_Upload">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>

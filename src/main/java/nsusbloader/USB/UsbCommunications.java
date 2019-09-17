@@ -1,6 +1,9 @@
 package nsusbloader.USB;
 
+import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.stage.FileChooser;
+import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -14,6 +17,8 @@ import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
 // TODO: add filter option to show only NSP files
 public class UsbCommunications extends Task<Void> {
     private final int DEFAULT_INTERFACE = 0;
@@ -204,6 +209,7 @@ public class UsbCommunications extends Task<Void> {
      * */
     private class TinFoil{
         TinFoil(){
+            logPrinter.print("============= TinFoil =============", EMsgType.INFO);
 
             if (!sendListOfNSP())
                 return;
@@ -432,6 +438,7 @@ public class UsbCommunications extends Task<Void> {
         }
 
     }
+
     /**
      * GoldLeaf processing
      * */
@@ -457,6 +464,8 @@ public class UsbCommunications extends Task<Void> {
 
         private boolean isWindows;
         private String homePath;
+        // For using in CMD_SelectFile with SPEC:/ prefix
+        private File selectedFile;
 
         GoldLeaf(){
             final byte CMD_GetDriveCount       = 0x00;
@@ -473,7 +482,7 @@ public class UsbCommunications extends Task<Void> {
             final byte CMD_Rename              = 0x0b;//11
             final byte CMD_GetSpecialPathCount = 0x0c;//12  // Special folders count;             simplified usage @ NS-UL
             final byte CMD_GetSpecialPath      = 0x0d;//13  // Information about special folders; simplified usage @ NS-UL
-            final byte CMD_SelectFile          = 0x0e;//14  // WTF? Ignoring for now. For future: execute another thread within this(?) context for FileChooser
+            final byte CMD_SelectFile          = 0x0e;//14
             final byte CMD_Max                 = 0x0f;//15  // not used @ NS-UL & GT
 
             final byte[] CMD_GLCI = new byte[]{0x47, 0x4c, 0x43, 0x49};
@@ -495,7 +504,8 @@ public class UsbCommunications extends Task<Void> {
 
             // Go parse commands
             byte[] readByte;
-            int someLength;
+            int someLength1,
+                    someLength2;
             while (! isCancelled()) {                          // Till user interrupted process.
                 readByte = readGL();
 
@@ -506,8 +516,8 @@ public class UsbCommunications extends Task<Void> {
                     continue;
                 }
 
-                //RainbowHexDump.hexDumpUTF8(readByte);   // TODO: DEBUG
-                //System.out.println("CHOICE: "+readByte[4]); // TODO: DEBUG
+                //RainbowHexDump.hexDumpUTF16LE(readByte);   // DEBUG
+                //System.out.println("CHOICE: "+readByte[4]); // DEBUG
 
                 if (Arrays.equals(Arrays.copyOfRange(readByte, 0,4), CMD_GLCI)) {
                     switch (readByte[4]) {
@@ -528,52 +538,62 @@ public class UsbCommunications extends Task<Void> {
                                 return;
                             break;
                         case CMD_GetDirectoryCount:
-                            if (getDirectoryOrFileCount(new String(readByte, 12, arrToIntLE(readByte, 8), StandardCharsets.UTF_8), true))
+                            someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
+                            if (getDirectoryOrFileCount(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), true))
                                 return;
                             break;
                         case CMD_GetFileCount:
-                            if (getDirectoryOrFileCount(new String(readByte, 12, arrToIntLE(readByte, 8), StandardCharsets.UTF_8), false))
+                            someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
+                            if (getDirectoryOrFileCount(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), false))
                                 return;
                             break;
                         case CMD_GetDirectory:
-                            someLength = arrToIntLE(readByte, 8);
-                            if (getDirectory(new String(readByte, 12, someLength, StandardCharsets.UTF_8), arrToIntLE(readByte, someLength+12)))
+                            someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
+                            if (getDirectory(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), arrToIntLE(readByte, someLength1+12)))
                                 return;
                             break;
                         case CMD_GetFile:
-                            someLength = arrToIntLE(readByte, 8);
-                            if (getFile(new String(readByte, 12, someLength, StandardCharsets.UTF_8), arrToIntLE(readByte, someLength+12)))
+                            someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
+                            if (getFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), arrToIntLE(readByte, someLength1+12)))
                                 return;
                             break;
                         case CMD_StatPath:
-                            if (statPath(new String(readByte, 12, arrToIntLE(readByte, 8), StandardCharsets.UTF_8)))
+                            someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
+                            if (statPath(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE)))
                                 return;
                             break;
                         case CMD_Rename:
-                            someLength = arrToIntLE(readByte, 12);
-                            if (rename(new String(readByte, 16, someLength, StandardCharsets.UTF_8),
-                                    new String(readByte, 16+someLength+4, arrToIntLE(readByte, 16+someLength), StandardCharsets.UTF_8)))
+                            someLength1 = arrToIntLE(readByte, 12) * 2; // Since GL 0.7
+                            someLength2 = arrToIntLE(readByte, 16+someLength1) * 2; // Since GL 0.7
+                            if (rename(new String(readByte, 16, someLength1, StandardCharsets.UTF_16LE),
+                                    new String(readByte, 16+someLength1+4, someLength2, StandardCharsets.UTF_16LE)))
                                 return;
                             break;
                         case CMD_Delete:
-                            if (delete(new String(readByte, 16, arrToIntLE(readByte, 12), StandardCharsets.UTF_8)))
+                            someLength1 = arrToIntLE(readByte, 12) * 2; // Since GL 0.7
+                            if (delete(new String(readByte, 16, someLength1, StandardCharsets.UTF_16LE)))
                                 return;
                             break;
                         case CMD_Create:
-                            if (create(new String(readByte, 16, arrToIntLE(readByte, 12), StandardCharsets.UTF_8), readByte[8]))
+                            someLength1 = arrToIntLE(readByte, 12) * 2; // Since GL 0.7
+                            if (create(new String(readByte, 16, someLength1, StandardCharsets.UTF_16LE), readByte[8]))
                                 return;
                             break;
                         case CMD_ReadFile:
-                            someLength = arrToIntLE(readByte, 8);
-                            if (readFile(new String(readByte, 12, someLength, StandardCharsets.UTF_8),
-                                    arrToLongLE(readByte, 12+someLength),
-                                    arrToLongLE(readByte, 12+someLength+8)))
+                            someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
+                            if (readFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE),
+                                    arrToLongLE(readByte, 12+someLength1),
+                                    arrToLongLE(readByte, 12+someLength1+8)))
                                 return;
                             break;
                         case CMD_WriteFile:
-                            someLength = arrToIntLE(readByte, 8);
-                            if (writeFile(new String(readByte, 12, someLength, StandardCharsets.UTF_8),
-                                    arrToLongLE(readByte, 12+someLength)))
+                            someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
+                            if (writeFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE),
+                                    arrToLongLE(readByte, 12+someLength1)))
+                                return;
+                            break;
+                        case CMD_SelectFile:
+                            if (selectFile())
                                 return;
                             break;
                         default:
@@ -612,7 +632,7 @@ public class UsbCommunications extends Task<Void> {
          */
         private boolean getDriveCount(){
             // Let's declare 2 drives
-            byte[] drivesCnt = intToArrLE(2);//2
+            byte[] drivesCnt = intToArrLE(2);   //2
             // Write count of drives
             if (writeGL_PASS(drivesCnt)) {
                 logPrinter.print("GL Handle 'ListDrives' command", EMsgType.FAIL);
@@ -640,10 +660,10 @@ public class UsbCommunications extends Task<Void> {
 
             // 0 == VIRTUAL DRIVE
             if (driveNo == 0){
-                driveLabel = "Virtual".getBytes(StandardCharsets.UTF_8);
-                driveLabelLen = intToArrLE(driveLabel.length);
-                driveLetter = "VIRT".getBytes(StandardCharsets.UTF_8);      // TODO: Consider moving to class field declaration
-                driveLetterLen = intToArrLE(driveLetter.length);
+                driveLabel = "Virtual".getBytes(StandardCharsets.UTF_16LE);
+                driveLabelLen = intToArrLE(driveLabel.length / 2); // since GL 0.7
+                driveLetter = "VIRT".getBytes(StandardCharsets.UTF_16LE);      // TODO: Consider moving to class field declaration
+                driveLetterLen = intToArrLE(driveLetter.length / 2);// since GL 0.7
                 totalFreeSpace = new byte[4];
                 for (File nspFile : nspMap.values()){
                     totalSizeLong += nspFile.length();
@@ -651,15 +671,17 @@ public class UsbCommunications extends Task<Void> {
                 totalSize = Arrays.copyOfRange(longToArrLE(totalSizeLong), 0, 4);  // Dirty hack; now for GL!
             }
             else { //1 == User home dir
-                driveLabel = "Home".getBytes(StandardCharsets.UTF_8);
-                driveLabelLen = intToArrLE(driveLabel.length);
-                driveLetter = "HOME".getBytes(StandardCharsets.UTF_8);
-                driveLetterLen = intToArrLE(driveLetter.length);
+                driveLabel = "Home".getBytes(StandardCharsets.UTF_16LE);
+                driveLabelLen = intToArrLE(driveLabel.length / 2);// since GL 0.7
+                driveLetter = "HOME".getBytes(StandardCharsets.UTF_16LE);
+                driveLetterLen = intToArrLE(driveLetter.length / 2);// since GL 0.7
                 File userHomeDir = new File(System.getProperty("user.home"));
                 long totalFreeSpaceLong = userHomeDir.getFreeSpace();
                 totalFreeSpace = Arrays.copyOfRange(longToArrLE(totalFreeSpaceLong), 0, 4);  // Dirty hack; now for GL!;
                 totalSizeLong = userHomeDir.getTotalSpace();
                 totalSize = Arrays.copyOfRange(longToArrLE(totalSizeLong), 0, 4);  // Dirty hack; now for GL!
+
+                //System.out.println("totalSize: "+totalSizeLong+"totalFreeSpace: "+totalFreeSpaceLong);
             }
 
             List<byte[]> command = new LinkedList<>();
@@ -684,9 +706,9 @@ public class UsbCommunications extends Task<Void> {
          * */
         private boolean getSpecialPathCount(){
             // Let's declare nothing =)
-            byte[] virtDrivesCnt = intToArrLE(0);
+            byte[] specialPathCnt = intToArrLE(0);
             // Write count of special paths
-            if (writeGL_PASS(virtDrivesCnt)) {
+            if (writeGL_PASS(specialPathCnt)) {
                 logPrinter.print("GL Handle 'SpecialPathCount' command", EMsgType.FAIL);
                 return true;
             }
@@ -697,7 +719,7 @@ public class UsbCommunications extends Task<Void> {
          *  @return true if failed
          *          false if everything is ok
          * */
-        private boolean getSpecialPath(int virtDriveNo){
+        private boolean getSpecialPath(int specialPathNo){
             return writeGL_FAIL("GL Handle 'SpecialPath' command [not supported]");
         }
         /**
@@ -736,20 +758,20 @@ public class UsbCommunications extends Task<Void> {
                 if (isGetDirectoryCount){
                     filesOrDirs = pathDir.list((current, name) -> {
                         File dir = new File(current, name);
-                        return (dir.isDirectory() && ! dir.isHidden());      // TODO: FIX FOR WIN ?
+                        return (dir.isDirectory() && ! dir.isHidden());
                     });
                 }
                 else {
                     if (nspFilterForGl){
                         filesOrDirs = pathDir.list((current, name) -> {
                             File dir = new File(current, name);
-                            return (! dir.isDirectory() && name.toLowerCase().endsWith(".nsp"));      // TODO: FIX FOR WIN ?
+                            return (! dir.isDirectory() && name.toLowerCase().endsWith(".nsp"));
                         });
                     }
                     else {
                         filesOrDirs = pathDir.list((current, name) -> {
                             File dir = new File(current, name);
-                            return (! dir.isDirectory() && (! dir.isHidden()));      // TODO: MOVE TO PROD
+                            return (! dir.isDirectory() && (! dir.isHidden()));
                         });
                     }
                 }
@@ -759,10 +781,9 @@ public class UsbCommunications extends Task<Void> {
                         logPrinter.print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.FAIL);
                         return true;
                     }
-                    //logPrinter.print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.PASS);
                     return false;
                 }
-                // Sorting is mandatory
+                // Sorting is mandatory TODO: NOTE: Proxy tail
                 Arrays.sort(filesOrDirs, String.CASE_INSENSITIVE_ORDER);
 
                 if (isGetDirectoryCount)
@@ -775,9 +796,24 @@ public class UsbCommunications extends Task<Void> {
                     return true;
                 }
             }
-            // If requested drive is not VIRT and not HOME then reply error
-            else {
-                return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request]");
+            else if (path.startsWith("SPEC:/")){
+                if (isGetDirectoryCount){       // If dir request then 0 dirs
+                    if (writeGL_PASS()) {
+                        logPrinter.print("GL Handle 'GetDirectoryCount' command", EMsgType.FAIL);
+                        return true;
+                    }
+                }
+                else if (selectedFile != null){ // Else it's file request, if we have selected then we will report 1.
+                    if (writeGL_PASS(intToArrLE(1))) {
+                        logPrinter.print("GL Handle 'GetFileCount' command Count = 1", EMsgType.FAIL);
+                        return true;
+                    }
+                }
+                else
+                    return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] (file) - "+path);
+            }
+            else { // If requested drive is not VIRT and not HOME then reply error
+                return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] "+(isGetDirectoryCount?"(dir) - ":"(file) - ")+path);
             }
             return false;
         }
@@ -793,8 +829,10 @@ public class UsbCommunications extends Task<Void> {
                 List<byte[]> command = new LinkedList<>();
 
                 if (dirName.equals(recentPath) && recentDirs != null && recentDirs.length != 0){
-                    command.add(intToArrLE(recentDirs[subDirNo].getBytes(StandardCharsets.UTF_8).length));
-                    command.add(recentDirs[subDirNo].getBytes(StandardCharsets.UTF_8));
+                    byte[] dirNameBytes = recentDirs[subDirNo].getBytes(StandardCharsets.UTF_16LE);
+
+                    command.add(intToArrLE(dirNameBytes.length / 2)); // Since GL 0.7
+                    command.add(dirNameBytes);
                 }
                 else {
                     File pathDir = new File(dirName);
@@ -810,22 +848,21 @@ public class UsbCommunications extends Task<Void> {
                     // Check that we still don't have any fuckups
                     if (this.recentDirs != null && this.recentDirs.length > subDirNo){
                         Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);
-                        byte[] dirBytesName = recentDirs[subDirNo].getBytes(StandardCharsets.UTF_8);
-                        command.add(intToArrLE(dirBytesName.length));
+                        byte[] dirBytesName = recentDirs[subDirNo].getBytes(StandardCharsets.UTF_16LE);
+                        command.add(intToArrLE(dirBytesName.length / 2)); // Since GL 0.7
                         command.add(dirBytesName);
                     }
                     else
                         return writeGL_FAIL("GL Handle 'GetDirectory' command [doesn't exist or not a folder]");
                 }
-                if (proxyForGL)
-                    return proxyGetDirFile(true);
-                else {
-                    if (writeGL_PASS(command)) {
-                        logPrinter.print("GL Handle 'GetDirectory' command.", EMsgType.FAIL);
-                        return true;
-                    }
-                    return false;
+                //if (proxyForGL) // TODO: NOTE: PROXY TAILS
+                //    return proxyGetDirFile(true);
+
+                if (writeGL_PASS(command)) {
+                    logPrinter.print("GL Handle 'GetDirectory' command.", EMsgType.FAIL);
+                    return true;
                 }
+                return false;
             }
             // VIRT:// and any other
             return writeGL_FAIL("GL Handle 'GetDirectory' command for virtual drive [no folders support]");
@@ -842,9 +879,9 @@ public class UsbCommunications extends Task<Void> {
                 dirName = updateHomePath(dirName);
 
                 if (dirName.equals(recentPath) && recentFiles != null && recentFiles.length != 0){
-                    byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_8);
+                    byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_16LE);
 
-                    command.add(intToArrLE(fileNameBytes.length));
+                    command.add(intToArrLE(fileNameBytes.length / 2)); //Since GL 0.7
                     command.add(fileNameBytes);
                 }
                 else {
@@ -869,16 +906,26 @@ public class UsbCommunications extends Task<Void> {
                     // Check that we still don't have any fuckups
                     if (this.recentFiles != null && this.recentFiles.length > subDirNo){
                         Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);        // TODO: NOTE: array sorting is an overhead for using poxy loops
-                        byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_8);
-                        command.add(intToArrLE(fileNameBytes.length));
+                        byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_16LE);
+                        command.add(intToArrLE(fileNameBytes.length / 2)); //Since GL 0.7
                         command.add(fileNameBytes);
                     }
                     else
                         return writeGL_FAIL("GL Handle 'GetFile' command [doesn't exist or not a folder]");
                 }
-                if (proxyForGL)
-                    return proxyGetDirFile(false);
-                else {
+                //if (proxyForGL) // TODO: NOTE: PROXY TAILS
+                //    return proxyGetDirFile(false);
+                if (writeGL_PASS(command)) {
+                    logPrinter.print("GL Handle 'GetFile' command.", EMsgType.FAIL);
+                    return true;
+                }
+                return false;
+            }
+            else if (dirName.equals("VIRT:/")){
+                if (nspMap.size() != 0){    // therefore nspMapKeySetIndexes also != 0
+                    byte[] fileNameBytes = nspMapKeySetIndexes[subDirNo].getBytes(StandardCharsets.UTF_16LE);
+                    command.add(intToArrLE(fileNameBytes.length / 2)); // since GL 0.7
+                    command.add(fileNameBytes);
                     if (writeGL_PASS(command)) {
                         logPrinter.print("GL Handle 'GetFile' command.", EMsgType.FAIL);
                         return true;
@@ -886,10 +933,10 @@ public class UsbCommunications extends Task<Void> {
                     return false;
                 }
             }
-            else if (dirName.equals("VIRT:/")){
-                if (nspMap.size() != 0){    // therefore nspMapKeySetIndexes also != 0
-                    byte[] fileNameBytes = nspMapKeySetIndexes[subDirNo].getBytes(StandardCharsets.UTF_8);
-                    command.add(intToArrLE(fileNameBytes.length));
+            else if (dirName.equals("SPEC:/")){
+                if (selectedFile != null){
+                    byte[] fileNameBytes = selectedFile.getName().getBytes(StandardCharsets.UTF_16LE);
+                    command.add(intToArrLE(fileNameBytes.length / 2)); // since GL 0.7
                     command.add(fileNameBytes);
                     if (writeGL_PASS(command)) {
                         logPrinter.print("GL Handle 'GetFile' command.", EMsgType.FAIL);
@@ -899,7 +946,7 @@ public class UsbCommunications extends Task<Void> {
                 }
             }
             //  any other cases
-            return writeGL_FAIL("GL Handle 'GetFile' command for virtual drive [no folders support]");
+            return writeGL_FAIL("GL Handle 'GetFile' command for virtual drive [no folders support?]");
         }
         /**
          * Handle StatPath
@@ -911,8 +958,8 @@ public class UsbCommunications extends Task<Void> {
 
             if (filePath.startsWith("HOME:/")){
                 filePath = updateHomePath(filePath);
-                if (proxyForGL)
-                    return proxyStatPath(filePath); // dirty name
+                //if (proxyForGL)                     // TODO:NOTE PROXY TAILS
+                //    return proxyStatPath(filePath); // dirty name
 
                 File fileDirElement = new File(filePath);
                 if (fileDirElement.exists()){
@@ -934,6 +981,19 @@ public class UsbCommunications extends Task<Void> {
                 if (nspMap.containsKey(filePath)){
                     command.add(GL_OBJ_TYPE_FILE);                              // THIS IS INT
                     command.add(longToArrLE(nspMap.get(filePath).length()));    // YES, THIS IS LONG!
+                    if (writeGL_PASS(command)) {
+                        logPrinter.print("GL Handle 'StatPath' command.", EMsgType.FAIL);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            else if (filePath.startsWith("SPEC:/")){
+                System.out.println(filePath);
+                filePath = filePath.replaceFirst("SPEC:/","");
+                if (selectedFile.getName().equals(filePath)){
+                    command.add(GL_OBJ_TYPE_FILE);
+                    command.add(longToArrLE(selectedFile.length()));
                     if (writeGL_PASS(command)) {
                         logPrinter.print("GL Handle 'StatPath' command.", EMsgType.FAIL);
                         return true;
@@ -1046,6 +1106,7 @@ public class UsbCommunications extends Task<Void> {
          *          false if everything is ok
          * */
         private boolean readFile(String fileName, long offset, long size) {
+            //System.out.println("readFile "+fileName+" "+offset+" "+size);
             if (fileName.startsWith("VIRT:/")){
                 // Let's find out which file requested
                 String fNamePath = nspMap.get(fileName.substring(6)).getAbsolutePath();     // NOTE: 6 = "VIRT:/".length
@@ -1101,22 +1162,9 @@ public class UsbCommunications extends Task<Void> {
                     logPrinter.print("GL Handle 'ReadFile' command [CMD]", EMsgType.FAIL);
                     return true;
                 }
-                if (bytesRead > 8388608){
-                    // Let's bypass bytes we read part 1
-                    if (writeToUsb(Arrays.copyOfRange(chunk, 0, 8388608))) {
-                        logPrinter.print("GL Handle 'ReadFile' command [Data 1/2]", EMsgType.FAIL);
-                        return true;
-                    }
-                    // Let's bypass bytes we read part 2
-                    if (writeToUsb(Arrays.copyOfRange(chunk, 8388608, chunk.length))) {
-                        logPrinter.print("GL Handle 'ReadFile' command [Data 2/2]", EMsgType.FAIL);
-                        return true;
-                    }
-                    return false;
-                }
                 // Let's bypass bytes we read total
                 if (writeToUsb(chunk)) {
-                    logPrinter.print("GL Handle 'ReadFile' command [Data 1/1]", EMsgType.FAIL);
+                    logPrinter.print("GL Handle 'ReadFile' command", EMsgType.FAIL);
                     return true;
                 }
                 return false;
@@ -1141,15 +1189,11 @@ public class UsbCommunications extends Task<Void> {
          *          false if everything is ok
          * */
         private boolean writeFile(String fileName, long size) {
+            //System.out.println("writeFile "+fileName+" "+size);
             if (fileName.startsWith("VIRT:/")){
                 return writeGL_FAIL("GL Handle 'WriteFile' command [not supported for virtual drive]");
             }
             else {
-                if ((int)size > 8388608){
-                    logPrinter.print("GL Handle 'WriteFile' command [Files greater than 8mb are not supported]", EMsgType.FAIL);
-                    return true;
-                }
-
                 fileName = updateHomePath(fileName);
                 // Check if we didn't see this (or any) file during this session
                 if (writeFilesMap.size() == 0 || (! writeFilesMap.containsKey(fileName))){
@@ -1186,6 +1230,38 @@ public class UsbCommunications extends Task<Void> {
                 }
                 return false;
             }
+        }
+
+        /**
+         * Handle 'SelectFile'
+         * @return true if failed
+         *          false if everything is ok
+         * */
+        private boolean selectFile(){
+            File selectedFile = CompletableFuture.supplyAsync(() -> {
+                FileChooser fChooser = new FileChooser();
+                fChooser.setTitle(MediatorControl.getInstance().getContoller().getResourceBundle().getString("btn_OpenFile")); // TODO: FIX BAD IMPLEMENTATION
+                fChooser.setInitialDirectory(new File(System.getProperty("user.home")));                                            // TODO: Consider fixing; not a prio.
+                fChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("*", "*"));
+                return fChooser.showOpenDialog(null);    // Leave as is for now.
+            }, Platform::runLater).join();
+
+            if (selectedFile != null){
+                List<byte[]> command = new LinkedList<>();
+                byte[] selectedFileNameBytes = ("SPEC:/"+selectedFile.getName()).getBytes(StandardCharsets.UTF_16LE);
+                command.add(intToArrLE(selectedFileNameBytes.length / 2)); // since GL 0.7
+                command.add(selectedFileNameBytes);
+                if (writeGL_PASS(command)) {
+                    logPrinter.print("GL Handle 'SelectFile' command", EMsgType.FAIL);
+                    this.selectedFile = null;
+                    return true;
+                }
+                this.selectedFile = selectedFile;
+                return false;
+            }
+            // Nothing selected; Report failure.
+            this.selectedFile = null;
+            return writeGL_FAIL("GL Handle 'SelectFile' command: Nothing selected");
         }
 
         /*----------------------------------------------------*/
@@ -1226,7 +1302,7 @@ public class UsbCommunications extends Task<Void> {
             IntBuffer readBufTransferred = IntBuffer.allocate(1);
 
             int result;
-            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 5000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
             if (result != LibUsb.SUCCESS && result != LibUsb.ERROR_TIMEOUT){
                 logPrinter.print("GL Data transfer (read) issue\n  Returned: "+UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
@@ -1246,7 +1322,7 @@ public class UsbCommunications extends Task<Void> {
             IntBuffer readBufTransferred = IntBuffer.allocate(1);   // Works for 8mb
 
             int result;
-            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 5000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81 TODO: Fix or leave as is
 
             if (result != LibUsb.SUCCESS && result != LibUsb.ERROR_TIMEOUT){
                 logPrinter.print("GL Data transfer (read) issue\n  Returned: "+UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
@@ -1302,9 +1378,10 @@ public class UsbCommunications extends Task<Void> {
         }
 
         /*----------------------------------------------------*/
-        /*                     GL EXPERIMENTAL PART           */
+        /*                  GL EXPERIMENTAL PART              */
+        /*                  (left for better times)           */
         /*----------------------------------------------------*/
-
+        /*
         private boolean proxyStatPath(String path) {
             ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
             List<byte[]> fileBytesSize = new LinkedList<>();
@@ -1348,7 +1425,7 @@ public class UsbCommunications extends Task<Void> {
                 if (recentDirs.length <= 0)
                     return writeGL_FAIL("proxyGetDirFile");
                 for (String dirName : recentDirs) {
-                    byte[] name = dirName.getBytes(StandardCharsets.UTF_8);
+                    byte[] name = dirName.getBytes(StandardCharsets.UTF_16LE);
                     dirBytesNameSize.add(intToArrLE(name.length));
                     dirBytesName.add(name);
                 }
@@ -1370,7 +1447,7 @@ public class UsbCommunications extends Task<Void> {
                 if (recentDirs.length <= 0)
                     return writeGL_FAIL("proxyGetDirFile");
                 for (String dirName : recentFiles){
-                    byte[] name = dirName.getBytes(StandardCharsets.UTF_8);
+                    byte[] name = dirName.getBytes(StandardCharsets.UTF_16LE);
                     dirBytesNameSize.add(intToArrLE(name.length));
                     dirBytesName.add(name);
                 }
@@ -1390,9 +1467,8 @@ public class UsbCommunications extends Task<Void> {
             }
             return false;
         }
-
+        */
     }
-
     //------------------------------------------------------------------------------------------------------------------
     /**
      * Correct exit
@@ -1429,8 +1505,9 @@ public class UsbCommunications extends Task<Void> {
      * */
     private boolean writeToUsb(byte[] message){
         ByteBuffer writeBuffer = ByteBuffer.allocateDirect(message.length);   //writeBuffer.order() equals BIG_ENDIAN;
-        writeBuffer.put(message);
-                                                    // DONT EVEN THINK OF USING writeBuffer.rewind();        // well..
+        writeBuffer.put(message);// DONT EVEN THINK OF USING writeBuffer.rewind();        // well..
+        //RainbowHexDump.hexDumpUTF16LE(message);
+        //System.out.println("-------------------");
         IntBuffer writeBufTransferred = IntBuffer.allocate(1);
         int result;
         result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 0);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01

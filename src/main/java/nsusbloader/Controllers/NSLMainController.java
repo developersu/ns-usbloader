@@ -92,6 +92,16 @@ public class NSLMainController implements Initializable {
             updates.start();
         }
     }
+
+    /**
+     * Get resources
+     * TODO: Find better solution; used in UsbCommunications() -> GL -> SelectFile command
+     * @return ResourceBundle
+     */
+    public ResourceBundle getResourceBundle() {
+        return resourceBundle;
+    }
+
     /**
      * Provide hostServices to Settings tab
      * */
