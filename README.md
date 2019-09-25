@@ -37,6 +37,13 @@ Sometimes I add new posts about this project [on my home page](https://developer
 
 JRE/JDK 8u60 or higher.
 
+### Table of supported GoldLeaf versions
+| GoldLeaf version | NS-USBloader version |
+| ---------------- | -------------------- |
+| v0.5             | v0.4 - v0.5.2        |
+| v0.6.1           | v0.6                 |
+| v0.7             | v0.7                 |
+
 ### Usage
 ##### Linux:
 
@@ -116,7 +123,7 @@ Why when 'NET' once started it never ends?
 Because there is HTTP server inside of application. It can't determine the moment when all transmissions finishes (unless they failed). So you have to look on your NS screen and 'Interrupt' it once done.
 
 ### Known bugs
-* Unable to interrupt transmission when using TinFoil (when user sent NSP list but didn't select anything on NS). Sometimes this issue also appears when network transmission started and nothing received from NS.
+* Unable to interrupt transmission when network transmission started and nothing received from NS.
 
 ### Other notes
 'Status' = 'Uploaded' that appears in the table does not mean that file has been installed. It means that it has been sent to NS without any issues! That's what this app about. 
