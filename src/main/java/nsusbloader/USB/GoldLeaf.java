@@ -68,7 +68,7 @@ class GoldLeaf implements ITransferModule {
         final byte CMD_GetSpecialPathCount = 0x0c;//12  // Special folders count;             simplified usage @ NS-UL
         final byte CMD_GetSpecialPath      = 0x0d;//13  // Information about special folders; simplified usage @ NS-UL
         final byte CMD_SelectFile          = 0x0e;//14
-        final byte CMD_Max                 = 0x0f;//15  // not used @ NS-UL & GT
+        //final byte CMD_Max                 = 0x0f;//15  // not used @ NS-UL & GT
 
         final byte[] CMD_GLCI = new byte[]{0x47, 0x4c, 0x43, 0x49};
 
@@ -175,8 +175,8 @@ class GoldLeaf implements ITransferModule {
                         break;
                     case CMD_WriteFile:
                         someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
-                        if (writeFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE),
-                                arrToLongLE(readByte, 12+someLength1)))
+                        //if (writeFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), arrToLongLE(readByte, 12+someLength1)))
+                        if (writeFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE)))
                             break main_loop;
                         break;
                     case CMD_SelectFile:
@@ -771,12 +771,13 @@ class GoldLeaf implements ITransferModule {
     /**
      * Handle 'WriteFile'
      * @param fileName full path including new file name in the end
-     * @param size requested size
+     *
      * @return true if failed
      *          false if everything is ok
      * */
-    private boolean writeFile(String fileName, long size) {
-        //System.out.println("writeFile "+fileName+" "+size);
+    //@param size requested size
+    //private boolean writeFile(String fileName, long size) {
+    private boolean writeFile(String fileName) {
         if (fileName.startsWith("VIRT:/")){
             return writeGL_FAIL("GL Handle 'WriteFile' command [not supported for virtual drive]");
         }

@@ -46,7 +46,7 @@ public class MessagesConsumer extends AnimationTimer {
         ArrayList<String> messages = new ArrayList<>();
         int msgRecieved = msgQueue.drainTo(messages);
         if (msgRecieved > 0)
-            messages.forEach(msg -> logsArea.appendText(msg));
+            messages.forEach(logsArea::appendText);
 
         ArrayList<Double> progress = new ArrayList<>();
         int progressRecieved = progressQueue.drainTo(progress);

@@ -61,8 +61,8 @@ public class NSLMainController implements Initializable {
             uploadStopBtn.setDisable(true);
         else
             uploadStopBtn.setDisable(false);
-        selectNspBtn.setOnAction(e->{ selectFilesBtnAction(); });
-        uploadStopBtn.setOnAction(e->{ uploadBtnAction(); });
+        selectNspBtn.setOnAction(e-> selectFilesBtnAction());
+        uploadStopBtn.setOnAction(e-> uploadBtnAction());
 
         selectNspBtn.getStyleClass().add("buttonSelect");
 
@@ -122,9 +122,12 @@ public class NSLMainController implements Initializable {
         else
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
-        if (SettingsTabController.getTfXCISupport() && FrontTabController.getSelectedProtocol().equals("TinFoil")){
+        if (FrontTabController.getSelectedProtocol().equals("TinFoil") && SettingsTabController.getTfXCISupport())
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI", "*.nsp", "*.xci"));
-        }
+        else if (FrontTabController.getSelectedProtocol().equals("GoldLeaf") && (! SettingsTabController.getNSPFileFilterForGL()))
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Any file", "*.*"),
+                    new FileChooser.ExtensionFilter("NSP ROM", "*.nsp")
+            );
         else
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
         
@@ -142,7 +145,7 @@ public class NSLMainController implements Initializable {
         if ((workThread == null || !workThread.isAlive())){
             // Collect files
             List<File> nspToUpload;
-            if ((nspToUpload = FrontTabController.tableFilesListController.getFilesForUpload()) == null && FrontTabController.getSelectedProtocol().equals("TinFoil")) {
+            if (FrontTabController.tableFilesListController.getFilesForUpload() == null && FrontTabController.getSelectedProtocol().equals("TinFoil")) {
                 logArea.setText(resourceBundle.getString("tab3_Txt_NoFolderOrFileSelected"));
                 return;
             }
@@ -207,7 +210,7 @@ public class NSLMainController implements Initializable {
     public void notifyTransmissionStarted(boolean isTransmissionStarted){
         if (isTransmissionStarted) {
             selectNspBtn.setDisable(true);
-            uploadStopBtn.setOnAction(e->{ stopBtnAction(); });
+            uploadStopBtn.setOnAction(e-> stopBtnAction());
 
             uploadStopBtn.setText(resourceBundle.getString("btn_Stop"));
 
@@ -219,7 +222,7 @@ public class NSLMainController implements Initializable {
         }
         else {
             selectNspBtn.setDisable(false);
-            uploadStopBtn.setOnAction(e->{ uploadBtnAction(); });
+            uploadStopBtn.setOnAction(e-> uploadBtnAction());
 
             uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
 
@@ -258,24 +261,38 @@ public class NSLMainController implements Initializable {
         }
         List<File> filesDropped = new ArrayList<>();
         try {
-            if (SettingsTabController.getTfXCISupport() && FrontTabController.getSelectedProtocol().equals("TinFoil")){
+            if (FrontTabController.getSelectedProtocol().equals("TinFoil") && SettingsTabController.getTfXCISupport()){
                 for (File fileOrDir : event.getDragboard().getFiles()) {
-                    if (fileOrDir.getName().toLowerCase().endsWith(".nsp") || fileOrDir.getName().toLowerCase().endsWith(".xci"))
-                        filesDropped.add(fileOrDir);
-                    else if (fileOrDir.isDirectory())
+                    if (fileOrDir.isDirectory()) {
                         for (File file : fileOrDir.listFiles())
-                            if (file.getName().toLowerCase().endsWith(".nsp") || file.getName().toLowerCase().endsWith(".xci"))
+                            if ((! file.isDirectory()) && (file.getName().toLowerCase().endsWith(".nsp") || file.getName().toLowerCase().endsWith(".xci")))
                                 filesDropped.add(file);
+                    }
+                    else if (fileOrDir.getName().toLowerCase().endsWith(".nsp") || fileOrDir.getName().toLowerCase().endsWith(".xci"))
+                        filesDropped.add(fileOrDir);
+
+                }
+            }// TODO: Somehow improve this double-action function in settings.
+            else if (FrontTabController.getSelectedProtocol().equals("GoldLeaf") && (! SettingsTabController.getNSPFileFilterForGL())){
+                for (File fileOrDir : event.getDragboard().getFiles()) {
+                    if (fileOrDir.isDirectory()) {
+                        for (File file : fileOrDir.listFiles())
+                            if ((! file.isDirectory()) && (! file.isHidden()))
+                                filesDropped.add(file);
+                    }
+                    else
+                        filesDropped.add(fileOrDir);
                 }
             }
             else {
                 for (File fileOrDir : event.getDragboard().getFiles()) {
-                    if (fileOrDir.getName().toLowerCase().endsWith(".nsp"))
-                        filesDropped.add(fileOrDir);
-                    else if (fileOrDir.isDirectory())
+                    if (fileOrDir.isDirectory()){
                         for (File file : fileOrDir.listFiles())
-                            if (file.getName().toLowerCase().endsWith(".nsp"))
+                            if (file.getName().toLowerCase().endsWith(".nsp") && (! file.isDirectory()))
                                 filesDropped.add(file);
+                    }
+                    else if (fileOrDir.getName().toLowerCase().endsWith(".nsp"))
+                        filesDropped.add(fileOrDir);
                 }
             }
         }

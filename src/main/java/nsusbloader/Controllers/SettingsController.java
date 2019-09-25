@@ -72,9 +72,7 @@ public class SettingsController implements Initializable {
         expertSettingsVBox.setDisable(!AppPreferences.getInstance().getExpertMode());
 
         expertModeCb.setSelected(AppPreferences.getInstance().getExpertMode());
-        expertModeCb.setOnAction(e->{
-                expertSettingsVBox.setDisable(!expertModeCb.isSelected());
-        });
+        expertModeCb.setOnAction(e-> expertSettingsVBox.setDisable(!expertModeCb.isSelected()));
 
         autoDetectIpCb.setSelected(AppPreferences.getInstance().getAutoDetectIp());
         pcIpTextField.setDisable(AppPreferences.getInstance().getAutoDetectIp());
@@ -141,7 +139,7 @@ public class SettingsController implements Initializable {
             else
                 return change;
         }));
-        pcPortTextField.setTextFormatter(new TextFormatter<Object>(change -> {
+        pcPortTextField.setTextFormatter(new TextFormatter<>(change -> {
             if (change.getControlNewText().matches("^[0-9]{0,5}$")) {
                 if (!change.getControlNewText().isEmpty()
                         && ((Integer.parseInt(change.getControlNewText()) > 65535) || (Integer.parseInt(change.getControlNewText()) == 0))
@@ -162,9 +160,7 @@ public class SettingsController implements Initializable {
         }));
 
         newVersionLink.setVisible(false);
-        newVersionLink.setOnAction(e->{
-            hs.showDocument(newVersionLink.getText());
-        });
+        newVersionLink.setOnAction(e-> hs.showDocument(newVersionLink.getText()));
 
         autoCheckUpdCb.setSelected(AppPreferences.getInstance().getAutoCheckUpdates());
 
@@ -201,7 +197,7 @@ public class SettingsController implements Initializable {
 
         File jarFile;
         try{
-            jarFile = new File(URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "utf-8"));
+            jarFile = new File(URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8"));
         }
         catch (UnsupportedEncodingException uee){
             uee.printStackTrace();
