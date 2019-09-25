@@ -374,23 +374,14 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
                 }
                 currSockOS.write(byteBuf);
                 //-----------------------------------------/
-                try {
-                    logPrinter.updateProgress((currentOffset+readPice)/(count/100.0) / 100.0);
-                }catch (InterruptedException ie){
-                    getException().printStackTrace();               // TODO: Do something with this
-                }
+                logPrinter.updateProgress((currentOffset+readPice)/(count/100.0) / 100.0);
                 //-----------------------------------------/
                 currentOffset += readPice;
             }
             currSockOS.flush();         // TODO: check if this really needed.
             bis.close();
             //-----------------------------------------/
-            try{
-                logPrinter.updateProgress(1.0);
-            }
-            catch (InterruptedException ie){
-                getException().printStackTrace();               // TODO: Do something with this
-            }
+            logPrinter.updateProgress(1.0);
             //-----------------------------------------/
         }
         catch (IOException ioe){

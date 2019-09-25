@@ -49,8 +49,11 @@ public class LogPrinter {
     /**
      * Update progress for progress bar
      * */
-    public void updateProgress(Double value) throws InterruptedException{
-        progressQueue.put(value);
+    public void updateProgress(Double value) {
+        try {
+            progressQueue.put(value);
+        }
+        catch (InterruptedException ignored){}               // TODO: Do something with this
     }
     /**
      * When we're done - update status
