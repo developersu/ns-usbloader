@@ -31,9 +31,9 @@ public class NSLMain extends Application {
         );
 
         primaryStage.setTitle("NS-USBloader "+appVersion);
-        primaryStage.setMinWidth(600);
-        primaryStage.setMinHeight(400);
-        Scene mainScene = new Scene(root, 800, 425);
+        primaryStage.setMinWidth(650);
+        primaryStage.setMinHeight(450);
+        Scene mainScene = new Scene(root, 850, 475);
 
         mainScene.getStylesheets().add(AppPreferences.getInstance().getTheme());
 
