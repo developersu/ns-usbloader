@@ -576,7 +576,7 @@ class GoldLeaf implements ITransferModule {
             }
         }
         else if (filePath.startsWith("SPEC:/")){
-            System.out.println(filePath);
+            //System.out.println(filePath);
             filePath = filePath.replaceFirst("SPEC:/","");
             if (selectedFile.getName().equals(filePath)){
                 command.add(GL_OBJ_TYPE_FILE);

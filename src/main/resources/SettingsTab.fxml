@@ -94,6 +94,12 @@
                   </HBox>
                   <CheckBox fx:id="tfXciSpprtCb" mnemonicParsing="false" text="%tab2_Cb_AllowXci" />
                   <Label disable="true" text="%tab2_Lbl_AllowXciDesc" wrapText="true" />
+         <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+               <CheckBox fx:id="glOldVerCheck" mnemonicParsing="false" text="%tab2_Cb_UseOldGlVersion" />
+               <ChoiceBox fx:id="glOldVerChoice" prefWidth="75.0" />
+            </children>
+         </HBox>
                </children>
                <padding>
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

@@ -164,7 +164,7 @@ public class NSLMainController implements Initializable {
             if (FrontTabController.getSelectedProtocol().equals("GoldLeaf") ||
                     ( FrontTabController.getSelectedProtocol().equals("TinFoil") && FrontTabController.getSelectedNetUsb().equals("USB") )
             ){
-                usbNetCommunications = new UsbCommunications(nspToUpload, FrontTabController.getSelectedProtocol(), SettingsTabController.getNSPFileFilterForGL());
+                usbNetCommunications = new UsbCommunications(nspToUpload, FrontTabController.getSelectedProtocol()+SettingsTabController.getGlOldVer(), SettingsTabController.getNSPFileFilterForGL());
                 workThread = new Thread(usbNetCommunications);
                 workThread.setDaemon(true);
                 workThread.start();
@@ -323,7 +323,8 @@ public class NSLMainController implements Initializable {
                 SettingsTabController.getHostExtra(),
                 SettingsTabController.getAutoCheckForUpdates(),
                 SettingsTabController.getTfXCISupport(),
-                SettingsTabController.getNSPFileFilterForGL()
+                SettingsTabController.getNSPFileFilterForGL(),
+                SettingsTabController.getGlOldVer()
         );
     }
 }

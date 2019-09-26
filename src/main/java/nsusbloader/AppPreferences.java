@@ -26,7 +26,8 @@ public class AppPreferences {
             String HostExtra,
             boolean autoCheck4Updates,
             boolean tinfoilXciSupport,
-            boolean nspFileFilterForGl
+            boolean nspFileFilterForGl,
+            String useOldGlVersion
             ){
         setProtocol(Protocol);
         setRecent(PreviouslyOpened);
@@ -43,6 +44,7 @@ public class AppPreferences {
         setAutoCheckUpdates(autoCheck4Updates);
         setTfXCI(tinfoilXciSupport);
         setNspFileFilterGL(nspFileFilterForGl);
+        setUseOldGlVersion(useOldGlVersion);
     }
     public String getTheme(){
         String theme = preferences.get("THEME", "/res/app_dark.css");           // Don't let user to change settings manually
@@ -114,4 +116,7 @@ public class AppPreferences {
 
     public boolean getNspFileFilterGL(){return preferences.getBoolean("GL_NSP_FILTER", false); }
     public void setNspFileFilterGL(boolean prop){preferences.putBoolean("GL_NSP_FILTER", prop);}
+
+    public String getUseOldGlVersion(){ return preferences.get("OldGlVersion", ""); }
+    public void setUseOldGlVersion(String version){ preferences.put("OldGlVersion", version);}
 }

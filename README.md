@@ -40,9 +40,9 @@ JRE/JDK 8u60 or higher.
 ### Table of supported GoldLeaf versions
 | GoldLeaf version | NS-USBloader version |
 | ---------------- | -------------------- |
-| v0.5             | v0.4 - v0.5.2        |
+| v0.5             | v0.4 - v0.5.2, v0.8  |
 | v0.6.1           | v0.6                 |
-| v0.7             | v0.7                 |
+| v0.7             | v0.7 - v0.8          |
 
 ### Usage
 ##### Linux:

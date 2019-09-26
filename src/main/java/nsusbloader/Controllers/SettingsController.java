@@ -61,7 +61,15 @@ public class SettingsController implements Initializable {
     @FXML
     private ChoiceBox<String> langCB;
 
+    @FXML
+    private CheckBox glOldVerCheck;
+
+    @FXML
+    private ChoiceBox<String> glOldVerChoice;
+
     private HostServices hs;
+
+    private static final String[] oldGlSupportedVersions = {"v0.5"};
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -240,7 +248,20 @@ public class SettingsController implements Initializable {
                     ResourceBundle.getBundle("locale", new Locale(langCB.getSelectionModel().getSelectedItem()))
                             .getString("windowBodyRestartToApplyLang"));
         });
-
+        // Set supported old versions
+        glOldVerChoice.getItems().addAll(oldGlSupportedVersions);
+        String oldVer = AppPreferences.getInstance().getUseOldGlVersion();  // Overhead; Too much validation of consistency
+        if (Arrays.asList(oldGlSupportedVersions).contains(oldVer)) {
+            glOldVerChoice.getSelectionModel().select(oldVer);
+            glOldVerChoice.setDisable(false);
+            glOldVerCheck.setSelected(true);
+        }
+        else {
+            glOldVerChoice.getSelectionModel().select(0);
+            glOldVerChoice.setDisable(true);
+            glOldVerCheck.setSelected(false);
+        }
+        glOldVerCheck.setOnAction(e-> glOldVerChoice.setDisable(! glOldVerCheck.isSelected()) );
     }
     public boolean getNSPFileFilterForGL(){return nspFilesFilterForGLCB.isSelected(); }
     public boolean getExpertModeSelected(){ return expertModeCb.isSelected(); }
@@ -261,5 +282,12 @@ public class SettingsController implements Initializable {
     public void setNewVersionLink(String newVer){
         newVersionLink.setVisible(true);
         newVersionLink.setText("https://github.com/developersu/ns-usbloader/releases/tag/"+newVer);
+    }
+
+    public String getGlOldVer() {
+        if (glOldVerCheck.isSelected())
+            return glOldVerChoice.getValue();
+        else
+            return "";
     }
 }
