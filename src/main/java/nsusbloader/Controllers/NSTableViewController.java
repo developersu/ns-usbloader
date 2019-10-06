@@ -53,7 +53,7 @@ public class NSTableViewController implements Initializable {
 
         TableColumn<NSLRowModel, String> statusColumn = new TableColumn<>(resourceBundle.getString("tab1_table_Lbl_Status"));
         TableColumn<NSLRowModel, String> fileNameColumn = new TableColumn<>(resourceBundle.getString("tab1_table_Lbl_FileName"));
-        TableColumn<NSLRowModel, String> fileSizeColumn = new TableColumn<>(resourceBundle.getString("tab1_table_Lbl_Size"));
+        TableColumn<NSLRowModel, Long> fileSizeColumn = new TableColumn<>(resourceBundle.getString("tab1_table_Lbl_Size"));
         TableColumn<NSLRowModel, Boolean> uploadColumn = new TableColumn<>(resourceBundle.getString("tab1_table_Lbl_Upload"));
 
         statusColumn.setEditable(false);
@@ -93,6 +93,16 @@ public class NSTableViewController implements Initializable {
         });
 
         uploadColumn.setCellFactory(paramFeatures -> new CheckBoxTableCell<>());
+        fileSizeColumn.setCellFactory(col -> new TableCell<NSLRowModel, Long>() {
+            @Override
+            protected void updateItem(Long length, boolean empty) {
+                if (length == null || empty) {
+                    setText("");
+                } else {
+                    setText(formatByteSize(length));
+                }
+            }
+        });
         table.setRowFactory(        // this shit is made to implement context menu. It's such a pain..
                 nslRowModelTableView -> {
                     final TableRow<NSLRowModel> row = new TableRow<>();
@@ -207,6 +217,16 @@ public class NSTableViewController implements Initializable {
         else
             rowsObsLst.removeIf(current -> ! current.getNspFileName().toLowerCase().endsWith("nsp"));
         table.refresh();
+    }
+    
+    
+    private String formatByteSize(long length) {
+        final String[] unitNames = { "bytes", "KiB", "MiB", "GiB", "TiB"};
+        int i;
+        for (i = 0; length > 1024 && i < unitNames.length - 1; i++) {
+            length = length / 1024;
+        }
+      return String.format("%,d %s", length, unitNames[i]);
     }
 
 }
