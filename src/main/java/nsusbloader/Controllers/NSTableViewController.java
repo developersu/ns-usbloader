@@ -220,13 +220,13 @@ public class NSTableViewController implements Initializable {
     }
     
     
-    private String formatByteSize(long length) {
+    private String formatByteSize(double length) {
         final String[] unitNames = { "bytes", "KiB", "MiB", "GiB", "TiB"};
         int i;
         for (i = 0; length > 1024 && i < unitNames.length - 1; i++) {
             length = length / 1024;
         }
-      return String.format("%,d %s", length, unitNames[i]);
+      return String.format("%,.2f %s", length, unitNames[i]);
     }
 
 }
