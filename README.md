@@ -32,6 +32,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * Spanish by [/u/cokimaya007](https://www.reddit.com/u/cokimaya007), Kuziel Alejandro
 * Chinese by [Huang YunKun (htynkn)](https://github.com/htynkn)
 * German by [Swarsele](https://github.com/Swarsele)
+* Vietnamese by [Hai Phan Nguyen (pnghai)](https://github.com/pnghai)
 
 ### System requirements
 
@@ -118,14 +119,16 @@ Also here you can:
 
 That's where all logs dropped. Verbose information about transmissions comes here.
 
-Why when 'NET' once started it never ends?
-
-Because there is HTTP server inside of application. It can't determine the moment when all transmissions finishes (unless they failed). So you have to look on your NS screen and 'Interrupt' it once done.
-
 ### Known bugs
+* 'NET' once started it never ends:
+
+It happens because there is HTTP server inside of application. It can't determine the moment when all transmissions finishes (unless they failed). So you have to look on your NS screen and 'Interrupt' it once done.
+
 * Unable to interrupt transmission when network transmission started and nothing received from NS.
 
 ### Other notes
+Alternative build for Windows 10 is recommended for all Windows 10 users. It also works well on Linux and any other Windows PC and even on macOS Mojave, but doesn't work on all previous versions of macOS. 
+
 'Status' = 'Uploaded' that appears in the table does not mean that file has been installed. It means that it has been sent to NS without any issues! That's what this app about. 
 Handling successful/failed installation is a purpose of the other side application: TinFoil or GoldLeaf. And they don't provide any feedback interfaces so I can't detect success/failure.
 
