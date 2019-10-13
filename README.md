@@ -23,6 +23,10 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * [usb4java](https://mvnrepository.com/artifact/org.usb4java/usb4java)
 * Few icons taken from: [materialdesignicons.com](http://materialdesignicons.com/)
 
+#### List of awesome contributors!
+
+* [wolfposd](https://github.com/wolfposd)
+
 #### Thanks for the great work done by our translators!
 
 * French by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 

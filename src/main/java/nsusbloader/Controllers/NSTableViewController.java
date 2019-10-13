@@ -98,7 +98,8 @@ public class NSTableViewController implements Initializable {
             protected void updateItem(Long length, boolean empty) {
                 if (length == null || empty) {
                     setText("");
-                } else {
+                }
+                else {
                     setText(formatByteSize(length));
                 }
             }
@@ -218,8 +219,9 @@ public class NSTableViewController implements Initializable {
             rowsObsLst.removeIf(current -> ! current.getNspFileName().toLowerCase().endsWith("nsp"));
         table.refresh();
     }
-    
-    
+    /**
+     * Used for showing in 'Size' column size representation in human-readable format
+     * */
     private String formatByteSize(double length) {
         final String[] unitNames = { "bytes", "KiB", "MiB", "GiB", "TiB"};
         int i;
