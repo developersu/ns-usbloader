@@ -119,4 +119,10 @@ public class AppPreferences {
 
     public String getUseOldGlVersion(){ return preferences.get("OldGlVersion", ""); }
     public void setUseOldGlVersion(String version){ preferences.put("OldGlVersion", version);}
+
+    public double getSceneWidth(){ return preferences.getDouble("WIND_WIDTH", 850.0); }
+    public void setSceneWidth(double value){ preferences.putDouble("WIND_WIDTH", value); }
+
+    public double getSceneHeight(){ return preferences.getDouble("WIND_HEIGHT", 475.0); }
+    public void setSceneHeight(double value){ preferences.putDouble("WIND_HEIGHT", value); }
 }

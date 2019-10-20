@@ -33,7 +33,10 @@ public class NSLMain extends Application {
         primaryStage.setTitle("NS-USBloader "+appVersion);
         primaryStage.setMinWidth(650);
         primaryStage.setMinHeight(450);
-        Scene mainScene = new Scene(root, 850, 475);
+        Scene mainScene = new Scene(root,
+                AppPreferences.getInstance().getSceneWidth(),
+                AppPreferences.getInstance().getSceneHeight()
+        );
 
         mainScene.getStylesheets().add(AppPreferences.getInstance().getTheme());
 
@@ -48,7 +51,11 @@ public class NSLMain extends Application {
 
         NSLMainController controller = loader.getController();
         controller.setHostServices(getHostServices());
-        primaryStage.setOnHidden(e-> controller.exit());
+        primaryStage.setOnHidden(e-> {
+            AppPreferences.getInstance().setSceneHeight(mainScene.getHeight());
+            AppPreferences.getInstance().setSceneWidth(mainScene.getWidth());
+            controller.exit();
+        });
     }
 
     public static void main(String[] args) {
