@@ -205,7 +205,8 @@ public class SettingsController implements Initializable {
 
         File jarFile;
         try{
-            jarFile = new File(URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8"));
+            String encodedJarLocation = getClass().getProtectionDomain().getCodeSource().getLocation().getPath().replace("+", "%2B");
+            jarFile = new File(URLDecoder.decode(encodedJarLocation, "UTF-8"));
         }
         catch (UnsupportedEncodingException uee){
             uee.printStackTrace();
