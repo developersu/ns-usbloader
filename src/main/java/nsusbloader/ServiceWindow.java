@@ -2,6 +2,7 @@ package nsusbloader;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.image.Image;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 
@@ -29,6 +30,12 @@ public class ServiceWindow   {
 
         Stage dialogStage = (Stage) alertBox.getDialogPane().getScene().getWindow();
         dialogStage.setAlwaysOnTop(true);
+        dialogStage.getIcons().addAll(
+                new Image("/res/warn_ico32x32.png"),
+                new Image("/res/warn_ico48x48.png"),
+                new Image("/res/warn_ico64x64.png"),
+                new Image("/res/warn_ico128x128.png")
+        );
         dialogStage.toFront();
 
         alertBox.show();
@@ -45,6 +52,17 @@ public class ServiceWindow   {
         alertBox.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alertBox.setResizable(true);        // Java bug workaround for JDR11/OpenJFX. TODO: nothing. really.
         alertBox.getDialogPane().getStylesheets().add(AppPreferences.getInstance().getTheme());
+
+        Stage dialogStage = (Stage) alertBox.getDialogPane().getScene().getWindow();
+        dialogStage.setAlwaysOnTop(true);
+        dialogStage.getIcons().addAll(
+                new Image("/res/ask_ico32x32.png"),
+                new Image("/res/ask_ico48x48.png"),
+                new Image("/res/ask_ico64x64.png"),
+                new Image("/res/ask_ico128x128.png")
+        );
+        dialogStage.toFront();
+
         Optional<ButtonType> result = alertBox.showAndWait();
 
         return (result.isPresent() && result.get() == ButtonType.OK);

@@ -4,7 +4,7 @@
 
 [Support author](#support-this-app)
 
-NS-USBloader is a PC-side **[Adubbz/TinFoil](https://github.com/Adubbz/Tinfoil/)** (version 0.2.1; USB and Network) and **GoldLeaf** (USB) NSP installer. Replacement for default **usb_install_pc.py**, **remote_install_pc.py** *(never ever use this. even if you brave. no idea why it works.)* and **GoldTree**.
+NS-USBloader is a PC-side **[Adubbz/TinFoil](https://github.com/Adubbz/Tinfoil/)** (version 0.2.1; USB and Network) and **GoldLeaf** (USB) NSP installer. Replacement for default **usb_install_pc.py**, **remote_install_pc.py** and **GoldTree**.
 
 [Click here for Android version ;)](https://github.com/developersu/ns-usbloader-mobile)
 
@@ -45,9 +45,9 @@ JRE/JDK 8u60 or higher.
 ### Table of supported GoldLeaf versions
 | GoldLeaf version | NS-USBloader version |
 | ---------------- | -------------------- |
-| v0.5             | v0.4 - v0.5.2, v0.8  |
+| v0.5             | v0.4 - v0.5.2, v0.8+ |
 | v0.6.1           | v0.6                 |
-| v0.7             | v0.7 - v0.8          |
+| v0.7             | v0.7 - v0.8+         |
 
 ### Usage
 ##### Linux:

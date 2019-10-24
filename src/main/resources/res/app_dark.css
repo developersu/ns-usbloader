@@ -303,18 +303,26 @@
 /*-======================= Check Box =====================-*/
 .check-box .box, .check-box:selected .box {
     -fx-background-color: #4f4f4f;
-    -fx-border-color: #4f4f4f;
-    -fx-border-radius: 3px;
+    -fx-background-insets: 0 0 0 0, 0, 1, 1;
+    -fx-background-radius: 5;
+    -fx-border-color: #2d2d2d;
+    -fx-border-radius: 3;
+
 }
 
-.check-box:hover .box, .check-box:selected:hover .box {
+.check-box:hover .box {
     -fx-background-color: #4f4f4f;
+    -fx-background-insets: 0 0 0 0, 0, 1, 1;
+    -fx-background-radius: 3;
     -fx-border-color: #a4ffff;
-    -fx-border-radius: 3px;
+    -fx-border-radius: 3;
 }
 
-.check-box:selected .mark {
+.check-box:selected .box, .check-box:selected:hover .box {
     -fx-background-color: #eea11e;
+}
+.check-box:selected .mark, .check-box:selected:hover .mark{
+    -fx-background-color: #4f4f4f;
 }
 /***********************************************************/
 .regionUpload{

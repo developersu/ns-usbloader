@@ -276,7 +276,7 @@ public class SettingsController implements Initializable {
     public String getHostPort(){ return pcPortTextField.getText(); }
     public String getHostExtra(){ return pcExtraTextField.getText(); }
     public boolean getAutoCheckForUpdates(){ return autoCheckUpdCb.isSelected(); }
-    public boolean getTfXCISupport(){ return tfXciSpprtCb.isSelected(); }
+    public boolean getTfXciNszXczSupport(){ return tfXciSpprtCb.isSelected(); }           // Used also for NSZ/XCZ
 
     public void registerHostServices(HostServices hostServices){this.hs = hostServices;}
 

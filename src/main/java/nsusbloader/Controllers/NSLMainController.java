@@ -122,8 +122,8 @@ public class NSLMainController implements Initializable {
         else
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
-        if (FrontTabController.getSelectedProtocol().equals("TinFoil") && SettingsTabController.getTfXCISupport())
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI", "*.nsp", "*.xci"));
+        if (FrontTabController.getSelectedProtocol().equals("TinFoil") && SettingsTabController.getTfXciNszXczSupport())
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
         else if (FrontTabController.getSelectedProtocol().equals("GoldLeaf") && (! SettingsTabController.getNSPFileFilterForGL()))
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Any file", "*.*"),
                     new FileChooser.ExtensionFilter("NSP ROM", "*.nsp")
@@ -253,6 +253,7 @@ public class NSLMainController implements Initializable {
     /**
      * Drag-n-drop support (drop consumer)
      * */
+    // TODO: DO SOMETHING WITH THIS
     @FXML
     private void handleDrop(DragEvent event){
         if (MediatorControl.getInstance().getTransferActive()) {
@@ -261,14 +262,18 @@ public class NSLMainController implements Initializable {
         }
         List<File> filesDropped = new ArrayList<>();
         try {
-            if (FrontTabController.getSelectedProtocol().equals("TinFoil") && SettingsTabController.getTfXCISupport()){
+            if (FrontTabController.getSelectedProtocol().equals("TinFoil") && SettingsTabController.getTfXciNszXczSupport()){
                 for (File fileOrDir : event.getDragboard().getFiles()) {
                     if (fileOrDir.isDirectory()) {
                         for (File file : fileOrDir.listFiles())
-                            if ((! file.isDirectory()) && (file.getName().toLowerCase().endsWith(".nsp") || file.getName().toLowerCase().endsWith(".xci")))
+                            if ((! file.isDirectory()) && (file.getName().toLowerCase().endsWith(".nsp") ||
+                                    file.getName().toLowerCase().endsWith(".xci") ||
+                                    file.getName().toLowerCase().endsWith(".nsz") ||
+                                    file.getName().toLowerCase().endsWith(".xcz")))
                                 filesDropped.add(file);
                     }
-                    else if (fileOrDir.getName().toLowerCase().endsWith(".nsp") || fileOrDir.getName().toLowerCase().endsWith(".xci"))
+                    else if (fileOrDir.getName().toLowerCase().endsWith(".nsp") || fileOrDir.getName().toLowerCase().endsWith(".xci") ||
+                            fileOrDir.getName().toLowerCase().endsWith(".nsz") || fileOrDir.getName().toLowerCase().endsWith(".xcz") )
                         filesDropped.add(fileOrDir);
 
                 }
@@ -322,7 +327,7 @@ public class NSLMainController implements Initializable {
                 SettingsTabController.getHostPort(),
                 SettingsTabController.getHostExtra(),
                 SettingsTabController.getAutoCheckForUpdates(),
-                SettingsTabController.getTfXCISupport(),
+                SettingsTabController.getTfXciNszXczSupport(),
                 SettingsTabController.getNSPFileFilterForGL(),
                 SettingsTabController.getGlOldVer()
         );

@@ -213,8 +213,11 @@ public class NSTableViewController implements Initializable {
     public void setNewProtocol(String newProtocol){
         if (rowsObsLst.isEmpty())
             return;
-        if (newProtocol.equals("GoldLeaf"))
-            rowsObsLst.removeIf(current -> current.getNspFileName().toLowerCase().endsWith("xci"));
+        if (newProtocol.equals("GoldLeaf")) {
+            rowsObsLst.removeIf(current -> current.getNspFileName().toLowerCase().endsWith("xci") ||
+                    current.getNspFileName().toLowerCase().endsWith("nsz") ||
+                    current.getNspFileName().toLowerCase().endsWith("xcz"));
+        }
         else
             rowsObsLst.removeIf(current -> ! current.getNspFileName().toLowerCase().endsWith("nsp"));
         table.refresh();
