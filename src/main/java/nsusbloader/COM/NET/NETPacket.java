@@ -1,4 +1,4 @@
-package nsusbloader.NET;
+package nsusbloader.COM.NET;
 
 import nsusbloader.NSLMain;
 

@@ -3,6 +3,7 @@ package nsusbloader.Controllers;
 import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.io.File;
+import java.io.FilenameFilter;
 
 public class NSLRowModel {
 
@@ -16,7 +17,15 @@ public class NSLRowModel {
         this.nspFile = nspFile;
         this.markForUpload = checkBoxValue;
         this.nspFileName = nspFile.getName();
-        this.nspFileSize = nspFile.length();
+        if (nspFile.isFile())
+            this.nspFileSize = nspFile.length();
+        else {
+            File[] subFilesArr = nspFile.listFiles((file, name) -> name.matches("[0-9]{2}"));
+            if (subFilesArr != null) {
+                for (File subFile : subFilesArr)
+                    this.nspFileSize += subFile.length();
+            }
+        }
         this.status = "";
     }
     // Model methods start

@@ -1,10 +1,11 @@
-package nsusbloader.USB;
+package nsusbloader.COM.USB;
 
 import javafx.concurrent.Task;
 import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
-import nsusbloader.USB.PFS.PFSProvider;
+import nsusbloader.COM.Helpers.NSSplitReader;
+import nsusbloader.COM.USB.PFS.PFSProvider;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 
@@ -18,7 +19,7 @@ import java.util.LinkedHashMap;
 /**
  * GoldLeaf processing
  * */
-public class GoldLeaf_05 implements ITransferModule{
+public class GoldLeaf_05 extends TransferModule {
     //                            CMD                                G     L     U     C
     private static final byte[] CMD_GLUC =               new byte[]{0x47, 0x4c, 0x55, 0x43};
     private static final byte[] CMD_ConnectionRequest =  new byte[]{0x00, 0x00, 0x00, 0x00};    // Write-only command
@@ -31,13 +32,13 @@ public class GoldLeaf_05 implements ITransferModule{
     private static final byte[] CMD_NSPTicket =          new byte[]{0x06, 0x00, 0x00, 0x00};
     private static final byte[] CMD_Finish =             new byte[]{0x07, 0x00, 0x00, 0x00};
 
-    private DeviceHandle handlerNS;
-    private Task<Void> task;
-    private LogPrinter logPrinter;
-    private EFileStatus status = EFileStatus.FAILED;
     private RandomAccessFile raf;   // NSP File
+    private NSSplitReader nsr;      // It'a also NSP File
 
     GoldLeaf_05(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, LogPrinter logPrinter){
+        super(handler, nspMap, task, logPrinter);
+        status = EFileStatus.FAILED;
+
         logPrinter.print("============= GoldLeaf v0.5 =============\n" +
             "        Only one file per time could be sent. In case you selected more the first one would be picked.", EMsgType.INFO);
         if (nspMap.isEmpty()){
@@ -62,14 +63,14 @@ public class GoldLeaf_05 implements ITransferModule{
         }
         logPrinter.print("GL File structure validated and it will be uploaded", EMsgType.PASS);
 
-        this.handlerNS = handler;
-        this.task = task;
-        this.logPrinter = logPrinter;
         try{
-            this.raf = new RandomAccessFile(nspFile, "r");
+            if (nspFile.isDirectory())
+                this.nsr = new NSSplitReader(nspFile, 0);
+            else
+                this.raf = new RandomAccessFile(nspFile, "r");
         }
-        catch (FileNotFoundException fnfe){
-            logPrinter.print("GL File not found\n\t"+fnfe.getMessage(), EMsgType.FAIL);
+        catch (IOException ioe){
+            logPrinter.print("GL File not found\n\t"+ioe.getMessage(), EMsgType.FAIL);
             return;
         }
 
@@ -131,9 +132,11 @@ public class GoldLeaf_05 implements ITransferModule{
         try {
             raf.close();
         }
-        catch (IOException ioe){
-            logPrinter.print("GL Failed to close file.", EMsgType.INFO);
+        catch (IOException | NullPointerException ignored){}
+        try {
+            nsr.close();
         }
+        catch (IOException | NullPointerException ignored){}
     }
     /**
      * ConnectionResponse command handler
@@ -254,21 +257,41 @@ public class GoldLeaf_05 implements ITransferModule{
         byte[] readBuf;
 
         try{
-            raf.seek(realNcaOffset);
+            if (raf == null){
+                nsr.seek(realNcaOffset);
 
-            while (readFrom < realNcaSize){
-                if (realNcaSize - readFrom < readPice)
-                    readPice = Math.toIntExact(realNcaSize - readFrom);    // it's safe, I guarantee
-                readBuf = new byte[readPice];
-                if (raf.read(readBuf) != readPice)
-                    return true;
-                //System.out.println("S: "+readFrom+" T: "+realNcaSize+" P: "+readPice);    //  DEBUG
-                if (writeUsb(readBuf))
-                    return true;
-                //-----------------------------------------/
-                logPrinter.updateProgress((readFrom+readPice)/(realNcaSize/100.0) / 100.0);
-                //-----------------------------------------/
-                readFrom += readPice;
+                while (readFrom < realNcaSize){
+                    if (realNcaSize - readFrom < readPice)
+                        readPice = Math.toIntExact(realNcaSize - readFrom);    // it's safe, I guarantee
+                    readBuf = new byte[readPice];
+                    if (nsr.read(readBuf) != readPice)
+                        return true;
+                    //System.out.println("S: "+readFrom+" T: "+realNcaSize+" P: "+readPice);    //  DEBUG
+                    if (writeUsb(readBuf))
+                        return true;
+                    //-----------------------------------------/
+                    logPrinter.updateProgress((readFrom+readPice)/(realNcaSize/100.0) / 100.0);
+                    //-----------------------------------------/
+                    readFrom += readPice;
+                }
+            }
+            else {
+                raf.seek(realNcaOffset);
+
+                while (readFrom < realNcaSize){
+                    if (realNcaSize - readFrom < readPice)
+                        readPice = Math.toIntExact(realNcaSize - readFrom);    // it's safe, I guarantee
+                    readBuf = new byte[readPice];
+                    if (raf.read(readBuf) != readPice)
+                        return true;
+                    //System.out.println("S: "+readFrom+" T: "+realNcaSize+" P: "+readPice);    //  DEBUG
+                    if (writeUsb(readBuf))
+                        return true;
+                    //-----------------------------------------/
+                    logPrinter.updateProgress((readFrom+readPice)/(realNcaSize/100.0) / 100.0);
+                    //-----------------------------------------/
+                    readFrom += readPice;
+                }
             }
             //-----------------------------------------/
             logPrinter.updateProgress(1.0);
@@ -282,8 +305,6 @@ public class GoldLeaf_05 implements ITransferModule{
         return false;
     }
 
-    @Override
-    public EFileStatus getStatus() { return status; }
 
     /**
      * Sending any byte array to USB device

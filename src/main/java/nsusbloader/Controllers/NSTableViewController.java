@@ -150,6 +150,24 @@ public class NSTableViewController implements Initializable {
         table.getColumns().add(uploadColumn);
     }
     /**
+     * Add single file when user selected it (Split file usually)
+     * */
+    public void setFile(File file){
+        if ( ! rowsObsLst.isEmpty()){
+            List<String> filesAlreayInList = new ArrayList<>();
+            for (NSLRowModel model : rowsObsLst)
+                filesAlreayInList.add(model.getNspFileName());
+
+            if ( ! filesAlreayInList.contains(file.getName()))
+                rowsObsLst.add(new NSLRowModel(file, true));
+        }
+        else {
+            rowsObsLst.add(new NSLRowModel(file, true));
+            MediatorControl.getInstance().getContoller().disableUploadStopBtn(false);
+        }
+        table.refresh();
+    }
+    /**
      * Add files when user selected them
      * */
     public void setFiles(List<File> newFiles){

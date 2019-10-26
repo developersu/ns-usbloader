@@ -24,6 +24,7 @@ public class RainbowHexDump {
         System.out.println(">"+ANSI_RED+byteArray.length+ANSI_RESET);
         for (byte b: byteArray)
             System.out.print(String.format("%02x ", b));
+        //System.out.println();
         System.out.print("\t\t\t"
                 + new String(byteArray, StandardCharsets.UTF_8)
                 + "\n");

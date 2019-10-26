@@ -8,15 +8,15 @@ import javafx.scene.control.*;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import nsusbloader.*;
 import nsusbloader.ModelControllers.UpdatesChecker;
-import nsusbloader.NET.NETCommunications;
-import nsusbloader.USB.UsbCommunications;
+import nsusbloader.COM.NET.NETCommunications;
+import nsusbloader.COM.USB.UsbCommunications;
 
 import java.io.File;
 import java.net.*;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -28,9 +28,8 @@ public class NSLMainController implements Initializable {
     @FXML
     public TextArea logArea;            // Accessible from Mediator
     @FXML
-    private Button selectNspBtn;
-    @FXML
-    private Button uploadStopBtn;
+    private Button selectNspBtn, selectSplitNspBtn, uploadStopBtn;
+
     private Region btnUpStopImage;
     @FXML
     public ProgressBar progressBar;            // Accessible from Mediator
@@ -62,6 +61,10 @@ public class NSLMainController implements Initializable {
         else
             uploadStopBtn.setDisable(false);
         selectNspBtn.setOnAction(e-> selectFilesBtnAction());
+
+        selectSplitNspBtn.setOnAction(e-> selectSplitBtnAction());
+        selectSplitNspBtn.getStyleClass().add("buttonSelect");
+
         uploadStopBtn.setOnAction(e-> uploadBtnAction());
 
         selectNspBtn.getStyleClass().add("buttonSelect");
@@ -101,7 +104,6 @@ public class NSLMainController implements Initializable {
     public ResourceBundle getResourceBundle() {
         return resourceBundle;
     }
-
     /**
      * Provide hostServices to Settings tab
      * */
@@ -109,7 +111,6 @@ public class NSLMainController implements Initializable {
 
     /**
      * Functionality for selecting NSP button.
-     * Uses setReady and setNotReady to simplify code readability.
      * */
     private void selectFilesBtnAction(){
         List<File> filesList;
@@ -136,6 +137,28 @@ public class NSLMainController implements Initializable {
             FrontTabController.tableFilesListController.setFiles(filesList);
             uploadStopBtn.setDisable(false);
             previouslyOpenedPath = filesList.get(0).getParent();
+        }
+    }
+    /**
+     * Functionality for selecting Split NSP button.
+     * */
+    private void selectSplitBtnAction(){
+        File splitFile;
+        DirectoryChooser dirChooser = new DirectoryChooser();
+        dirChooser.setTitle(resourceBundle.getString("btn_OpenFile"));
+
+        File validator = new File(previouslyOpenedPath);
+        if (validator.exists())
+            dirChooser.setInitialDirectory(validator);
+        else
+            dirChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+
+        splitFile = dirChooser.showDialog(logArea.getScene().getWindow());
+
+        if (splitFile != null && splitFile.getName().toLowerCase().endsWith(".nsp")) {
+            FrontTabController.tableFilesListController.setFile(splitFile);
+            uploadStopBtn.setDisable(false);    // Is it useful?
+            previouslyOpenedPath = splitFile.getParent();
         }
     }
     /**
@@ -210,6 +233,7 @@ public class NSLMainController implements Initializable {
     public void notifyTransmissionStarted(boolean isTransmissionStarted){
         if (isTransmissionStarted) {
             selectNspBtn.setDisable(true);
+            selectSplitNspBtn.setDisable(true);
             uploadStopBtn.setOnAction(e-> stopBtnAction());
 
             uploadStopBtn.setText(resourceBundle.getString("btn_Stop"));
@@ -222,6 +246,7 @@ public class NSLMainController implements Initializable {
         }
         else {
             selectNspBtn.setDisable(false);
+            selectSplitNspBtn.setDisable(false);
             uploadStopBtn.setOnAction(e-> uploadBtnAction());
 
             uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
@@ -253,58 +278,22 @@ public class NSLMainController implements Initializable {
     /**
      * Drag-n-drop support (drop consumer)
      * */
-    // TODO: DO SOMETHING WITH THIS
     @FXML
     private void handleDrop(DragEvent event){
         if (MediatorControl.getInstance().getTransferActive()) {
             event.setDropCompleted(true);
             return;
         }
-        List<File> filesDropped = new ArrayList<>();
-        try {
-            if (FrontTabController.getSelectedProtocol().equals("TinFoil") && SettingsTabController.getTfXciNszXczSupport()){
-                for (File fileOrDir : event.getDragboard().getFiles()) {
-                    if (fileOrDir.isDirectory()) {
-                        for (File file : fileOrDir.listFiles())
-                            if ((! file.isDirectory()) && (file.getName().toLowerCase().endsWith(".nsp") ||
-                                    file.getName().toLowerCase().endsWith(".xci") ||
-                                    file.getName().toLowerCase().endsWith(".nsz") ||
-                                    file.getName().toLowerCase().endsWith(".xcz")))
-                                filesDropped.add(file);
-                    }
-                    else if (fileOrDir.getName().toLowerCase().endsWith(".nsp") || fileOrDir.getName().toLowerCase().endsWith(".xci") ||
-                            fileOrDir.getName().toLowerCase().endsWith(".nsz") || fileOrDir.getName().toLowerCase().endsWith(".xcz") )
-                        filesDropped.add(fileOrDir);
+        List<File> filesDropped = event.getDragboard().getFiles();
 
-                }
-            }// TODO: Somehow improve this double-action function in settings.
-            else if (FrontTabController.getSelectedProtocol().equals("GoldLeaf") && (! SettingsTabController.getNSPFileFilterForGL())){
-                for (File fileOrDir : event.getDragboard().getFiles()) {
-                    if (fileOrDir.isDirectory()) {
-                        for (File file : fileOrDir.listFiles())
-                            if ((! file.isDirectory()) && (! file.isHidden()))
-                                filesDropped.add(file);
-                    }
-                    else
-                        filesDropped.add(fileOrDir);
-                }
-            }
-            else {
-                for (File fileOrDir : event.getDragboard().getFiles()) {
-                    if (fileOrDir.isDirectory()){
-                        for (File file : fileOrDir.listFiles())
-                            if (file.getName().toLowerCase().endsWith(".nsp") && (! file.isDirectory()))
-                                filesDropped.add(file);
-                    }
-                    else if (fileOrDir.getName().toLowerCase().endsWith(".nsp"))
-                        filesDropped.add(fileOrDir);
-                }
-            }
-        }
-        catch (SecurityException se){
-            se.printStackTrace();
-        }
-        if (!filesDropped.isEmpty())
+        if (FrontTabController.getSelectedProtocol().equals("TinFoil") && SettingsTabController.getTfXciNszXczSupport())
+            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches("(.*\\.nsp$)|(.*\\.xci$)|(.*\\.nsz$)|(.*\\.xcz$)"));
+        else if (FrontTabController.getSelectedProtocol().equals("GoldLeaf") && (! SettingsTabController.getNSPFileFilterForGL()))
+            filesDropped.removeIf(file -> (file.isDirectory() && ! file.getName().toLowerCase().matches(".*\\.nsp$")));
+        else
+            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches(".*\\.nsp$"));
+
+        if ( ! filesDropped.isEmpty() )
             FrontTabController.tableFilesListController.setFiles(filesDropped);
 
         event.setDropCompleted(true);

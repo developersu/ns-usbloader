@@ -1,9 +1,10 @@
-package nsusbloader.NET;
+package nsusbloader.COM.NET;
 
 import javafx.concurrent.Task;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
+import nsusbloader.COM.Helpers.NSSplitReader;
 
 import java.io.*;
 import java.net.*;
@@ -22,6 +23,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
     private String switchIP;
 
     private HashMap<String, File> nspMap;
+    private HashMap<String, Long> nspFileSizes;
 
     private ServerSocket serverSocket;
 
@@ -42,6 +44,29 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         this.switchIP = switchIP;
         this.logPrinter = new LogPrinter();
         this.nspMap = new HashMap<>();
+        this.nspFileSizes = new HashMap<>();
+        // Filter and remove empty/incorrect split-files
+        filesList.removeIf(f -> {
+            if (f.isDirectory()){
+                File[] subFiles = f.listFiles((file, name) -> name.matches("[0-9]{2}"));
+                if (subFiles == null || subFiles.length == 0) {
+                    logPrinter.print("NET: Removing empty folder: " + f.getName(), EMsgType.WARNING);
+                    return true;
+                }
+                else {
+                    Arrays.sort(subFiles, Comparator.comparingInt(file -> Integer.parseInt(file.getName())));
+
+                    for (int i = subFiles.length - 2; i > 0 ; i--){
+                        if (subFiles[i].length() < subFiles[i-1].length()) {
+                            logPrinter.print("NET: Removing strange split file: "+f.getName()+
+                                    "\n      (Chunk sizes of the split file are not the same, but has to be.)", EMsgType.WARNING);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        });
         // Collect and encode NSP files list
         try {
             for (File nspFile : filesList)
@@ -49,12 +74,27 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         }
         catch (UnsupportedEncodingException uee){
             isValid = false;
-            logPrinter.print("NET: Unsupported encoding for 'URLEncoder'. Internal issue you can't fix. Please report.  Returned:\n\t"+uee.getMessage(), EMsgType.FAIL);
-            for (File nspFile : filesList)
-                nspMap.put(nspFile.getName(), nspFile);
+            logPrinter.print("NET: Unsupported encoding for 'URLEncoder'. Internal issue you can't fix. Please report. Returned:\n\t"+uee.getMessage(), EMsgType.FAIL);
+            //for (File nspFile : filesList)
+            //    nspMap.put(nspFile.getName(), nspFile);
             close(EFileStatus.FAILED);
             return;
         }
+        // Collect sizes since now we can have split-files support
+        for (Map.Entry<String, File> entry : nspMap.entrySet()){
+            File inFile = entry.getValue();
+            long fSize = 0;
+            if (inFile.isDirectory()){
+                File[] subFiles = inFile.listFiles((file, name) -> name.matches("[0-9]{2}"));
+                for (File subFile : subFiles)
+                    fSize += subFile.length();
+                nspFileSizes.put(entry.getKey(), fSize);
+            }
+            else
+                nspFileSizes.put(entry.getKey(), inFile.length());
+        }
+        
+        
         // Resolve IP
         if (hostIPaddr.isEmpty()) {
             DatagramSocket socket;
@@ -242,23 +282,23 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
                 LinkedList<String> tcpPacket = new LinkedList<>();
 
                 while ((line = br.readLine()) != null) {
-                    //System.out.println(line);              // TODO: remove DBG
-                    if (line.trim().isEmpty()) {           // If TCP packet is ended
+                    //System.out.println(line);           // Debug
+                    if (line.trim().isEmpty()) {          // If TCP packet is ended
                         if (handleRequest(tcpPacket))     // Proceed required things
                             break work_routine;
                         tcpPacket.clear();                // Clear data and wait for next TCP packet
                     }
                     else
-                        tcpPacket.add(line);               // Otherwise collect data
+                        tcpPacket.add(line);              // Otherwise collect data
                 }
                 // and reopen client sock
                 clientSocket.close();
             }
-            catch (IOException ioe){    // If server socket closed, then client socket also closed.
+            catch (IOException ioe){                      // If server socket closed, then client socket also closed.
                 break;
             }
         }
-        if (!isCancelled())
+        if ( ! isCancelled() )
             close(EFileStatus.UNKNOWN);
         return null;
     }
@@ -271,8 +311,11 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
     private boolean handleRequest(LinkedList<String> packet){
     //private boolean handleRequest(LinkedList<String> packet, OutputStreamWriter pw){
         File requestedFile;
-        requestedFile = nspMap.get(packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", ""));
-        if (!requestedFile.exists() || requestedFile.length() == 0){   // well.. tell 404 if file exists with 0 length is against standard, but saves time
+        String reqFileName = packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", "");
+        long reqFileSize = nspFileSizes.get(reqFileName);
+        requestedFile = nspMap.get(reqFileName);
+
+        if (!requestedFile.exists() || reqFileSize == 0){   // well.. tell 404 if file exists with 0 length is against standard, but saves time
             currSockPW.write(NETPacket.getCode404());
             currSockPW.flush();
             logPrinter.print("NET: File "+requestedFile.getName()+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
@@ -280,7 +323,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
             return true;
         }
         if (packet.get(0).startsWith("HEAD")){
-            currSockPW.write(NETPacket.getCode200(requestedFile.length()));
+            currSockPW.write(NETPacket.getCode200(reqFileSize));
             currSockPW.flush();
             logPrinter.print("NET: Replying for requested file: "+requestedFile.getName(), EMsgType.INFO);
             return false;
@@ -298,23 +341,23 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
                                     logPrinter.update(requestedFile, EFileStatus.FAILED);
                                     return true;
                                 }
-                                if (writeToSocket(requestedFile, Long.parseLong(rangeStr[0]), Long.parseLong(rangeStr[1])))         // DO WRITE
+                                if (writeToSocket(reqFileName, Long.parseLong(rangeStr[0]), Long.parseLong(rangeStr[1])))         // DO WRITE
                                     return true;
 
                         }
                         else if (!rangeStr[0].isEmpty()) {                           // If only START defined: Read all
-                            if (writeToSocket(requestedFile, Long.parseLong(rangeStr[0]), requestedFile.length()))         // DO WRITE
+                            if (writeToSocket(reqFileName, Long.parseLong(rangeStr[0]), reqFileSize))         // DO WRITE
                                 return true;
                         }
                         else if (!rangeStr[1].isEmpty()) {                           // If only END defined: Try to read last 500 bytes
-                            if (requestedFile.length() > 500){
-                                if (writeToSocket(requestedFile, requestedFile.length()-500, requestedFile.length()))         // DO WRITE
+                            if (reqFileSize > 500){
+                                if (writeToSocket(reqFileName, reqFileSize-500, reqFileSize))         // DO WRITE
                                     return true;
                             }
                             else {                                                  // If file smaller than 500 bytes
                                 currSockPW.write(NETPacket.getCode416());
                                 currSockPW.flush();
-                                logPrinter.print("NET: File size requested for "+requestedFile.getName()+" while actual size of it: "+requestedFile.length()+". Returning 416", EMsgType.FAIL);
+                                logPrinter.print("NET: File size requested for "+requestedFile.getName()+" while actual size of it: "+reqFileSize+". Returning 416", EMsgType.FAIL);
                                 logPrinter.update(requestedFile, EFileStatus.FAILED);
                                 return true;
                             }
@@ -343,50 +386,84 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
     /**
      * Send files.
      * */
-    private boolean writeToSocket(File file, long start, long end){
+    private boolean writeToSocket(String fileName, long start, long end){
+        File reqFile = nspMap.get(fileName);
+        // Inform
         logPrinter.print("NET: Responding to requested range: "+start+"-"+end, EMsgType.INFO);
-        currSockPW.write(NETPacket.getCode206(file.length(), start, end));
+        // Reply
+        currSockPW.write(NETPacket.getCode206(nspFileSizes.get(fileName), start, end));
         currSockPW.flush();
+        // Prepare transfer
+        long count = end - start + 1;
+
+        int readPice = 8388608;                     // = 8Mb
+        byte[] byteBuf;
+        long currentOffset = 0;
+
         try{
-            long count = end - start + 1;
+            //=================================  SPLIT FILE  ====================================
+            if (reqFile.isDirectory()){
+                NSSplitReader nsr = new NSSplitReader(reqFile, start);
 
-            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-            int readPice = 8388608;                     // = 8Mb
-            byte[] byteBuf;
+                while (currentOffset < count){
+                    if (isCancelled())
+                        return true;
+                    if ((currentOffset + readPice) >= count){
+                        readPice = Math.toIntExact(count - currentOffset);
+                    }
+                    byteBuf = new byte[readPice];
 
-            if (bis.skip(start) != start){
-                logPrinter.print("NET: Unable to skip requested range.", EMsgType.FAIL);
-                logPrinter.update(file, EFileStatus.FAILED);
-                return true;
-            }
-            long currentOffset = 0;
-            while (currentOffset < count){
-                if (isCancelled())
-                    return true;
-                if ((currentOffset+readPice) >= count){
-                    readPice = Math.toIntExact(count - currentOffset);
+                    if (nsr.read(byteBuf) != readPice){
+                        logPrinter.print("NET: Reading of file stream suddenly ended.", EMsgType.FAIL);
+                        return true;
+                    }
+                    currSockOS.write(byteBuf);
+                    //-------/
+                    logPrinter.updateProgress((currentOffset+readPice)/(count/100.0) / 100.0);
+                    //-------/
+                    currentOffset += readPice;
                 }
-                byteBuf = new byte[readPice];
+                currSockOS.flush();         // TODO: check if this really needed.
+                nsr.close();
+            }
+            //================================= REGULAR FILE ====================================
+            else {
+                BufferedInputStream bis = new BufferedInputStream(new FileInputStream(reqFile));
 
-                if (bis.read(byteBuf) != readPice){
-                    logPrinter.print("NET: Reading of file stream suddenly ended.", EMsgType.FAIL);
+                if (bis.skip(start) != start){
+                    logPrinter.print("NET: Unable to skip requested range.", EMsgType.FAIL);
+                    logPrinter.update(reqFile, EFileStatus.FAILED);
                     return true;
                 }
-                currSockOS.write(byteBuf);
-                //-----------------------------------------/
-                logPrinter.updateProgress((currentOffset+readPice)/(count/100.0) / 100.0);
-                //-----------------------------------------/
-                currentOffset += readPice;
+
+                while (currentOffset < count){
+                    if (isCancelled())
+                        return true;
+                    if ((currentOffset + readPice) >= count){
+                        readPice = Math.toIntExact(count - currentOffset);
+                    }
+                    byteBuf = new byte[readPice];
+
+                    if (bis.read(byteBuf) != readPice){
+                        logPrinter.print("NET: Reading of file stream suddenly ended.", EMsgType.FAIL);
+                        return true;
+                    }
+                    currSockOS.write(byteBuf);
+                    //-------/
+                    logPrinter.updateProgress((currentOffset+readPice)/(count/100.0) / 100.0);
+                    //-------/
+                    currentOffset += readPice;
+                }
+                currSockOS.flush();         // TODO: check if this really needed.
+                bis.close();
             }
-            currSockOS.flush();         // TODO: check if this really needed.
-            bis.close();
-            //-----------------------------------------/
+            //-------/
             logPrinter.updateProgress(1.0);
-            //-----------------------------------------/
+            //-------/
         }
-        catch (IOException ioe){
-            logPrinter.print("NET: File transmission failed. Returned:\n\t"+ioe.getMessage(), EMsgType.FAIL);
-            logPrinter.update(file, EFileStatus.FAILED);
+        catch (IOException | NullPointerException e){
+            logPrinter.print("NET: File transmission failed. Returned:\n\t"+e.getMessage(), EMsgType.FAIL);
+            logPrinter.update(reqFile, EFileStatus.FAILED);
             return true;
         }
         return false;
@@ -403,7 +480,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
                 logPrinter.print("NET: Closing server socket.", EMsgType.PASS);
             }
         }
-        catch (IOException | NullPointerException ioe){
+        catch (IOException ioe){
             logPrinter.print("NET: Closing server socket failed. Sometimes it's not an issue.", EMsgType.WARNING);
         }
         if (status != null) {

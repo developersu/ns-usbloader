@@ -1,4 +1,4 @@
-package nsusbloader.USB;
+package nsusbloader.COM.USB;
 
 import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;

@@ -1,8 +1,7 @@
-package nsusbloader.USB.PFS;
+package nsusbloader.COM.USB.PFS;
 
 import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
-import nsusbloader.ServiceWindow;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -22,9 +21,14 @@ public class PFSProvider {
     private int ticketID = -1;
 
     public PFSProvider(File nspFile, LogPrinter logPrinter) throws Exception{
+        if (nspFile.isDirectory()) {
+            nspFileName = nspFile.getName();
+            nspFile = new File(nspFile.getAbsolutePath() + File.separator + "00");
+        }
+        else
+            nspFileName = nspFile.getName();
 
         RandomAccessFile randAccessFile = new RandomAccessFile(nspFile, "r");
-        nspFileName = nspFile.getName();
 
         int filesCount;
         int header;

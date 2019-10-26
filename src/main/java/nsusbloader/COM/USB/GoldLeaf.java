@@ -1,12 +1,12 @@
-package nsusbloader.USB;
+package nsusbloader.COM.USB;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.stage.FileChooser;
 import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.LogPrinter;
-import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
+import nsusbloader.COM.Helpers.NSSplitReader;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 
@@ -19,14 +19,10 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * GoldLeaf processing
+ * GoldLeaf 0.7 - 0.7.3 processing
  */
-class GoldLeaf implements ITransferModule {
-    private LogPrinter logPrinter;
-    private DeviceHandle handlerNS;
-    private LinkedHashMap<String, File> nspMap;
+class GoldLeaf extends TransferModule {
     private boolean nspFilterForGl;
-    private Task<Void> task;
 
     //                     CMD
     private final byte[] CMD_GLCO_SUCCESS = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, 0x00, 0x00};         // used @ writeToUsb_GLCMD
@@ -44,8 +40,11 @@ class GoldLeaf implements ITransferModule {
 
     private String openReadFileNameAndPath;
     private RandomAccessFile randAccessFile;
+    private NSSplitReader splitReader;
 
     private HashMap<String, BufferedOutputStream> writeFilesMap;
+    private long virtDriveSize;
+    private HashMap<String, Long> splitFileSize;
 
     private boolean isWindows;
     private String homePath;
@@ -53,6 +52,8 @@ class GoldLeaf implements ITransferModule {
     private File selectedFile;
 
     GoldLeaf(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, LogPrinter logPrinter, boolean nspFilter){
+        super(handler, nspMap, task, logPrinter);
+
         final byte CMD_GetDriveCount       = 0x00;
         final byte CMD_GetDriveInfo        = 0x01;
         final byte CMD_StatPath            = 0x02; // proxy done [proxy: in case if folder contains ENG+RUS+UKR file names works incorrect]
@@ -72,11 +73,7 @@ class GoldLeaf implements ITransferModule {
 
         final byte[] CMD_GLCI = new byte[]{0x47, 0x4c, 0x43, 0x49};
 
-        this.handlerNS = handler;
-        this.nspMap = nspMap;
-        this.logPrinter = logPrinter;
         this.nspFilterForGl = nspFilter;
-        this.task = task;
 
         logPrinter.print("============= GoldLeaf =============\n\tVIRT:/ equals files added into the application\n\tHOME:/ equals "
                 +System.getProperty("user.home"), EMsgType.INFO);
@@ -91,6 +88,22 @@ class GoldLeaf implements ITransferModule {
         isWindows = System.getProperty("os.name").contains("Windows");
 
         homePath = System.getProperty("user.home")+File.separator;
+
+        splitFileSize = new HashMap<>();
+
+        // Calculate size of VIRT:/ drive
+        for (File nspFile : nspMap.values()){
+            if (nspFile.isDirectory()) {
+                File[] subFiles = nspFile.listFiles((file, name) -> name.matches("[0-9]{2}"));
+                long size = 0;
+                for (File subFile : subFiles)   // Validated by parent class
+                    size += subFile.length();
+                virtDriveSize += size;
+                splitFileSize.put(nspFile.getName(), size);
+            }
+            else
+                virtDriveSize += nspFile.length();
+        }
 
         // Go parse commands
         byte[] readByte;
@@ -193,7 +206,7 @@ class GoldLeaf implements ITransferModule {
             for (BufferedOutputStream fBufOutStream: writeFilesMap.values()){
                 try{
                     fBufOutStream.close();
-                }catch (IOException ignored){}
+                }catch (IOException | NullPointerException ignored){}
             }
         }
         closeOpenedReadFilesGl();
@@ -207,9 +220,14 @@ class GoldLeaf implements ITransferModule {
             try{
                 randAccessFile.close();
             }
-            catch (IOException ignored){}
+            catch (IOException | NullPointerException ignored){}
+            try{
+                splitReader.close();
+            }
+            catch (IOException | NullPointerException ignored){}
             openReadFileNameAndPath = null;
             randAccessFile = null;
+            splitReader = null;
         }
     }
     /**
@@ -243,7 +261,7 @@ class GoldLeaf implements ITransferModule {
                 driveLetterLen,
                 totalFreeSpace,
                 totalSize;
-        long totalSizeLong = 0;
+        long totalSizeLong;
 
         // 0 == VIRTUAL DRIVE
         if (driveNo == 0){
@@ -252,9 +270,7 @@ class GoldLeaf implements ITransferModule {
             driveLetter = "VIRT".getBytes(StandardCharsets.UTF_16LE);      // TODO: Consider moving to class field declaration
             driveLetterLen = intToArrLE(driveLetter.length / 2);// since GL 0.7
             totalFreeSpace = new byte[4];
-            for (File nspFile : nspMap.values()){
-                totalSizeLong += nspFile.length();
-            }
+            totalSizeLong = virtDriveSize;
             totalSize = Arrays.copyOfRange(longToArrLE(totalSizeLong), 0, 4);  // Dirty hack; now for GL!
         }
         else { //1 == User home dir
@@ -567,7 +583,12 @@ class GoldLeaf implements ITransferModule {
             filePath = filePath.replaceFirst("VIRT:/", "");
             if (nspMap.containsKey(filePath)){
                 command.add(GL_OBJ_TYPE_FILE);                              // THIS IS INT
-                command.add(longToArrLE(nspMap.get(filePath).length()));    // YES, THIS IS LONG!
+                if (nspMap.get(filePath).isDirectory()) {
+                    command.add(longToArrLE(splitFileSize.get(filePath)));    // YES, THIS IS LONG!;
+                }
+                else
+                    command.add(longToArrLE(nspMap.get(filePath).length()));    // YES, THIS IS LONG!
+
                 if (writeGL_PASS(command)) {
                     logPrinter.print("GL Handle 'StatPath' command.", EMsgType.FAIL);
                     return true;
@@ -693,7 +714,7 @@ class GoldLeaf implements ITransferModule {
      *          false if everything is ok
      * */
     private boolean readFile(String fileName, long offset, long size) {
-        //System.out.println("readFile "+fileName+" "+offset+" "+size);
+        //System.out.println("readFile "+fileName+" "+offset+" "+size+"\n");
         if (fileName.startsWith("VIRT:/")){
             // Let's find out which file requested
             String fNamePath = nspMap.get(fileName.substring(6)).getAbsolutePath();     // NOTE: 6 = "VIRT:/".length
@@ -703,14 +724,25 @@ class GoldLeaf implements ITransferModule {
                 if (openReadFileNameAndPath != null){
                     try{
                         randAccessFile.close();
-                    }catch (IOException ignored){}
+                    }catch (Exception ignored){}
+                    try{
+                        splitReader.close();
+                    }catch (Exception ignored){}
                 }
                 // Open what has to be opened
                 try{
-                    randAccessFile = new RandomAccessFile(nspMap.get(fileName.substring(6)), "r");
+                    File tempFile = nspMap.get(fileName.substring(6));
+                    if (tempFile.isDirectory()) {
+                        randAccessFile = null;
+                        splitReader = new NSSplitReader(tempFile, 0);
+                    }
+                    else {
+                        splitReader = null;
+                        randAccessFile = new RandomAccessFile(tempFile, "r");
+                    }
                     openReadFileNameAndPath = fNamePath;
                 }
-                catch (IOException ioe){
+                catch (IOException | NullPointerException ioe){
                     return writeGL_FAIL("GL Handle 'ReadFile' command\n\t"+ioe.getMessage());
                 }
             }
@@ -724,47 +756,79 @@ class GoldLeaf implements ITransferModule {
                 if (openReadFileNameAndPath != null){
                     try{
                         randAccessFile.close();
-                    }catch (IOException ignored){}
+                    }catch (IOException | NullPointerException ignored){}
                 }
                 // Open what has to be opened
                 try{
                     randAccessFile = new RandomAccessFile(fileName, "r");
                     openReadFileNameAndPath = fileName;
-                }catch (IOException ioe){
+                }catch (IOException | NullPointerException ioe){
                     return writeGL_FAIL("GL Handle 'ReadFile' command\n\t"+ioe.getMessage());
                 }
             }
         }
         //----------------------- Actual transfer chain ------------------------
         try{
-            randAccessFile.seek(offset);
-            byte[] chunk = new byte[(int)size]; // WTF MAN?
-            // Let's find out how much bytes we got
-            int bytesRead = randAccessFile.read(chunk);
-            // Let's check that we read expected size
-            if (bytesRead != (int)size)
-                return writeGL_FAIL("GL Handle 'ReadFile' command [CMD] Requested = "+size+" Read from file = "+bytesRead);
-            // Let's tell as a command about our result.
-            if (writeGL_PASS(longToArrLE(size))) {
-                logPrinter.print("GL Handle 'ReadFile' command [CMD]", EMsgType.FAIL);
-                return true;
+            if (randAccessFile == null){
+                splitReader.seek(offset);
+                byte[] chunk = new byte[(int)size]; // WTF MAN?
+                // Let's find out how much bytes we got
+                int bytesRead = splitReader.read(chunk);
+                // Let's check that we read expected size
+                if (bytesRead != (int)size)
+                    return writeGL_FAIL("GL Handle 'ReadFile' command [CMD]\n" +
+                            "    At offset: "+offset+"\n    Requested: "+size+"\n    Received:  "+bytesRead);
+                // Let's tell as a command about our result.
+                if (writeGL_PASS(longToArrLE(size))) {
+                    logPrinter.print("GL Handle 'ReadFile' command [CMD]", EMsgType.FAIL);
+                    return true;
+                }
+                // Let's bypass bytes we read total
+                if (writeToUsb(chunk)) {
+                    logPrinter.print("GL Handle 'ReadFile' command", EMsgType.FAIL);
+                    return true;
+                }
+                return false;
             }
-            // Let's bypass bytes we read total
-            if (writeToUsb(chunk)) {
-                logPrinter.print("GL Handle 'ReadFile' command", EMsgType.FAIL);
-                return true;
+            else {
+                randAccessFile.seek(offset);
+                byte[] chunk = new byte[(int)size]; // WTF MAN?
+                // Let's find out how much bytes we got
+                int bytesRead = randAccessFile.read(chunk);
+                // Let's check that we read expected size
+                if (bytesRead != (int)size)
+                    return writeGL_FAIL("GL Handle 'ReadFile' command [CMD] Requested = "+size+" Read from file = "+bytesRead);
+                // Let's tell as a command about our result.
+                if (writeGL_PASS(longToArrLE(size))) {
+                    logPrinter.print("GL Handle 'ReadFile' command [CMD]", EMsgType.FAIL);
+                    return true;
+                }
+                // Let's bypass bytes we read total
+                if (writeToUsb(chunk)) {
+                    logPrinter.print("GL Handle 'ReadFile' command", EMsgType.FAIL);
+                    return true;
+                }
+                return false;
             }
-            return false;
         }
-        catch (IOException ioe){
+        catch (Exception ioe){
             try{
                 randAccessFile.close();
             }
-            catch (IOException ioee){
-                logPrinter.print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioee.getMessage(), EMsgType.WARNING);
+            catch (NullPointerException ignored){}
+            catch (IOException ioe_){
+                logPrinter.print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
+            }
+            try{
+                splitReader.close();
+            }
+            catch (NullPointerException ignored){}
+            catch (IOException ioe_){
+                logPrinter.print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
             }
             openReadFileNameAndPath = null;
             randAccessFile = null;
+            splitReader = null;
             return writeGL_FAIL("GL Handle 'ReadFile' command\n\t"+ioe.getMessage());
         }
     }
@@ -852,10 +916,6 @@ class GoldLeaf implements ITransferModule {
         return writeGL_FAIL("GL Handle 'SelectFile' command: Nothing selected");
     }
 
-    @Override
-    public EFileStatus getStatus() {
-        return EFileStatus.UNKNOWN;
-    }
     /*----------------------------------------------------*/
     /*                     GL HELPERS                     */
     /*----------------------------------------------------*/

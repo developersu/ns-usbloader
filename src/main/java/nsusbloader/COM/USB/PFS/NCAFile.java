@@ -1,4 +1,4 @@
-package nsusbloader.USB.PFS;
+package nsusbloader.COM.USB.PFS;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

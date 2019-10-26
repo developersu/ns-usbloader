@@ -1,4 +1,4 @@
-package nsusbloader.USB;
+package nsusbloader.COM.USB;
 
 import javafx.concurrent.Task;
 import nsusbloader.ModelControllers.LogPrinter;
@@ -50,7 +50,7 @@ public class UsbCommunications extends Task<Void> {
 
         DeviceHandle handler = usbConnect.getHandlerNS();
 
-        ITransferModule module;
+        TransferModule module;
 
         if (protocol.equals("TinFoil"))
             module = new TinFoil(handler, nspMap, this, logPrinter);

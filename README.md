@@ -12,7 +12,7 @@ With GUI and cookies. Works on Windows, macOS and Linux.
 
 Sometimes I add new posts about this project [on my home page](https://developersu.blogspot.com/search/label/NS-USBloader).
 
-![Screenshot](https://farm8.staticflickr.com/7809/46703921964_53f60f04ed_o.png)
+![Screenshot](https://live.staticflickr.com/65535/48962978677_4c3913e8a9_o.png)
 
 #### License
 
@@ -99,7 +99,7 @@ There are three tabs. First one is main.
 
 At the top of you selecting from drop-down application and protocol that you're going to use. For GoldLeaf only USB is available. Lamp icon stands for switching themes (light or dark).
 
-Then you may drag-n-drop folder with NSPs OR files to application or use 'Select NSP files' button. Multiple selection for files available. Click it again and select files from another folder it you want, it will be added into the table.
+Then you may drag-n-drop files (split-files aka folders) to application or use 'Select NSP files' button. Multiple selection for files available. Click it again and select files from another folder it you want, it will be added into the table.
 
 Table.
 
@@ -140,13 +140,16 @@ usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This shou
 
 ### Translators!
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
-Upload somewhere (create PR, use pastebin/google drive/whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add. 
+
+Upload somewhere (create PR, use pastebin/google drive/whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add.
+
+To convert files of any locale to readable format (and vise-versa) you can use this site [https://itpro.cz/juniconv/](https://itpro.cz/juniconv/)
+ 
 
 #### TODO (maybe):
 - [x] [Android support](https://github.com/developersu/ns-usbloader-mobile)
 - [ ] File order sort (non-critical)
 - [ ] More deep file analyze before uploading.
-- [ ] XCI support
 
 ## Support this app
 

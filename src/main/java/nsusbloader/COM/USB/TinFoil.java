@@ -1,9 +1,10 @@
-package nsusbloader.USB;
+package nsusbloader.COM.USB;
 
 import javafx.concurrent.Task;
 import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
+import nsusbloader.COM.Helpers.NSSplitReader;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 
@@ -18,18 +19,9 @@ import java.util.LinkedHashMap;
 /**
  * Tinfoil processing
  * */
-class TinFoil implements ITransferModule {
-    private LogPrinter logPrinter;
-    private DeviceHandle handlerNS;
-    private LinkedHashMap<String, File> nspMap;
-    private EFileStatus status = EFileStatus.FAILED;
-    private Task<Void> task;
-
+class TinFoil extends TransferModule {
     TinFoil(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, LogPrinter logPrinter){
-        this.handlerNS = handler;
-        this.nspMap = nspMap;
-        this.task = task;
-        this.logPrinter = logPrinter;
+        super(handler, nspMap, task, logPrinter);
 
         logPrinter.print("============= TinFoil =============", EMsgType.INFO);
 
@@ -162,44 +154,83 @@ class TinFoil implements ITransferModule {
             return false;
 
         try {
-
-            BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspMap.get(receivedRequestedNSP)));      // TODO: refactor?
-            byte[] bufferCurrent ;//= new byte[1048576];        // eq. Allocate 1mb
-
-            if (bufferedInStream.skip(receivedRangeOffset) != receivedRangeOffset){
-                logPrinter.print("TF Requested skip is out of file size. Nothing to transmit.", EMsgType.FAIL);
-                return false;
-            }
+            byte[] bufferCurrent;   //= new byte[1048576];        // eq. Allocate 1mb
 
             long currentOffset = 0;
             // 'End Offset' equal to receivedRangeSize.
             int readPice = 8388608;                     // = 8Mb
 
-            while (currentOffset < receivedRangeSize){
-                if ((currentOffset + readPice) >= receivedRangeSize )
-                    readPice = Math.toIntExact(receivedRangeSize - currentOffset);
-                //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // NOTE: DEBUG
-                // updating progress bar (if a lot of data requested) START BLOCK
-                //-----------------------------------------/
-                logPrinter.updateProgress((currentOffset+readPice)/(receivedRangeSize/100.0) / 100.0);
-                //-----------------------------------------/
-                bufferCurrent = new byte[readPice];                                                         // TODO: not perfect moment, consider refactoring.
+            //---------------! Split files start !---------------
+            if (nspMap.get(receivedRequestedNSP).isDirectory()){
+                NSSplitReader nsSplitReader = new NSSplitReader(nspMap.get(receivedRequestedNSP), receivedRangeSize);
+                if (nsSplitReader.seek(receivedRangeOffset) != receivedRangeOffset){
+                    logPrinter.print("TF Requested skip is out of file size. Nothing to transmit.", EMsgType.FAIL);
+                    return false;
+                }
 
-                if (bufferedInStream.read(bufferCurrent) != readPice) {                                      // changed since @ v0.3.2
-                    logPrinter.print("TF Reading of stream suddenly ended.", EMsgType.WARNING);
-                    return false;
+                while (currentOffset < receivedRangeSize){
+                    if ((currentOffset + readPice) >= receivedRangeSize )
+                        readPice = Math.toIntExact(receivedRangeSize - currentOffset);
+                    //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // NOTE: DEBUG
+                    // updating progress bar (if a lot of data requested) START BLOCK
+                    //---Tell progress to UI---/
+                    logPrinter.updateProgress((currentOffset+readPice)/(receivedRangeSize/100.0) / 100.0);
+                    //------------------------/
+                    bufferCurrent = new byte[readPice];                                                         // TODO: not perfect moment, consider refactoring.
+
+                    if (nsSplitReader.read(bufferCurrent) != readPice) {                                      // changed since @ v0.3.2
+                        logPrinter.print("TF Reading of stream suddenly ended.", EMsgType.WARNING);
+                        return false;
+                    }
+                    //write to USB
+                    if (writeUsb(bufferCurrent)) {
+                        logPrinter.print("TF Failure during NSP transmission.", EMsgType.FAIL);
+                        return false;
+                    }
+                    currentOffset += readPice;
                 }
-                //write to USB
-                if (writeUsb(bufferCurrent)) {
-                    logPrinter.print("TF Failure during NSP transmission.", EMsgType.FAIL);
-                    return false;
-                }
-                currentOffset += readPice;
+                nsSplitReader.close();
+                //---Tell progress to UI---/
+                logPrinter.updateProgress(1.0);
+                //------------------------/
             }
-            bufferedInStream.close();
-            //-----------------------------------------/
-            logPrinter.updateProgress(1.0);
-            //-----------------------------------------/
+            //---------------! Split files end     !---------------
+            //---------------! Regular files start !---------------
+            else {
+                BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspMap.get(receivedRequestedNSP)));      // TODO: refactor?
+
+                if (bufferedInStream.skip(receivedRangeOffset) != receivedRangeOffset) {
+                    logPrinter.print("TF Requested skip is out of file size. Nothing to transmit.", EMsgType.FAIL);
+                    return false;
+                }
+
+                while (currentOffset < receivedRangeSize) {
+                    if ((currentOffset + readPice) >= receivedRangeSize)
+                        readPice = Math.toIntExact(receivedRangeSize - currentOffset);
+                    //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // NOTE: DEBUG
+                    // updating progress bar (if a lot of data requested) START BLOCK
+                    //---Tell progress to UI---/
+                    logPrinter.updateProgress((currentOffset + readPice) / (receivedRangeSize / 100.0) / 100.0);
+                    //------------------------/
+                    bufferCurrent = new byte[readPice];                                                         // TODO: not perfect moment, consider refactoring.
+
+                    if (bufferedInStream.read(bufferCurrent) != readPice) {                                      // changed since @ v0.3.2
+                        logPrinter.print("TF Reading of stream suddenly ended.", EMsgType.WARNING);
+                        return false;
+                    }
+                    //write to USB
+                    if (writeUsb(bufferCurrent)) {
+                        logPrinter.print("TF Failure during NSP transmission.", EMsgType.FAIL);
+                        return false;
+                    }
+                    currentOffset += readPice;
+                }
+                bufferedInStream.close();
+                //---Tell progress to UI---/
+                logPrinter.updateProgress(1.0);
+                //------------------------/
+            }
+            //---------------! Regular files end     !---------------
         } catch (FileNotFoundException fnfe){
             logPrinter.print("TF FileNotFoundException:\n  "+fnfe.getMessage(), EMsgType.FAIL);
             fnfe.printStackTrace();
@@ -211,6 +242,10 @@ class TinFoil implements ITransferModule {
         } catch (ArithmeticException ae){
             logPrinter.print("TF ArithmeticException (can't cast 'offset end' - 'offsets current' to 'integer'):\n  "+ae.getMessage(), EMsgType.FAIL);
             ae.printStackTrace();
+            return false;
+        } catch (NullPointerException npe){
+            logPrinter.print("TF NullPointerException (in some moment application didn't find something. Something important.):\n  "+npe.getMessage(), EMsgType.FAIL);
+            npe.printStackTrace();
             return false;
         }
 
@@ -308,14 +343,5 @@ class TinFoil implements ITransferModule {
         }
         logPrinter.print("TF Execution interrupted", EMsgType.INFO);
         return null;
-    }
-
-    /**
-     * Status getter
-     * @return status
-     */
-    @Override
-    public EFileStatus getStatus() {
-        return status;
     }
 }

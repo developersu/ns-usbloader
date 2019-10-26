@@ -1,4 +1,4 @@
-package nsusbloader.USB;
+package nsusbloader.COM.USB;
 
 import org.usb4java.LibUsb;
 
