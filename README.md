@@ -1,10 +1,11 @@
 # NS-USBloader
 
-![License](https://img.shields.io/badge/License-GPLv3-blue.svg) [![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg)]() [![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg)]()
+![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg)
 
 [Support author](#support-this-app)
 
-NS-USBloader is a PC-side **[Adubbz/TinFoil](https://github.com/Adubbz/Tinfoil/)** (version 0.2.1; USB and Network) and **GoldLeaf** (USB) NSP installer. Replacement for default **usb_install_pc.py**, **remote_install_pc.py** and **GoldTree**.
+NS-USBloader is a PC-side installer for **[Adubbz/TinFoil (v0.2.1)](https://github.com/Adubbz/Tinfoil/)**, **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** (USB and Network supported) and **[XorTroll/GoldLeaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
+Replacement for default **usb_install_pc.py**, **remote_install_pc.py**, **GoldTree**/**Quark**. 
 
 [Click here for Android version ;)](https://github.com/developersu/ns-usbloader-mobile)
 
@@ -42,12 +43,18 @@ Sometimes I add new posts about this project [on my home page](https://developer
 
 JRE/JDK 8u60 or higher.
 
-### Table of supported GoldLeaf versions
+### Supported GoldLeaf versions
 | GoldLeaf version | NS-USBloader version |
 | ---------------- | -------------------- |
 | v0.5             | v0.4 - v0.5.2, v0.8+ |
 | v0.6.1           | v0.6                 |
-| v0.7             | v0.7 - v0.8+         |
+| v0.7 - 0.7.3     | v0.7 - v0.8+         |
+
+### Awoo support
+
+Awoo-installer uses the same command-set (or 'protocol') to TinFoil. So just select 'TinFoil' in case you're going to use Awoo.
+
+Also, please go to 'Settings' tab of NS-USBloader after first installation and check 'Allow XCI / NSZ / XCZ files selection for TinFoil' option. This installer can install not only NSPs but a way more formats!
 
 ### Usage
 ##### Linux:
@@ -84,14 +91,11 @@ Set 'Security & Privacy' settings if needed.
 
 #### And how to use it?
 
-The first thing you should do it install TinFoil ([Adubbz](https://github.com/Adubbz/Tinfoil/)) or GoldLeaf ([XorTroll](https://github.com/XorTroll/Goldleaf)) on your NS.
+The first thing you should do it install TinFoil ([Adubbz](https://github.com/Adubbz/Tinfoil/)), GoldLeaf ([XorTroll](https://github.com/XorTroll/Goldleaf)) or Awoo ([Huntereb](https://github.com/Huntereb/Awoo-Installer)) on your NS. 
 
-Here is the version of 'not perfect but anyway' [tinfoil I use](https://cloud.mail.ru/public/DwbX/H8d2p3aYR).
-Ok, I'm almost sure that this version has bugs. I don't remember where I downloaded it. But it works for me somehow. 
+Take a look on app, find where is the option to install from USB and/or Network. Maybe [this article (about TinFoil)](https://developersu.blogspot.com/2019/02/ns-usbloader-en.html) will be helpful.
 
-Let's rephrase, if you have working version of TinFoil **DO NOT** use this one. Ok. let's begin.
-
-Take a look on app, find where is the option to install from USB and/or Network. Maybe [this article](https://developersu.blogspot.com/2019/02/ns-usbloader-en.html) will be helpful.
+#### In details
 
 There are three tabs. First one is main.
 
@@ -166,9 +170,6 @@ Want to support development? Make a donation* (see below):
 * [EN] Please note! This is non-commercial application. Any received money considered as a gift.
 * [RU] Пожалуйста обратите внимание! Это некоммерческое приложение. Перечисляя средства вы совершаете дарение.
 
-##### Thanks
-Appreciate assistance and support of both Vitaliy and Konstantin. Without you all this magic would not have happened.
+Thanks
 
-[Konstanin Kelemen](https://github.com/konstantin-kelemen)
-
-[Vitaliy Natarov](https://github.com/SebastianUA)
+Appreciate assistance and support of both [Vitaliy](https://github.com/SebastianUA) and [Konstantin](https://github.com/konstantin-kelemen). Without you all this magic would not have happened.

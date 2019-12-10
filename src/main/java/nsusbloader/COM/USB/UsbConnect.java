@@ -91,28 +91,11 @@ class UsbConnect {
         LibUsb.freeDeviceList(deviceList, true);
 
         // DO some stuff to connected NS
-        // Check if this device uses kernel driver and detach if possible:
-        boolean canDetach = LibUsb.hasCapability(LibUsb.CAP_SUPPORTS_DETACH_KERNEL_DRIVER); // if cant, it's windows ot old lib
-        if (canDetach){
-            int usedByKernel = LibUsb.kernelDriverActive(handlerNS, DEFAULT_INTERFACE);
-            if (usedByKernel == LibUsb.SUCCESS)
-                logPrinter.print("Can proceed with libusb driver", EMsgType.PASS);   // we're good
-            else if (usedByKernel == 1) {      // used by kernel
-                result = LibUsb.detachKernelDriver(handlerNS, DEFAULT_INTERFACE);
-                logPrinter.print("Detach kernel required", EMsgType.INFO);
-                if (result != 0) {
-                    logPrinter.print("Detach kernel\n  Returned: " + UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
-                    close();
-                    return;
-                }
-                else
-                    logPrinter.print("Detach kernel", EMsgType.PASS);
-            }
-            else
-                logPrinter.print("Can't proceed with libusb driver\n  Returned: "+UsbErrorCodes.getErrCode(usedByKernel), EMsgType.FAIL);
-        }
+        // Actually, there are not drivers in Linux kernel that are using this device..
+        if (LibUsb.setAutoDetachKernelDriver(handlerNS, true) == LibUsb.SUCCESS)
+            logPrinter.print("Handle kernel driver attach & detach", EMsgType.PASS);
         else
-            logPrinter.print("libusb doesn't support function 'CAP_SUPPORTS_DETACH_KERNEL_DRIVER'. It's normal. Proceeding.", EMsgType.WARNING);
+            logPrinter.print("Skip kernel driver attach & detach", EMsgType.INFO);
         /*
         // Reset device
         result = LibUsb.resetDevice(handlerNS);
