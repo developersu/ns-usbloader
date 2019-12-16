@@ -291,6 +291,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
                     else
                         tcpPacket.add(line);              // Otherwise collect data
                 }
+                //System.out.println("<Socket Closed>");
                 // and reopen client sock
                 clientSocket.close();
             }
@@ -312,10 +313,18 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
     //private boolean handleRequest(LinkedList<String> packet, OutputStreamWriter pw){
         File requestedFile;
         String reqFileName = packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", "");
+
+        if (! nspFileSizes.containsKey(reqFileName)){
+            currSockPW.write(NETPacket.getCode404());
+            currSockPW.flush();
+            logPrinter.print("NET: File "+reqFileName+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
+            return true;
+        }
+
         long reqFileSize = nspFileSizes.get(reqFileName);
         requestedFile = nspMap.get(reqFileName);
 
-        if (!requestedFile.exists() || reqFileSize == 0){   // well.. tell 404 if file exists with 0 length is against standard, but saves time
+        if (! requestedFile.exists() || reqFileSize == 0){   // well.. tell 404 if file exists with 0 length is against standard, but saves time
             currSockPW.write(NETPacket.getCode404());
             currSockPW.flush();
             logPrinter.print("NET: File "+requestedFile.getName()+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
