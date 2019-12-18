@@ -150,7 +150,7 @@ class UsbConnect {
             int result = LibUsb.releaseInterface(handlerNS, DEFAULT_INTERFACE);
 
             if (result != LibUsb.SUCCESS)
-                logPrinter.print("Release interface\n  Returned: "+result+" (sometimes it's not an issue)", EMsgType.WARNING);
+                logPrinter.print("Release interface\n         Returned: "+result+" (sometimes it's not an issue)", EMsgType.WARNING);
             else
                 logPrinter.print("Release interface", EMsgType.PASS);
 

@@ -20,9 +20,11 @@ import java.util.LinkedHashMap;
  * Tinfoil processing
  * */
 class TinFoil extends TransferModule {
+    // "TUL0".getBytes(StandardCharsets.US_ASCII)
+    private static final byte[] TUL0 = new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x4c, (byte) 0x30};
+
     TinFoil(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, LogPrinter logPrinter){
         super(handler, nspMap, task, logPrinter);
-
         logPrinter.print("============= TinFoil =============", EMsgType.INFO);
 
         if (!sendListOfNSP())
@@ -35,14 +37,6 @@ class TinFoil extends TransferModule {
      * Send what NSP will be transferred
      * */
     private boolean sendListOfNSP(){
-        // Send list of NSP files:
-        // Proceed "TUL0"
-        if (writeUsb("TUL0".getBytes(StandardCharsets.US_ASCII))) {  // new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x76, (byte) 0x30}
-            logPrinter.print("TF Send list of files: handshake", EMsgType.FAIL);
-            return false;
-        }
-        else
-            logPrinter.print("TF Send list of files: handshake", EMsgType.PASS);
         //Collect file names
         StringBuilder nspListNamesBuilder = new StringBuilder();    // Add every title to one stringBuilder
         for(String nspFileName: nspMap.keySet()) {
@@ -53,28 +47,34 @@ class TinFoil extends TransferModule {
         byte[] nspListNames = nspListNamesBuilder.toString().getBytes(StandardCharsets.UTF_8);
         ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);         // integer = 4 bytes; BTW Java is stored in big-endian format
         byteBuffer.putInt(nspListNames.length);                                                             // This way we obtain length in int converted to byte array in correct Big-endian order. Trust me.
-        byte[] nspListSize = byteBuffer.array();                                                            // TODO: rewind? not sure..
-        //byteBuffer.reset();
+        byte[] nspListSize = byteBuffer.array();
+
+        logPrinter.print("TF Send list of files:", EMsgType.INFO);
+        // Proceed "TUL0"
+        if (writeUsb(TUL0)) {
+            logPrinter.print("  handshake   [1/4]", EMsgType.FAIL);
+            return false;
+        }
+        logPrinter.print("  handshake   [1/4]", EMsgType.PASS);
 
         // Sending NSP list
-        logPrinter.print("TF Send list of files", EMsgType.INFO);
         if (writeUsb(nspListSize)) {                                           // size of the list we're going to transfer goes...
-            logPrinter.print("  [send list length]", EMsgType.FAIL);
+            logPrinter.print("  list length [2/4]", EMsgType.FAIL);
             return false;
         }
-        logPrinter.print("  [send list length]", EMsgType.PASS);
+        logPrinter.print("  list length [2/4]", EMsgType.PASS);
 
         if (writeUsb(new byte[8])) {                                           // 8 zero bytes goes...
-            logPrinter.print("  [send padding]", EMsgType.FAIL);
+            logPrinter.print("  padding     [3/4]", EMsgType.FAIL);
             return false;
         }
-        logPrinter.print("  [send padding]", EMsgType.PASS);
+        logPrinter.print("  padding     [3/4]", EMsgType.PASS);
 
         if (writeUsb(nspListNames)) {                                           // list of the names goes...
-            logPrinter.print("  [send list itself]", EMsgType.FAIL);
+            logPrinter.print("  list itself [4/4]", EMsgType.FAIL);
             return false;
         }
-        logPrinter.print("  [send list itself]", EMsgType.PASS);
+        logPrinter.print("  list itself [4/4]", EMsgType.PASS);
 
         return true;
     }
@@ -108,7 +108,7 @@ class TinFoil extends TransferModule {
                 return true;                     // All interaction with USB device should be ended (expected);
             }
             else if ((receivedArray[8] == 0x01) || (receivedArray[8] == 0x02)){           //0x01 - file range; 0x02 unknown bug on backend side (dirty hack).
-                logPrinter.print("TF Received 'FILE RANGE' command. Proceeding: [0x0"+receivedArray[8]+"]", EMsgType.PASS);
+                logPrinter.print("TF Received 'FILE RANGE' command [0x0"+receivedArray[8]+"].", EMsgType.PASS);
                 /*// We can get in this pocket a length of file name (+32). Why +32? I dunno man.. Do we need this? Definitely not. This app can live without it.
                 long receivedSize = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 12,20)).order(ByteOrder.LITTLE_ENDIAN).getLong();
                 logsArea.appendText("[V] Received FILE_RANGE command. Size: "+Long.toUnsignedString(receivedSize)+"\n");            // this shit returns string that will be chosen next '+32'. And, BTW, can't be greater then 512
@@ -127,30 +127,31 @@ class TinFoil extends TransferModule {
     private boolean fileRangeCmd(){
         byte[] receivedArray;
         // Here we take information of what other side wants
-        receivedArray = readUsb();
-        if (receivedArray == null)
+        if ((receivedArray = readUsb()) == null)
             return false;
 
-        // range_offset of the requested file. In the begining it will be 0x10.
+        // range_offset of the requested file. In the beginning it will be 0x10.
         long receivedRangeSize = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 0,8)).order(ByteOrder.LITTLE_ENDIAN).getLong();          // Note - it could be unsigned long. Unfortunately, this app won't support files greater then 8796093022208 Gb
-        byte[] receivedRangeSizeRAW = Arrays.copyOfRange(receivedArray, 0,8);                                                               // used (only) when we use sendResponse(). It's just simply.
+        byte[] receivedRangeSizeRAW = Arrays.copyOfRange(receivedArray, 0,8);                                                               // used (only) when we use sendResponse().
         long receivedRangeOffset = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 8,16)).order(ByteOrder.LITTLE_ENDIAN).getLong();      // Note - it could be unsigned long. Unfortunately, this app won't support files greater then 8796093022208 Gb
             /* Below, it's REAL NSP file name length that we sent before among others (WITHOUT +32 byes). It can't be greater then... see what is written in the beginning of this code.
             We don't need this since in next pocket we'll get name itself UTF-8 encoded. Could be used to double-checks or something like that.
             long receivedNspNameLen = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 16,24)).order(ByteOrder.LITTLE_ENDIAN).getLong(); */
 
         // Requesting UTF-8 file name required:
-        receivedArray = readUsb();
-        if (receivedArray == null)
+        if ((receivedArray = readUsb()) == null)
             return false;
 
         String receivedRequestedNSP = new String(receivedArray, StandardCharsets.UTF_8);
-        logPrinter.print("TF Reply to requested file: "+receivedRequestedNSP
-                +"\n         Range Size:   "+receivedRangeSize
-                +"\n         Range Offset: "+receivedRangeOffset, EMsgType.INFO);
+        logPrinter.print(String.format("TF Reply for: %s" +
+                "\n         Offset: %-20d 0x%x" +
+                "\n         Size:   %-20d 0x%x",
+                receivedRequestedNSP,
+                receivedRangeOffset, receivedRangeOffset,
+                receivedRangeSize, receivedRangeSize), EMsgType.INFO);
 
         // Sending response header
-        if (!sendResponse(receivedRangeSizeRAW))   // Get receivedRangeSize in 'RAW' format exactly as it has been received. It's simply.
+        if (! sendResponse(receivedRangeSizeRAW))   // Get receivedRangeSize in 'RAW' format exactly as it has been received to simplify the process.
             return false;
 
         try {
@@ -164,7 +165,7 @@ class TinFoil extends TransferModule {
             if (nspMap.get(receivedRequestedNSP).isDirectory()){
                 NSSplitReader nsSplitReader = new NSSplitReader(nspMap.get(receivedRequestedNSP), receivedRangeSize);
                 if (nsSplitReader.seek(receivedRangeOffset) != receivedRangeOffset){
-                    logPrinter.print("TF Requested skip is out of file size. Nothing to transmit.", EMsgType.FAIL);
+                    logPrinter.print("TF Requested offset is out of file size. Nothing to transmit.", EMsgType.FAIL);
                     return false;
                 }
 
@@ -179,20 +180,17 @@ class TinFoil extends TransferModule {
                     bufferCurrent = new byte[readPice];                                                         // TODO: not perfect moment, consider refactoring.
 
                     if (nsSplitReader.read(bufferCurrent) != readPice) {                                      // changed since @ v0.3.2
-                        logPrinter.print("TF Reading of stream suddenly ended.", EMsgType.WARNING);
+                        logPrinter.print("TF Reading from stream suddenly ended.", EMsgType.WARNING);
                         return false;
                     }
                     //write to USB
                     if (writeUsb(bufferCurrent)) {
-                        logPrinter.print("TF Failure during NSP transmission.", EMsgType.FAIL);
+                        logPrinter.print("TF Failure during file transfer.", EMsgType.FAIL);
                         return false;
                     }
                     currentOffset += readPice;
                 }
                 nsSplitReader.close();
-                //---Tell progress to UI---/
-                logPrinter.updateProgress(1.0);
-                //------------------------/
             }
             //---------------! Split files end     !---------------
             //---------------! Regular files start !---------------
@@ -200,14 +198,21 @@ class TinFoil extends TransferModule {
                 BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspMap.get(receivedRequestedNSP)));      // TODO: refactor?
 
                 if (bufferedInStream.skip(receivedRangeOffset) != receivedRangeOffset) {
-                    logPrinter.print("TF Requested skip is out of file size. Nothing to transmit.", EMsgType.FAIL);
+                    logPrinter.print("TF Requested offset is out of file size. Nothing to transmit.", EMsgType.FAIL);
                     return false;
                 }
+                /*
+                File dir = new File(System.getProperty("user.home")+File.separator+"DBG_"+receivedRequestedNSP);                                                    //todo: remove
+                dir.mkdirs();                                                                                                   //todo: remove
 
+                File chunkFile = new File(System.getProperty("user.home")+File.separator+"DBG_"+receivedRequestedNSP+File.separator+receivedRangeSize+"_"+receivedRangeOffset+".part"); //todo: remove
+                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(chunkFile));                                       //todo: remove
+                */
                 while (currentOffset < receivedRangeSize) {
                     if ((currentOffset + readPice) >= receivedRangeSize)
                         readPice = Math.toIntExact(receivedRangeSize - currentOffset);
                     //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+readPice);  // NOTE: DEBUG
+                    //logPrinter.print(String.format("CO: %-20d EO: %-20d RP: %d\n", currentOffset, receivedRangeSize, readPice), EMsgType.NULL);  // NOTE: better DEBUG
                     // updating progress bar (if a lot of data requested) START BLOCK
                     //---Tell progress to UI---/
                     logPrinter.updateProgress((currentOffset + readPice) / (receivedRangeSize / 100.0) / 100.0);
@@ -215,22 +220,25 @@ class TinFoil extends TransferModule {
                     bufferCurrent = new byte[readPice];                                                         // TODO: not perfect moment, consider refactoring.
 
                     if (bufferedInStream.read(bufferCurrent) != readPice) {                                      // changed since @ v0.3.2
-                        logPrinter.print("TF Reading of stream suddenly ended.", EMsgType.WARNING);
+                        logPrinter.print("TF Reading from stream suddenly ended.", EMsgType.WARNING);
                         return false;
                     }
                     //write to USB
+                    //bos.write(bufferCurrent);   //todo: remove
+
                     if (writeUsb(bufferCurrent)) {
-                        logPrinter.print("TF Failure during NSP transmission.", EMsgType.FAIL);
+                        logPrinter.print("TF Failure during file transfer.", EMsgType.FAIL);
                         return false;
                     }
                     currentOffset += readPice;
                 }
                 bufferedInStream.close();
-                //---Tell progress to UI---/
-                logPrinter.updateProgress(1.0);
-                //------------------------/
+                //bos.close();                    //todo: remove
             }
             //---------------! Regular files end     !---------------
+            //---Tell progress to UI---/
+            logPrinter.updateProgress(1.0);
+
         } catch (FileNotFoundException fnfe){
             logPrinter.print("TF FileNotFoundException:\n  "+fnfe.getMessage(), EMsgType.FAIL);
             fnfe.printStackTrace();
@@ -256,27 +264,29 @@ class TinFoil extends TransferModule {
      * @return true if everything OK
      *         false if failed
      * */
-    private boolean sendResponse(byte[] rangeSize){                                 // This method as separate function itself for application needed as a cookie in the middle of desert.
-        logPrinter.print("TF Sending response", EMsgType.INFO);
-        if (writeUsb(new byte[] { (byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30,    // 'TUC0'
-                (byte) 0x01,                                                // CMD_TYPE_RESPONSE = 1
-                (byte) 0x00, (byte) 0x00, (byte) 0x00,                      // kinda padding. Guys, didn't you want to use integer value for CMD semantic?
-                (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00} )       // Send integer value of '1' in Little-endian format.
+    private boolean sendResponse(byte[] rangeSize){                         // This method as separate function itself for application needed as a cookie in the middle of desert.
+        final byte[] standardReplyBytes = new byte[] { 0x54, 0x55, 0x43, 0x30,    // 'TUC0'
+                                                       0x01, 0x00, 0x00, 0x00,    // CMD_TYPE_RESPONSE = 1
+                                                       0x01, 0x00, 0x00, 0x00 };
+
+        final byte[] twelveZeroBytes = new byte[12];
+        //logPrinter.print("TF Sending response", EMsgType.INFO);
+        if (writeUsb(standardReplyBytes)       // Send integer value of '1' in Little-endian format.
         ){
-            logPrinter.print("  [1/3]", EMsgType.FAIL);
+            logPrinter.print("TF Sending response failed [1/3]", EMsgType.FAIL);
             return false;
         }
-        logPrinter.print("  [1/3]", EMsgType.PASS);
+
         if(writeUsb(rangeSize)) {                                                          // Send EXACTLY what has been received
-            logPrinter.print("  [2/3]", EMsgType.FAIL);
+            logPrinter.print("TF Sending response failed [2/3]", EMsgType.FAIL);
             return false;
         }
-        logPrinter.print("  [2/3]", EMsgType.PASS);
-        if(writeUsb(new byte[12])) {                                                       // kinda another one padding
-            logPrinter.print("  [3/3]", EMsgType.FAIL);
+
+        if(writeUsb(twelveZeroBytes)) {                                                       // kinda another one padding
+            logPrinter.print("TF Sending response failed [3/3]", EMsgType.FAIL);
             return false;
         }
-        logPrinter.print("  [3/3]", EMsgType.PASS);
+        logPrinter.print("TF Sending response complete (3/3)", EMsgType.PASS);
         return true;
     }
 
@@ -290,23 +300,31 @@ class TinFoil extends TransferModule {
         writeBuffer.put(message);                                             // Don't do writeBuffer.rewind();
         IntBuffer writeBufTransferred = IntBuffer.allocate(1);
         int result;
-
+        //int varVar = 0; //todo:remove
         while (! task.isCancelled()) {
-            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
+            /*
+            if (varVar != 0)
+                logPrinter.print("writeUsb() retry cnt: "+varVar, EMsgType.INFO); //todo:remove
+            varVar++;
+            */
+            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 5050);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
 
             switch (result){
                 case LibUsb.SUCCESS:
                     if (writeBufTransferred.get() == message.length)
                         return false;
-                    else {
-                        logPrinter.print("TF Data transfer issue [write]\n  Requested: "+message.length+"\n  Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
-                        return true;
-                    }
+                    logPrinter.print("TF Data transfer issue [write]" +
+                            "\n         Requested: "+message.length+
+                            "\n         Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
+                    return true;
                 case LibUsb.ERROR_TIMEOUT:
+                    //System.out.println("writeBuffer position: "+writeBuffer.position()+" "+writeBufTransferred.get());
+                    //writeBufTransferred.clear();    // MUST BE HERE IF WE 'GET()' IT
                     continue;
                 default:
-                    logPrinter.print("TF Data transfer issue [write]\n  Returned: "+ UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
-                    logPrinter.print("TF Execution stopped", EMsgType.FAIL);
+                    logPrinter.print("TF Data transfer issue [write]" +
+                            "\n         Returned: "+ UsbErrorCodes.getErrCode(result) +
+                            "\n         (execution stopped)", EMsgType.FAIL);
                     return true;
             }
         }
@@ -322,7 +340,6 @@ class TinFoil extends TransferModule {
         ByteBuffer readBuffer = ByteBuffer.allocateDirect(512);
         // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
-
         int result;
         while (! task.isCancelled()) {
             result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
@@ -336,8 +353,9 @@ class TinFoil extends TransferModule {
                 case LibUsb.ERROR_TIMEOUT:
                     continue;
                 default:
-                    logPrinter.print("TF Data transfer issue [read]\n  Returned: " + UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
-                    logPrinter.print("TF Execution stopped", EMsgType.FAIL);
+                    logPrinter.print("TF Data transfer issue [read]" +
+                            "\n         Returned: " + UsbErrorCodes.getErrCode(result)+
+                            "\n         (execution stopped)", EMsgType.FAIL);
                     return null;
             }
         }

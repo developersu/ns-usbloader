@@ -1,5 +1,5 @@
 package nsusbloader.NSLDataTypes;
 
 public enum EMsgType {
-    PASS, FAIL, INFO, WARNING
+    PASS, FAIL, INFO, WARNING, NULL
 }
