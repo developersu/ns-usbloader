@@ -16,13 +16,66 @@
 <ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsController">
             <VBox spacing="5.0">
                <children>
-         <CheckBox fx:id="nspFilesFilterForGLCB" mnemonicParsing="false" text="%tab2_Cb_GLshowNspOnly" />
+         <Label text="%tab2_Lbl_ApplicationSettings" />
+                  <HBox alignment="CENTER_LEFT" spacing="5.0">
+                     <children>
+                        <Label text="%tab2_Lbl_Language" />
+                        <ChoiceBox fx:id="langCB" prefWidth="100.0" />
+                        <Button fx:id="langBtn" mnemonicParsing="false" text="OK" />
+                     </children>
+            <VBox.margin>
+               <Insets left="5.0" />
+            </VBox.margin>
+                  </HBox>
+                  <HBox>
+                     <children>
+                        <VBox>
+                           <children>
+                              <CheckBox fx:id="autoCheckUpdCb" mnemonicParsing="false" text="%tab2_Cb_AutoCheckForUpdates" />
+                              <Hyperlink fx:id="newVersionLink" />
+                           </children>
+                        </VBox>
+                        <Pane HBox.hgrow="ALWAYS" />
+                        <Button fx:id="checkForUpdBtn" mnemonicParsing="false" />
+                     </children>
+            <VBox.margin>
+               <Insets left="5.0" />
+            </VBox.margin>
+                  </HBox>
+         <Separator prefWidth="200.0" />
+         <Label text="GoldLeaf" />
+         <CheckBox fx:id="nspFilesFilterForGLCB" mnemonicParsing="false" text="%tab2_Cb_GLshowNspOnly">
+            <VBox.margin>
+               <Insets left="5.0" />
+            </VBox.margin></CheckBox>
+         <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+               <CheckBox fx:id="glOldVerCheck" mnemonicParsing="false" text="%tab2_Cb_UseOldGlVersion" />
+               <ChoiceBox fx:id="glOldVerChoice" prefWidth="75.0" />
+            </children>
+            <VBox.margin>
+               <Insets left="5.0" />
+            </VBox.margin>
+         </HBox>
+         <Separator prefWidth="200.0" />
+         <Label text="Tinfoil" />
+                  <CheckBox fx:id="tfXciSpprtCb" mnemonicParsing="false" text="%tab2_Cb_AllowXciNszXcz">
+            <VBox.margin>
+               <Insets left="5.0" />
+            </VBox.margin></CheckBox>
+                  <Label disable="true" text="%tab2_Lbl_AllowXciNszXczDesc" wrapText="true">
+            <VBox.margin>
+               <Insets left="5.0" />
+            </VBox.margin></Label>
                   <CheckBox fx:id="validateNSHostNameCb" mnemonicParsing="false" text="%tab2_Cb_ValidateNSHostName">
                      <VBox.margin>
-                        <Insets />
+                        <Insets left="5.0" />
                      </VBox.margin>
                   </CheckBox>
-                  <CheckBox fx:id="expertModeCb" mnemonicParsing="false" text="%tab2_Cb_ExpertMode" />
+                  <CheckBox fx:id="expertModeCb" mnemonicParsing="false" text="%tab2_Cb_ExpertMode">
+            <VBox.margin>
+               <Insets left="5.0" />
+            </VBox.margin></CheckBox>
                   <VBox fx:id="expertSettingsVBox" spacing="5.0">
                      <children>
                         <CheckBox fx:id="autoDetectIpCb" mnemonicParsing="false" text="%tab2_Cb_AutoDetectIp">
@@ -57,7 +110,6 @@
                               </TextField>
                            </children>
                         </HBox>
-                        <Separator prefWidth="200.0" />
                         <CheckBox fx:id="dontServeCb" mnemonicParsing="false" text="%tab2_Cb_DontServeRequests">
                            <VBox.margin>
                               <Insets />
@@ -70,36 +122,9 @@
                         </Label>
                      </children>
                      <padding>
-                        <Insets left="10.0" />
+                        <Insets left="15.0" />
                      </padding>
                   </VBox>
-                  <HBox>
-                     <children>
-                        <VBox>
-                           <children>
-                              <CheckBox fx:id="autoCheckUpdCb" mnemonicParsing="false" text="%tab2_Cb_AutoCheckForUpdates" />
-                              <Hyperlink fx:id="newVersionLink" />
-                           </children>
-                        </VBox>
-                        <Pane HBox.hgrow="ALWAYS" />
-                        <Button fx:id="checkForUpdBtn" mnemonicParsing="false" />
-                     </children>
-                  </HBox>
-                  <HBox alignment="CENTER_LEFT" spacing="5.0">
-                     <children>
-                        <Label text="%tab2_Lbl_Language" />
-                        <ChoiceBox fx:id="langCB" prefWidth="100.0" />
-                        <Button fx:id="langBtn" mnemonicParsing="false" text="OK" />
-                     </children>
-                  </HBox>
-                  <CheckBox fx:id="tfXciSpprtCb" mnemonicParsing="false" text="%tab2_Cb_AllowXciNszXcz" />
-                  <Label disable="true" text="%tab2_Lbl_AllowXciNszXczDesc" wrapText="true" />
-         <HBox alignment="CENTER_LEFT" spacing="5.0">
-            <children>
-               <CheckBox fx:id="glOldVerCheck" mnemonicParsing="false" text="%tab2_Cb_UseOldGlVersion" />
-               <ChoiceBox fx:id="glOldVerChoice" prefWidth="75.0" />
-            </children>
-         </HBox>
                </children>
                <padding>
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
