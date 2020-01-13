@@ -221,10 +221,10 @@
                                 <fileVersion>1.0.0.0</fileVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
                                 <fileDescription>TinFoil and GoldLeaf installer for your NS</fileDescription>
-                                <copyright>GNU General Public License v3, 2019 ${organization.name}. Russia/LPR.</copyright>
+                                <copyright>GNU General Public License v3, 2019 ${project.organization.name}. Russia/LPR.</copyright>
                                 <productVersion>1.0.0.0</productVersion>
                                 <txtProductVersion>${project.version}</txtProductVersion>
-                                <companyName>${organization.name}</companyName>
+                                <companyName>${project.organization.name}</companyName>
                                 <productName>${project.name}</productName>
                                 <internalName>${project.name}</internalName>
                                 <originalFilename>${project.name}.exe</originalFilename>
