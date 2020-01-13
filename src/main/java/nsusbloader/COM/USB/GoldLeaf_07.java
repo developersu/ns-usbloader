@@ -3,10 +3,10 @@ package nsusbloader.COM.USB;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.stage.FileChooser;
+import nsusbloader.COM.Helpers.NSSplitReader;
 import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
-import nsusbloader.COM.Helpers.NSSplitReader;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 
@@ -19,14 +19,14 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * GoldLeaf 0.8 processing
+ * GoldLeaf 0.7 - 0.7.3 processing
  */
-class GoldLeaf extends TransferModule {
+class GoldLeaf_07 extends TransferModule {
     private boolean nspFilterForGl;
 
     //                     CMD
     private final byte[] CMD_GLCO_SUCCESS = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, 0x00, 0x00};         // used @ writeToUsb_GLCMD
-    private final byte[] CMD_GLCO_FAILURE = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, (byte) 0xAD, (byte) 0xDE};  // used @ writeToUsb_GLCMD TODO: TEST
+    private final byte[] CMD_GLCO_FAILURE = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x64, (byte) 0xcb, 0x00, 0x00};  // used @ writeToUsb_GLCMD ; Incorrect BTW for 0.7.x but IIRC is good for v0.7 (?). Who cares till it works.
 
     // System.out.println((356 & 0x1FF) | ((1 + 100) & 0x1FFF) << 9); // 52068 // 0x00 0x00 0xCB 0x64
     private final byte[] GL_OBJ_TYPE_FILE = new byte[]{0x01, 0x00, 0x00, 0x00};
@@ -51,32 +51,31 @@ class GoldLeaf extends TransferModule {
     // For using in CMD_SelectFile with SPEC:/ prefix
     private File selectedFile;
 
-    GoldLeaf(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, LogPrinter logPrinter, boolean nspFilter){
+    GoldLeaf_07(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, LogPrinter logPrinter, boolean nspFilter){
         super(handler, nspMap, task, logPrinter);
 
-        final byte CMD_GetDriveCount       = 1;
-        final byte CMD_GetDriveInfo        = 2;
-        final byte CMD_StatPath            = 3;
-        final byte CMD_GetFileCount        = 4;
-        final byte CMD_GetFile             = 5;
-        final byte CMD_GetDirectoryCount   = 6;
-        final byte CMD_GetDirectory        = 7;
-        final byte CMD_StartFile           = 8; // 1 -open read RAF; 2 open write RAF; 3 open write RAF and seek to EOF (???).
-        final byte CMD_ReadFile            = 9;
-        final byte CMD_WriteFile           = 10;
-        final byte CMD_EndFile             = 11; // 1 - closed read RAF; 2 close write RAF.
-        final byte CMD_Create              = 12;
-        final byte CMD_Delete              = 13;
-        final byte CMD_Rename              = 14;
-        final byte CMD_GetSpecialPathCount = 15;
-        final byte CMD_GetSpecialPath      = 16;
-        final byte CMD_SelectFile          = 17;
+        final byte CMD_GetDriveCount       = 0x00;
+        final byte CMD_GetDriveInfo        = 0x01;
+        final byte CMD_StatPath            = 0x02;
+        final byte CMD_GetFileCount        = 0x03;
+        final byte CMD_GetFile             = 0x04;
+        final byte CMD_GetDirectoryCount   = 0x05;
+        final byte CMD_GetDirectory        = 0x06;
+        final byte CMD_ReadFile            = 0x07;
+        final byte CMD_WriteFile           = 0x08;
+        final byte CMD_Create              = 0x09;
+        final byte CMD_Delete              = 0x0a;//10
+        final byte CMD_Rename              = 0x0b;//11
+        final byte CMD_GetSpecialPathCount = 0x0c;//12  // Special folders count;             simplified usage @ NS-UL
+        final byte CMD_GetSpecialPath      = 0x0d;//13  // Information about special folders; simplified usage @ NS-UL
+        final byte CMD_SelectFile          = 0x0e;//14
+        //final byte CMD_Max                 = 0x0f;//15  // not used @ NS-UL & GT
 
         final byte[] CMD_GLCI = new byte[]{0x47, 0x4c, 0x43, 0x49};
 
         this.nspFilterForGl = nspFilter;
 
-        logPrinter.print("============= GoldLeaf v0.8 =============\n\t" +
+        logPrinter.print("============= GoldLeaf v0.7.x =============\n\t" +
                 "VIRT:/ equals files added into the application\n\t" +
                 "HOME:/ equals "
                 +System.getProperty("user.home"), EMsgType.INFO);
@@ -199,11 +198,6 @@ class GoldLeaf extends TransferModule {
                         if (selectFile())
                             break main_loop;
                         break;
-                    case CMD_StartFile:
-                    case CMD_EndFile:
-                        if (startOrEndFile())
-                            break main_loop;
-                        break;
                     default:
                         writeGL_FAIL("GL Unknown command: "+readByte[4]+" [it's a very bad sign]");
                 }
@@ -237,19 +231,6 @@ class GoldLeaf extends TransferModule {
             randAccessFile = null;
             splitReader = null;
         }
-    }
-    /**
-     * Handle StartFile & EndFile
-     * NOTE: It's something internal for GL and used somehow by GL-PC-app, so just ignore this, at least for v0.8.
-     * @return true if failed
-     *         false if everything is ok
-     * */
-    private boolean startOrEndFile(){
-        if (writeGL_PASS()){
-            logPrinter.print("GL Handle 'StartFile' command", EMsgType.FAIL);
-            return true;
-        }
-        return false;
     }
     /**
      * Handle GetDriveCount
@@ -735,7 +716,7 @@ class GoldLeaf extends TransferModule {
      *          false if everything is ok
      * */
     private boolean readFile(String fileName, long offset, long size) {
-        //System.out.println("readFile "+fileName+"\t"+offset+"\t"+size+"\n");
+        //System.out.println("readFile "+fileName+" "+offset+" "+size+"\n");
         if (fileName.startsWith("VIRT:/")){
             // Let's find out which file requested
             String fNamePath = nspMap.get(fileName.substring(6)).getAbsolutePath();     // NOTE: 6 = "VIRT:/".length
@@ -815,7 +796,7 @@ class GoldLeaf extends TransferModule {
             }
             else {
                 randAccessFile.seek(offset);
-                byte[] chunk = new byte[(int)size];         // yes, I know, but nothing to do here.
+                byte[] chunk = new byte[(int)size]; // WTF MAN?
                 // Let's find out how much bytes we got
                 int bytesRead = randAccessFile.read(chunk);
                 // Let's check that we read expected size
@@ -1094,7 +1075,8 @@ class GoldLeaf extends TransferModule {
                     else {
                         logPrinter.print("GL Data transfer issue [write]\n         Requested: " +
                                 message.length +
-                                "\n         Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
+                                "\n         Transferred: " +
+                                writeBufTransferred.get(), EMsgType.FAIL);
                         return true;
                     }
                 case LibUsb.ERROR_TIMEOUT:
@@ -1109,4 +1091,96 @@ class GoldLeaf extends TransferModule {
         logPrinter.print("GL Execution interrupted", EMsgType.INFO);
         return true;
     }
+
+    /*----------------------------------------------------*/
+    /*                  GL EXPERIMENTAL PART              */
+    /*                  (left for better times)           */
+    /*----------------------------------------------------*/
+        /*
+        private boolean proxyStatPath(String path) {
+            ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
+            List<byte[]> fileBytesSize = new LinkedList<>();
+            if ((recentDirs.length == 0) && (recentFiles.length == 0)) {
+                return writeGL_FAIL("proxyStatPath");
+            }
+            if (recentDirs.length > 0){
+                writeBuffer.put(CMD_GLCO_SUCCESS);
+                writeBuffer.put(GL_OBJ_TYPE_DIR);
+                byte[] resultingDir = writeBuffer.array();
+                writeToUsb(resultingDir);
+                for (int i = 1; i < recentDirs.length; i++) {
+                    readGL();
+                    writeToUsb(resultingDir);
+                }
+            }
+            if (recentFiles.length > 0){
+                path = path.replaceAll(recentDirs[0]+"$", "");  // Remove the name from path
+                for (String fileName : recentFiles){
+                    File f = new File(path+fileName);
+                    fileBytesSize.add(longToArrLE(f.length()));
+                }
+                writeBuffer.clear();
+                for (int i = 0; i < recentFiles.length; i++){
+                    readGL();
+                    writeBuffer.clear();
+                    writeBuffer.put(CMD_GLCO_SUCCESS);
+                    writeBuffer.put(GL_OBJ_TYPE_FILE);
+                    writeBuffer.put(fileBytesSize.get(i));
+                    writeToUsb(writeBuffer.array());
+                }
+            }
+            return false;
+        }
+
+        private boolean proxyGetDirFile(boolean forDirs){
+            ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
+            List<byte[]> dirBytesNameSize = new LinkedList<>();
+            List<byte[]> dirBytesName = new LinkedList<>();
+            if (forDirs) {
+                if (recentDirs.length <= 0)
+                    return writeGL_FAIL("proxyGetDirFile");
+                for (String dirName : recentDirs) {
+                    byte[] name = dirName.getBytes(StandardCharsets.UTF_16LE);
+                    dirBytesNameSize.add(intToArrLE(name.length));
+                    dirBytesName.add(name);
+                }
+                writeBuffer.put(CMD_GLCO_SUCCESS);
+                writeBuffer.put(dirBytesNameSize.get(0));
+                writeBuffer.put(dirBytesName.get(0));
+                writeToUsb(writeBuffer.array());
+                writeBuffer.clear();
+                for (int i = 1; i < recentDirs.length; i++){
+                    readGL();
+                    writeBuffer.put(CMD_GLCO_SUCCESS);
+                    writeBuffer.put(dirBytesNameSize.get(i));
+                    writeBuffer.put(dirBytesName.get(i));
+                    writeToUsb(writeBuffer.array());
+                    writeBuffer.clear();
+                }
+            }
+            else {
+                if (recentDirs.length <= 0)
+                    return writeGL_FAIL("proxyGetDirFile");
+                for (String dirName : recentFiles){
+                    byte[] name = dirName.getBytes(StandardCharsets.UTF_16LE);
+                    dirBytesNameSize.add(intToArrLE(name.length));
+                    dirBytesName.add(name);
+                }
+                writeBuffer.put(CMD_GLCO_SUCCESS);
+                writeBuffer.put(dirBytesNameSize.get(0));
+                writeBuffer.put(dirBytesName.get(0));
+                writeToUsb(writeBuffer.array());
+                writeBuffer.clear();
+                for (int i = 1; i < recentFiles.length; i++){
+                    readGL();
+                    writeBuffer.put(CMD_GLCO_SUCCESS);
+                    writeBuffer.put(dirBytesNameSize.get(i));
+                    writeBuffer.put(dirBytesName.get(i));
+                    writeToUsb(writeBuffer.array());
+                    writeBuffer.clear();
+                }
+            }
+            return false;
+        }
+        */
 }

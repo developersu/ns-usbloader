@@ -69,7 +69,7 @@ public class SettingsController implements Initializable {
 
     private HostServices hs;
 
-    private static final String[] oldGlSupportedVersions = {"v0.5"};
+    private static final String[] oldGlSupportedVersions = {"v0.5", "v0.7.x"};
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {

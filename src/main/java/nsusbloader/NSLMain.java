@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
-    public static final String appVersion = "v0.9.1";
+    public static final String appVersion = "v1.0";
     @Override
     public void start(Stage primaryStage) throws Exception{
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/NSLMain.fxml"));
@@ -59,9 +59,8 @@ public class NSLMain extends Application {
     }
 
     public static void main(String[] args) {
-        if ((args.length == 1) && (args[0].equals("-v") || args[0].equals("--version"))){
+        if ((args.length == 1) && (args[0].equals("-v") || args[0].equals("--version")))
             System.out.println("NS-USBloader "+NSLMain.appVersion);
-        }
         else
             launch(args);
     }

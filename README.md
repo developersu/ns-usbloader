@@ -47,12 +47,16 @@ JRE/JDK 8u60 or higher.
 | GoldLeaf version | NS-USBloader version |
 | ---------------- | -------------------- |
 | v0.5             | v0.4 - v0.5.2, v0.8+ |
+| v0.6             | none                 |
 | v0.6.1           | v0.6                 |
-| v0.7 - 0.7.3     | v0.7 - v0.8+         |
+| v0.7 - 0.7.3     | v0.7+                |
+| v0.8             | v1.0+                |
 
-### Awoo support
+where '+' means 'any next NS-USBloader version'.
 
-Awoo-installer uses the same command-set (or 'protocol') to TinFoil. So just select 'TinFoil' in case you're going to use Awoo.
+### Awoo Installer support
+
+Awoo Installer uses the same command-set (or 'protocol') to TinFoil. So just select 'TinFoil' in case you're going to use Awoo.
 
 Also, please go to 'Settings' tab of NS-USBloader after first installation and check 'Allow XCI / NSZ / XCZ files selection for TinFoil' option. This installer can install not only NSPs but a way more formats!
 
@@ -63,12 +67,14 @@ Also, please go to 'Settings' tab of NS-USBloader after first installation and c
 
 2. `root # java -jar /path/to/NS-USBloader.jar`
 
-3. Optional. Add user to 'udev' rules to use NS not-from-root-account
+3. Optional: add user to 'udev' rules to use NS not-from-root-account
 ```
 root # vim /etc/udev/rules.d/99-NS.rules
 SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", GROUP="plugdev"
 root # udevadm control --reload-rules && udevadm trigger
 ```
+
+Please note: you may have to change 'plugdev' group from example above to the different one. It's depends on you linux distro.
 
 ##### macOS
 

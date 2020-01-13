@@ -52,12 +52,20 @@ public class UsbCommunications extends Task<Void> {
 
         TransferModule module;
 
-        if (protocol.equals("TinFoil"))
-            module = new TinFoil(handler, nspMap, this, logPrinter);
-        else if (protocol.equals("GoldLeaf"))
-            module = new GoldLeaf(handler, nspMap, this, logPrinter, nspFilterForGl);
-        else
-            module = new GoldLeaf_05(handler, nspMap, this, logPrinter);
+        switch (protocol) {
+            case "TinFoil":
+                module = new TinFoil(handler, nspMap, this, logPrinter);
+                break;
+            case "GoldLeaf":
+                module = new GoldLeaf(handler, nspMap, this, logPrinter, nspFilterForGl);
+                break;
+            case "GoldLeafv0.7.x":
+                module = new GoldLeaf_07(handler, nspMap, this, logPrinter, nspFilterForGl);
+                break;
+            default:
+                module = new GoldLeaf_05(handler, nspMap, this, logPrinter);
+                break;
+        }
 
         usbConnect.close();
 
