@@ -39,6 +39,9 @@ public class NSLMainController implements Initializable {
     @FXML
     public FrontController FrontTabController;             // Accessible from Mediator | todo: incapsulate
 
+    @FXML
+    private SplitMergeController SplitMergeTabController;
+
     private Task<Void> usbNetCommunications;
     private Thread workThread;
 

@@ -307,7 +307,6 @@
     -fx-background-radius: 5;
     -fx-border-color: #2d2d2d;
     -fx-border-radius: 3;
-
 }
 
 .check-box:hover .box {
@@ -323,6 +322,32 @@
 }
 .check-box:selected .mark, .check-box:selected:hover .mark{
     -fx-background-color: #4f4f4f;
+}
+/*-======================= Radio Button =====================-*/
+.radio-button .radio, .radio-button:selected .radio {
+    -fx-background-color: #4f4f4f;
+    -fx-background-insets: 0 0 0 0, 0, 1, 1;
+    -fx-background-radius: 45;
+    -fx-border-color: transparent;
+    -fx-border-radius: 45;
+}
+
+.radio-button:hover .radio {
+    -fx-background-color: #4f4f4f;
+    -fx-background-insets: 0 0 0 0, 0, 1, 1;
+    -fx-background-radius: 45;
+    -fx-border-color: #a4ffff;
+    -fx-border-radius: 45;
+}
+
+.radio-button:selected .radio, .radio-button:selected:hover .radio {
+    -fx-background-color: #71e016;
+}
+.radio-button:selected .dot, .radio-button:selected:hover .dot{
+    -fx-background-color: #2d2d2d;
+    -fx-shape: "M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z";
+    -fx-scale-x: 1.2;
+    -fx-scale-y: 1.2;
 }
 /***********************************************************/
 .regionUpload{
