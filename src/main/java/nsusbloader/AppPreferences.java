@@ -125,4 +125,10 @@ public class AppPreferences {
 
     public double getSceneHeight(){ return preferences.getDouble("WIND_HEIGHT", 475.0); }
     public void setSceneHeight(double value){ preferences.putDouble("WIND_HEIGHT", value); }
+    // Split and Merge //
+    public int getSplitMergeType(){ return preferences.getInt("SM_TYPE", 0); }
+    public void setSplitMergeType(int value){ preferences.putInt("SM_TYPE", value); }
+
+    public String getSplitMergeRecent(){ return preferences.get("SM_RECENT", System.getProperty("user.home")); }
+    public void setSplitMergeRecent(String value){ preferences.put("SM_RECENT", value); }
 }

@@ -323,5 +323,7 @@ public class NSLMainController implements Initializable {
                 SettingsTabController.getNSPFileFilterForGL(),
                 SettingsTabController.getGlOldVer()
         );
+
+        SplitMergeTabController.updatePreferencesOnExit(); // NOTE: This shit above should be re-written to similar pattern
     }
 }
