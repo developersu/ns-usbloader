@@ -182,7 +182,6 @@ public class SplitMergeTool {
                         bis.close();
                     }
                     bos.close();
-
                     //=============== let's check what we have ==============
                     long resultFileSize = resultFile.length();
                     logPrinter.print("Total chunks size: " + cnkTotalSize, EMsgType.INFO);

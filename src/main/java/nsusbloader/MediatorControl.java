@@ -22,7 +22,7 @@ public class MediatorControl {
 
     public synchronized void setTransferActive(boolean state) {
         isTransferActive.set(state);
-        applicationController.notifyTransmissionStarted(state);
+        applicationController.getFrontCtrlr().notifyTransmissionStarted(state);
     }
     public synchronized boolean getTransferActive() { return this.isTransferActive.get(); }
 }
