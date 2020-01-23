@@ -1,5 +1,6 @@
 package nsusbloader.Controllers;
 
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -106,18 +107,44 @@ public class SplitMergeController implements Initializable {
                 ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"), resourceBundle.getString("windowBodyPleaseFinishTransfersFirst"));
                 return;
             }
-            MediatorControl.getInstance().setTransferActive(true);
-            /*
+
             if (splitRad.isSelected()){
-                SplitMergeTool.splitFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
-                System.out.println("split");
+                updateProcess(true);
+                Task<Void> task = SplitMergeTool.splitFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
+                task.setOnSucceeded(workerStateEvent -> this.updateProcess(false));
+                Thread thread = new Thread(task);
+                thread.setDaemon(true);
+                thread.start();
             }
             else{
-                System.out.println("merge");
-                SplitMergeTool.mergeFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
+                updateProcess(true);
+                Task<Void> task = SplitMergeTool.mergeFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
+                task.setOnSucceeded(workerStateEvent -> this.updateProcess(false));
+                Thread thread = new Thread(task);
+                thread.setDaemon(true);
+                thread.start();
             }
-            */
+
         });
+    }
+
+    private void updateProcess(boolean isStart){
+        if (isStart){
+            MediatorControl.getInstance().getContoller().logArea.clear();
+            MediatorControl.getInstance().setTransferActive(true);    // TODO: remove & rewrite to interrupt function
+            convertBtn.setDisable(true);// TODO: remove & rewrite to interrupt function
+            splitRad.setDisable(true);
+            mergeRad.setDisable(true);
+            selectFileFolderBtn.setDisable(true);
+            changeSaveToBtn.setDisable(true);
+            return;
+        }
+        MediatorControl.getInstance().setTransferActive(false);
+        convertBtn.setDisable(false);// TODO: remove & rewrite to interrupt function
+        splitRad.setDisable(false);
+        mergeRad.setDisable(false);
+        selectFileFolderBtn.setDisable(false);
+        changeSaveToBtn.setDisable(false);
     }
 
     public void updatePreferencesOnExit(){
@@ -125,6 +152,7 @@ public class SplitMergeController implements Initializable {
             AppPreferences.getInstance().setSplitMergeType(0);
         else
             AppPreferences.getInstance().setSplitMergeType(1);
+
         AppPreferences.getInstance().setSplitMergeRecent(saveToPathLbl.getText());
     }
 }
