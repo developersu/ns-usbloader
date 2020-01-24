@@ -119,6 +119,10 @@ public class NSLMainController implements Initializable {
     public FrontController getFrontCtrlr(){
         return FrontTabController;
     }
+
+    public SplitMergeController getSmCtrlr(){
+        return SplitMergeTabController;
+    }
     /**
      * Save preferences before exit
      * */

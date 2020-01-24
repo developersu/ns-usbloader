@@ -3,6 +3,7 @@ package nsusbloader.COM.USB;
 import javafx.concurrent.Task;
 import nsusbloader.ModelControllers.LogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
+import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.*;
 
@@ -34,7 +35,7 @@ public class UsbCommunications extends Task<Void> {
         this.nspMap = new LinkedHashMap<>();
         for (File f: nspList)
             nspMap.put(f.getName(), f);
-        this.logPrinter = new LogPrinter();
+        this.logPrinter = new LogPrinter(EModule.USB_NET_TRANSFERS);
     }
 
     @Override

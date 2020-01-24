@@ -7,6 +7,7 @@ import javafx.scene.control.TextArea;
 import nsusbloader.Controllers.NSTableViewController;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
+import nsusbloader.NSLDataTypes.EModule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,10 +21,12 @@ public class MessagesConsumer extends AnimationTimer {
     private final ProgressBar progressBar;
     private final HashMap<String, EFileStatus> statusMap;
     private final NSTableViewController tableViewController;
+    private final EModule appModuleType;
 
     private boolean isInterrupted;
 
-    MessagesConsumer(BlockingQueue<String> msgQueue, BlockingQueue<Double> progressQueue, HashMap<String, EFileStatus> statusMap){
+    MessagesConsumer(EModule appModuleType, BlockingQueue<String> msgQueue, BlockingQueue<Double> progressQueue, HashMap<String, EFileStatus> statusMap){
+        this.appModuleType = appModuleType;
         this.isInterrupted = false;
 
         this.msgQueue = msgQueue;
@@ -38,7 +41,7 @@ public class MessagesConsumer extends AnimationTimer {
         progressBar.setProgress(0.0);
 
         progressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
-        MediatorControl.getInstance().setTransferActive(true);
+        MediatorControl.getInstance().setBgThreadActive(true, appModuleType);
     }
 
     @Override
@@ -60,7 +63,7 @@ public class MessagesConsumer extends AnimationTimer {
         }
 
         if (isInterrupted) {                                                // It's safe 'cuz it's could't be interrupted while HashMap populating
-            MediatorControl.getInstance().setTransferActive(false);
+            MediatorControl.getInstance().setBgThreadActive(false, appModuleType);
             progressBar.setProgress(0.0);
 
             if (statusMap.size() > 0)

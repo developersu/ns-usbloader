@@ -3,15 +3,14 @@ package nsusbloader.Controllers;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
+import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
 import nsusbloader.Utilities.SplitMergeTool;
 
@@ -23,6 +22,9 @@ public class SplitMergeController implements Initializable {
     @FXML
     private ToggleGroup splitMergeTogGrp;
     @FXML
+    private VBox smToolPane;
+
+    @FXML
     private RadioButton splitRad, mergeRad;
     @FXML
     private Button selectFileFolderBtn,
@@ -31,16 +33,23 @@ public class SplitMergeController implements Initializable {
     @FXML
     private Label fileFolderLabelLbl,
             fileFolderActualPathLbl,
-            saveToPathLbl;
+            saveToPathLbl,
+            statusLbl;
+
+    private ResourceBundle resourceBundle;
 
     private Region convertRegion;
+    private Task<Boolean> smTask;
+    private Thread smThread;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        this.resourceBundle = resourceBundle;
         convertRegion = new Region();
         convertBtn.setGraphic(convertRegion);
 
         splitRad.setOnAction((actionEvent -> {
+            statusLbl.setText("");
             convertRegion.getStyleClass().clear();
             convertRegion.getStyleClass().add("regionSplitToOne");
             fileFolderLabelLbl.setText(resourceBundle.getString("tabSplMrg_Txt_File"));
@@ -49,6 +58,7 @@ public class SplitMergeController implements Initializable {
             convertBtn.setDisable(true);
         }));
         mergeRad.setOnAction((actionEvent -> {
+            statusLbl.setText("");
             convertRegion.getStyleClass().clear();
             convertRegion.getStyleClass().add("regionOneToSplit");
             fileFolderLabelLbl.setText(resourceBundle.getString("tabSplMrg_Txt_Folder"));
@@ -74,6 +84,7 @@ public class SplitMergeController implements Initializable {
         }));
 
         selectFileFolderBtn.setOnAction(actionEvent -> {
+            statusLbl.setText("");
             if (splitRad.isSelected()) {
                 FileChooser fc = new FileChooser();
                 fc.setTitle(resourceBundle.getString("tabSplMrg_Btn_SelectFile"));
@@ -102,51 +113,75 @@ public class SplitMergeController implements Initializable {
             }
         });
 
-        convertBtn.setOnAction(actionEvent -> {
-            if (MediatorControl.getInstance().getTransferActive()) {
-                ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"), resourceBundle.getString("windowBodyPleaseFinishTransfersFirst"));
-                return;
-            }
-
-            if (splitRad.isSelected()){
-                updateProcess(true);
-                Task<Void> task = SplitMergeTool.splitFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
-                task.setOnSucceeded(workerStateEvent -> this.updateProcess(false));
-                Thread thread = new Thread(task);
-                thread.setDaemon(true);
-                thread.start();
-            }
-            else{
-                updateProcess(true);
-                Task<Void> task = SplitMergeTool.mergeFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
-                task.setOnSucceeded(workerStateEvent -> this.updateProcess(false));
-                Thread thread = new Thread(task);
-                thread.setDaemon(true);
-                thread.start();
-            }
-
-        });
+        convertBtn.setOnAction(actionEvent -> setConvertBtnAction());
     }
 
-    private void updateProcess(boolean isStart){
+    public void notifySmThreadStarted(boolean isStart, EModule type){
+        if (! type.equals(EModule.SPLIT_MERGE_TOOL)){
+            smToolPane.setDisable(isStart);
+            return;
+        }
         if (isStart){
             MediatorControl.getInstance().getContoller().logArea.clear();
-            MediatorControl.getInstance().setTransferActive(true);    // TODO: remove & rewrite to interrupt function
-            convertBtn.setDisable(true);// TODO: remove & rewrite to interrupt function
             splitRad.setDisable(true);
             mergeRad.setDisable(true);
             selectFileFolderBtn.setDisable(true);
             changeSaveToBtn.setDisable(true);
+
+            convertBtn.setOnAction(e -> stopBtnAction());
+            convertBtn.setText(resourceBundle.getString("btn_Stop"));
+            convertRegion.getStyleClass().clear();
+            convertRegion.getStyleClass().add("regionStop");
             return;
         }
-        MediatorControl.getInstance().setTransferActive(false);
-        convertBtn.setDisable(false);// TODO: remove & rewrite to interrupt function
         splitRad.setDisable(false);
         mergeRad.setDisable(false);
         selectFileFolderBtn.setDisable(false);
         changeSaveToBtn.setDisable(false);
+
+        convertBtn.setOnAction(e -> setConvertBtnAction());
+        convertBtn.setText(resourceBundle.getString("tabSplMrg_Btn_Convert"));
+        convertRegion.getStyleClass().clear();
+        if (splitRad.isSelected())
+            convertRegion.getStyleClass().add("regionSplitToOne");
+        else
+            convertRegion.getStyleClass().add("regionOneToSplit");
     }
 
+    /**
+     * It's button listener when convert-process in progress
+     * */
+    private void stopBtnAction(){
+        if (smThread != null && smThread.isAlive())
+            smTask.cancel(false);
+    }
+    /**
+     * It's button listener when convert-process NOT in progress
+     * */
+    private void setConvertBtnAction(){
+        if (MediatorControl.getInstance().getTransferActive()) {
+            ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"), resourceBundle.getString("windowBodyPleaseFinishTransfersFirst"));
+            return;
+        }
+
+        if (splitRad.isSelected())
+            smTask = SplitMergeTool.splitFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
+        else
+            smTask = SplitMergeTool.mergeFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
+        smTask.setOnCancelled(event -> statusLbl.setText(resourceBundle.getString("failure_txt")));
+        smTask.setOnSucceeded(event -> {
+            if (smTask.getValue())
+                statusLbl.setText(resourceBundle.getString("done_txt"));
+            else
+                statusLbl.setText(resourceBundle.getString("failure_txt"));
+        });
+        smThread = new Thread(smTask);
+        smThread.setDaemon(true);
+        smThread.start();
+    }
+    /**
+     * Save application settings on exit
+     * */
     public void updatePreferencesOnExit(){
         if (splitRad.isSelected())
             AppPreferences.getInstance().setSplitMergeType(0);

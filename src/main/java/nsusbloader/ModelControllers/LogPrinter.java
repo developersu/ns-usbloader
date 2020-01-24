@@ -1,6 +1,7 @@
 package nsusbloader.ModelControllers;
 
 import nsusbloader.NSLDataTypes.EFileStatus;
+import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 
 import java.io.File;
@@ -14,11 +15,11 @@ public class LogPrinter {
     private BlockingQueue<Double> progressQueue;
     private HashMap<String, EFileStatus> statusMap;      // BlockingQueue for literally one object. TODO: read more books ; replace to hashMap
 
-    public LogPrinter(){
+    public LogPrinter(EModule whoIsAsking){
         this.msgQueue = new LinkedBlockingQueue<>();
         this.progressQueue = new LinkedBlockingQueue<>();
         this.statusMap =  new HashMap<>();
-        this.msgConsumer = new MessagesConsumer(this.msgQueue, this.progressQueue, this.statusMap);
+        this.msgConsumer = new MessagesConsumer(whoIsAsking, this.msgQueue, this.progressQueue, this.statusMap);
         this.msgConsumer.start();
     }
     /**
@@ -42,7 +43,8 @@ public class LogPrinter {
                 default:
                     msgQueue.put(message);
             }
-        }catch (InterruptedException ie){
+        }
+        catch (InterruptedException ie){
             ie.printStackTrace();
         }
     }

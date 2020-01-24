@@ -6,6 +6,7 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
@@ -14,6 +15,7 @@ import nsusbloader.AppPreferences;
 import nsusbloader.COM.NET.NETCommunications;
 import nsusbloader.COM.USB.UsbCommunications;
 import nsusbloader.MediatorControl;
+import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
 
 import java.io.File;
@@ -25,6 +27,8 @@ import java.util.ResourceBundle;
 public class FrontController implements Initializable {
     @FXML
     private Pane specialPane;
+    @FXML
+    private AnchorPane usbNetPane;
 
     @FXML
     private ChoiceBox<String> choiceProtocol, choiceNetUsb;
@@ -35,7 +39,7 @@ public class FrontController implements Initializable {
     @FXML
     private Button switchThemeBtn;
     @FXML
-    public NSTableViewController tableFilesListController;            // Accessible from Mediator
+    public NSTableViewController tableFilesListController;            // Accessible from Mediator (for drag-n-drop support)
 
     @FXML
     private Button selectNspBtn, selectSplitNspBtn, uploadStopBtn;
@@ -167,7 +171,7 @@ public class FrontController implements Initializable {
     }
     
     
-    /********************************************************************************************************************/
+    /*-****************************************************************************************************************-*/
     /**
      * Functionality for selecting NSP button.
      * */
@@ -290,30 +294,30 @@ public class FrontController implements Initializable {
      * Called from mediator
      * TODO: remove shitcoding practices
      * */
-    public void notifyTransmissionStarted(boolean isTransmissionStarted){
-        if (isTransmissionStarted) {
+    public void notifyTransmThreadStarted(boolean isActive, EModule type){
+        if (! type.equals(EModule.USB_NET_TRANSFERS)){
+            usbNetPane.setDisable(isActive);
+            return;
+        }
+        if (isActive) {
             selectNspBtn.setDisable(true);
             selectSplitNspBtn.setDisable(true);
-            uploadStopBtn.setOnAction(e-> stopBtnAction());
-
-            uploadStopBtn.setText(resourceBundle.getString("btn_Stop"));
-
-            btnUpStopImage.getStyleClass().remove("regionUpload");
+            btnUpStopImage.getStyleClass().clear();
             btnUpStopImage.getStyleClass().add("regionStop");
 
+            uploadStopBtn.setOnAction(e-> stopBtnAction());
+            uploadStopBtn.setText(resourceBundle.getString("btn_Stop"));
             uploadStopBtn.getStyleClass().remove("buttonUp");
             uploadStopBtn.getStyleClass().add("buttonStop");
             return;
         }
         selectNspBtn.setDisable(false);
         selectSplitNspBtn.setDisable(false);
-        uploadStopBtn.setOnAction(e-> uploadBtnAction());
-
-        uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
-
-        btnUpStopImage.getStyleClass().remove("regionStop");
+        btnUpStopImage.getStyleClass().clear();
         btnUpStopImage.getStyleClass().add("regionUpload");
 
+        uploadStopBtn.setOnAction(e-> uploadBtnAction());
+        uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
         uploadStopBtn.getStyleClass().remove("buttonStop");
         uploadStopBtn.getStyleClass().add("buttonUp");
     }

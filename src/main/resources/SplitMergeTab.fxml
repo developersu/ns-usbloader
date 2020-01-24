@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="190.0" spacing="25.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SplitMergeController">
+<VBox fx:id="smToolPane" spacing="25.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SplitMergeController">
    <Pane minHeight="-Infinity" prefHeight="10.0" style="-fx-background-color: linear-gradient(from 41px 34px to 50px 50px, reflect,  #00c8fc 40%, transparent  45%);" />
    <HBox alignment="CENTER">
       <children>
@@ -52,6 +52,12 @@
             <Button fx:id="changeSaveToBtn" contentDisplay="TOP" mnemonicParsing="false" text="%tabSplMrg_Btn_ChangeSaveToLocation" />
       </children>
    </VBox>
+   <HBox alignment="CENTER">
+      <children>
+         <Label fx:id="statusLbl" />
+      </children>
+   </HBox>
+   <Pane VBox.vgrow="ALWAYS" />
    <HBox alignment="CENTER">
       <children>
             <Button fx:id="convertBtn" contentDisplay="TOP" mnemonicParsing="false" text="%tabSplMrg_Btn_Convert" />
