@@ -5,7 +5,7 @@ import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.*;
 
 public class UsbConnect {
-    private int DEFAULT_INTERFACE;
+    private int DEFAULT_INTERFACE = 0;
 
     private Context contextNS;
     private DeviceHandle handlerNS;
@@ -24,17 +24,14 @@ public class UsbConnect {
 
         if (initForRCM){
             // CORRECT NV:
-            DEFAULT_INTERFACE = 1;
             VENDOR_ID = 0x0955;
             PRODUCT_ID = 0x7321;
             /* // QA:
-            DEFAULT_INTERFACE = 0;
             VENDOR_ID = 0x1a86;
             PRODUCT_ID = 0x7523;
              */
         }
         else {
-            DEFAULT_INTERFACE = 0;
             VENDOR_ID = 0x057E;
             PRODUCT_ID = 0x3000;
         }
