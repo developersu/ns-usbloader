@@ -4,8 +4,12 @@
 
 [Support author](#support-this-app)
 
-NS-USBloader is a PC-side installer for **[Adubbz/TinFoil (v0.2.1)](https://github.com/Adubbz/Tinfoil/)**, **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** (USB and Network supported) and **[XorTroll/GoldLeaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
+NS-USBloader is:
+* A PC-side installer for **[Adubbz/TinFoil (v0.2.1)](https://github.com/Adubbz/Tinfoil/)**, **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** (USB and Network supported) and **[XorTroll/GoldLeaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
 Replacement for default **usb_install_pc.py**, **remote_install_pc.py**, **GoldTree**/**Quark**. 
+* This application also could be used as RCM payload on Windows, MacOS and Linux (supported arch: x86, x86_64).
+* And of course it's a tool for split files! 
+* And also for merging split-files into one :) 
 
 [Click here for Android version ;)](https://github.com/developersu/ns-usbloader-mobile)
 
@@ -23,6 +27,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * [OpenJFX](https://wiki.openjdk.java.net/display/OpenJFX/Main)
 * [usb4java](https://mvnrepository.com/artifact/org.usb4java/usb4java)
 * Few icons taken from: [materialdesignicons.com](http://materialdesignicons.com/)
+* Information, ideas and data from ['fusee-launcher'](https://github.com/reswitched/fusee-launcher) application
 
 #### List of awesome contributors!
 
@@ -71,6 +76,12 @@ Also, please go to 'Settings' tab of NS-USBloader after first installation and c
 ```
 root # vim /etc/udev/rules.d/99-NS.rules
 SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", GROUP="plugdev"
+root # udevadm control --reload-rules && udevadm trigger
+```
+4. For RCM part
+```
+root # vim /etc/udev/rules.d/99-NS-RCM.rules
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0955", ATTRS{idProduct}=="7321", GROUP="plugdev"
 root # udevadm control --reload-rules && udevadm trigger
 ```
 
@@ -154,7 +165,6 @@ If you want to see this app translated to your language, go grab [this file](htt
 Upload somewhere (create PR, use pastebin/google drive/whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add.
 
 To convert files of any locale to readable format (and vise-versa) you can use this site [https://itpro.cz/juniconv/](https://itpro.cz/juniconv/)
- 
 
 #### TODO (maybe):
 - [x] [Android support](https://github.com/developersu/ns-usbloader-mobile)

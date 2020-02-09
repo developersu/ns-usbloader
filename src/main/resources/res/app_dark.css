@@ -92,11 +92,6 @@
 .tool-bar{
     -fx-background-color: transparent;
 }
-
-.special-pane-as-border{
-    -fx-background-color: #f7fafa;
-    -fx-min-height: 1;
-}
 // -======================== Choice box =========================-
 .choice-box {
     -fx-background-color: #4f4f4f;
@@ -144,16 +139,16 @@
     -fx-fill: #7effff;
 }
 .tab-pane .tab{
-    -fx-background-color: #424242;
+    -fx-background-color: transparent;
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
     -fx-border-radius: 0 0 0 0;
     -fx-border-width: 3 0 0 0;
-    -fx-border-color: #424242;
+    -fx-border-color: transparent;
 }
 
 .tab-pane .tab:selected{
-    -fx-background-color: #2d2d2d;
+    -fx-background-color: transparent;
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
     -fx-border-radius: 0 0 0 0;
@@ -168,8 +163,7 @@
 
 .tab-pane > .tab-header-area > .tab-header-background
 {
-   -fx-background-color: #424242;
-
+   -fx-background-color: linear-gradient(to right, #2d2d2d 0%, #343434 7.5%, #343434 100%); //#424242; //
 }
 .tab-pane > .tab-header-area > .headers-region > .tab {
     -fx-padding: 10;
@@ -255,8 +249,18 @@
     -fx-background-radius : 0.0em;
     -fx-border-radius :2.0em;
 }
-
-// -========================== Scroll =====================-
+/* -========================= Separator ===================- */
+.separator *.line {
+    -fx-border-style: solid;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #3a3738;
+}
+.strangeSeparator *.line {
+    -fx-border-style: solid;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #f7fafa;
+}
+/* -========================== Scroll =====================- */
 .scroll-bar .increment-arrow,
 .scroll-bar .decrement-arrow {
     -fx-background-color: #71e016;

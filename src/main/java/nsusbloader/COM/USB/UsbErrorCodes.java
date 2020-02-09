@@ -2,8 +2,8 @@ package nsusbloader.COM.USB;
 
 import org.usb4java.LibUsb;
 
-class UsbErrorCodes {
-    static String getErrCode(int value){
+public class UsbErrorCodes {
+    public static String getErrCode(int value){
         switch (value){
             case LibUsb.ERROR_ACCESS:
                 return "ERROR_ACCESS";

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+<?import javafx.scene.text.Font?>
+
+<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.RcmController">
+<VBox fx:id="rcmToolPane" spacing="15.0">
+   <Pane minHeight="-Infinity" prefHeight="10.0" style="-fx-background-color: linear-gradient(from 41px 34px to 50px 50px, reflect,  #ff1515 40%, transparent  45%);" />
+   <HBox alignment="CENTER">
+      <children>
+         <Label text="Fusée Gelée RCM">
+            <font>
+               <Font name="System Bold" size="15.0" />
+            </font>
+         </Label>
+      </children>
+   </HBox>
+   <GridPane>
+      <columnConstraints>
+         <ColumnConstraints hgrow="SOMETIMES" />
+         <ColumnConstraints hgrow="SOMETIMES" percentWidth="90.0" />
+         <ColumnConstraints hgrow="SOMETIMES" />
+      </columnConstraints>
+      <rowConstraints>
+         <RowConstraints vgrow="SOMETIMES" />
+      </rowConstraints>
+      <children>
+         <Separator prefWidth="200.0" styleClass="strangeSeparator" GridPane.columnIndex="1" />
+      </children>
+   </GridPane>
+   <VBox spacing="8.0">
+      <children>
+         <Label text="Payload: " />
+         <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+               <RadioButton fx:id="pldrRadio1" mnemonicParsing="false">
+                  <toggleGroup>
+                     <ToggleGroup fx:id="rcmToggleGrp" />
+                  </toggleGroup></RadioButton>
+               <VBox fx:id="pldPane1" onMouseClicked="#selectPldrPane" HBox.hgrow="ALWAYS">
+                  <children>
+                     <HBox>
+                        <children>
+                           <Label fx:id="payloadFNameLbl1" />
+                        </children>
+                     </HBox>
+                     <Label fx:id="payloadFPathLbl1" disable="true">
+                        <font>
+                           <Font name="System Italic" size="13.0" />
+                        </font>
+                     </Label>
+                  </children>
+               </VBox>
+               <Button fx:id="selPldBtn1" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">
+                  <graphic>
+                     <SVGPath content="M19,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H19A2,2 0 0,1 21,8H21L4,8V18L6.14,10H23.21L20.93,18.5C20.7,19.37 19.92,20 19,20Z" fill="#289de8" />
+                  </graphic></Button>
+               <Button fx:id="resPldBtn1" mnemonicParsing="false" onAction="#bntResetPayloader" styleClass="buttonStop">
+                  <graphic>
+                     <SVGPath content="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="#fb582c" />
+                  </graphic>
+               </Button>
+            </children>
+         </HBox>
+         <Separator prefWidth="200.0" />
+         <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+               <RadioButton fx:id="pldrRadio2" mnemonicParsing="false" toggleGroup="$rcmToggleGrp" />
+               <VBox fx:id="pldPane2" onMouseClicked="#selectPldrPane" HBox.hgrow="ALWAYS">
+                  <children>
+                     <HBox>
+                        <children>
+                           <Label fx:id="payloadFNameLbl2" />
+                        </children>
+                     </HBox>
+                     <Label fx:id="payloadFPathLbl2" disable="true">
+                        <font>
+                           <Font name="System Italic" size="13.0" />
+                        </font>
+                     </Label>
+                  </children>
+               </VBox>
+               <Button fx:id="selPldBtn2" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">
+                  <graphic>
+                     <SVGPath content="M19,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H19A2,2 0 0,1 21,8H21L4,8V18L6.14,10H23.21L20.93,18.5C20.7,19.37 19.92,20 19,20Z" fill="#289de8" />
+                  </graphic></Button>
+               <Button fx:id="resPldBtn2" mnemonicParsing="false" onAction="#bntResetPayloader" styleClass="buttonStop">
+                  <graphic>
+                     <SVGPath content="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="#fb582c" />
+                  </graphic>
+               </Button>
+            </children>
+         </HBox>
+         <Separator prefWidth="200.0" />
+         <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+               <RadioButton fx:id="pldrRadio3" mnemonicParsing="false" toggleGroup="$rcmToggleGrp" />
+               <VBox fx:id="pldPane3" onMouseClicked="#selectPldrPane" HBox.hgrow="ALWAYS">
+                  <children>
+                     <HBox>
+                        <children>
+                           <Label fx:id="payloadFNameLbl3" />
+                        </children>
+                     </HBox>
+                     <Label fx:id="payloadFPathLbl3" disable="true">
+                        <font>
+                           <Font name="System Italic" size="13.0" />
+                        </font>
+                     </Label>
+                  </children>
+               </VBox>
+               <Button fx:id="selPldBtn3" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">
+                  <graphic>
+                     <SVGPath content="M19,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H19A2,2 0 0,1 21,8H21L4,8V18L6.14,10H23.21L20.93,18.5C20.7,19.37 19.92,20 19,20Z" fill="#289de8" />
+                  </graphic></Button>
+               <Button fx:id="resPldBtn3" mnemonicParsing="false" onAction="#bntResetPayloader" styleClass="buttonStop">
+                  <graphic>
+                     <SVGPath content="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="#fb582c" />
+                  </graphic>
+               </Button>
+            </children>
+         </HBox>
+         <Separator prefWidth="200.0" />
+         <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+               <RadioButton fx:id="pldrRadio4" mnemonicParsing="false" toggleGroup="$rcmToggleGrp" />
+               <VBox fx:id="pldPane4" onMouseClicked="#selectPldrPane" HBox.hgrow="ALWAYS">
+                  <children>
+                     <HBox>
+                        <children>
+                           <Label fx:id="payloadFNameLbl4" />
+                        </children>
+                     </HBox>
+                     <Label fx:id="payloadFPathLbl4" disable="true">
+                        <font>
+                           <Font name="System Italic" size="13.0" />
+                        </font>
+                     </Label>
+                  </children>
+               </VBox>
+               <Button fx:id="selPldBtn4" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">
+                  <graphic>
+                     <SVGPath content="M19,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H19A2,2 0 0,1 21,8H21L4,8V18L6.14,10H23.21L20.93,18.5C20.7,19.37 19.92,20 19,20Z" fill="#289de8" />
+                  </graphic></Button>
+               <Button fx:id="resPldBtn4" mnemonicParsing="false" onAction="#bntResetPayloader" styleClass="buttonStop">
+                  <graphic>
+                     <SVGPath content="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="#fb582c" />
+                  </graphic>
+               </Button>
+            </children>
+         </HBox>
+         <Separator prefWidth="200.0" />
+         <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+               <RadioButton fx:id="pldrRadio5" mnemonicParsing="false" toggleGroup="$rcmToggleGrp" />
+               <VBox fx:id="pldPane5" onMouseClicked="#selectPldrPane" HBox.hgrow="ALWAYS">
+                  <children>
+                     <HBox>
+                        <children>
+                           <Label fx:id="payloadFNameLbl5" />
+                        </children>
+                     </HBox>
+                     <Label fx:id="payloadFPathLbl5" disable="true">
+                        <font>
+                           <Font name="System Italic" size="13.0" />
+                        </font>
+                     </Label>
+                  </children>
+               </VBox>
+               <Button fx:id="selPldBtn5" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">
+                  <graphic>
+                     <SVGPath content="M19,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H19A2,2 0 0,1 21,8H21L4,8V18L6.14,10H23.21L20.93,18.5C20.7,19.37 19.92,20 19,20Z" fill="#289de8" />
+                  </graphic></Button>
+               <Button fx:id="resPldBtn5" mnemonicParsing="false" onAction="#bntResetPayloader" styleClass="buttonStop">
+                  <graphic>
+                     <SVGPath content="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="#fb582c" />
+                  </graphic>
+               </Button>
+            </children>
+         </HBox>
+         <Separator prefWidth="200.0" />
+      </children>
+      <VBox.margin>
+         <Insets left="15.0" right="15.0" />
+      </VBox.margin>
+   </VBox>
+   <HBox alignment="CENTER">
+      <children>
+         <Label fx:id="statusLbl" />
+      </children>
+   </HBox>
+   <Pane VBox.vgrow="ALWAYS" />
+   <HBox alignment="CENTER">
+      <children>
+         <Button fx:id="injectPldBtn" contentDisplay="TOP" disable="true" mnemonicParsing="false" styleClass="buttonUp" text="%btn_InjectPayloader">
+            <graphic>
+               <SVGPath content="M 1 1 L 1 13.5 L 21 13.5 L 21 1 L 1 1 z M 26.226562 1.0683594 L 22 5.2949219 L 26.226562 9.5214844 L 27.226562 8.5214844 L 24.697266 6 L 31.158203 6 L 31.158203 20 L 32.566406 20 L 32.566406 4.5917969 L 24.697266 4.5917969 L 27.226562 2.0683594 L 26.226562 1.0683594 z M 2.515625 2.25 L 12.984375 2.25 C 12.993075 2.25 13 2.256995 13 2.265625 L 13 3.984375 C 12.999995 3.993026 12.993031 4 12.984375 4 L 2.515625 4 C 2.5069687 4 2.5 3.993031 2.5 3.984375 L 2.5 2.265625 C 2.5 2.256925 2.50697 2.25 2.515625 2.25 z M 2.515625 5.25 L 17.962891 5.25 C 17.971591 5.25 17.978516 5.256995 17.978516 5.265625 L 17.978516 6.984375 C 17.978516 6.993075 17.971521 7 17.962891 7 L 2.515625 7 C 2.5069687 6.99999 2.5 6.993031 2.5 6.984375 L 2.5 5.265625 C 2.5 5.256925 2.50697 5.25 2.515625 5.25 z M 2.515625 8.25 L 15.421875 8.25 C 15.430575 8.25 15.4375 8.256995 15.4375 8.265625 L 15.4375 9.984375 C 15.4375 9.993075 15.430505 10 15.421875 10 L 2.515625 10 C 2.5069687 9.99999 2.5 9.993031 2.5 9.984375 L 2.5 8.265625 C 2.5 8.256969 2.5069687 8.25 2.515625 8.25 z M 1 14.5 L 1 18 C 1 20 2 21 4 21 L 18 21 C 20 21 21 20 21 18 L 21 14.5 L 1 14.5 z M 5.8515625 16.001953 A 1.8950667 1.8950667 0 0 1 7.7480469 17.898438 A 1.8950667 1.8950667 0 0 1 5.8515625 19.792969 A 1.8950667 1.8950667 0 0 1 3.9570312 17.898438 A 1.8950667 1.8950667 0 0 1 5.8515625 16.001953 z" fill="#71e016" />
+            </graphic></Button>
+      </children>
+   </HBox>
+   <padding>
+      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+   </padding>
+</VBox>
+</ScrollPane>

@@ -7,7 +7,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -25,8 +24,6 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class FrontController implements Initializable {
-    @FXML
-    private Pane specialPane;
     @FXML
     private AnchorPane usbNetPane;
 
@@ -52,7 +49,6 @@ public class FrontController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
-        specialPane.getStyleClass().add("special-pane-as-border");  // UI hacks
 
         ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "GoldLeaf");
         choiceProtocol.setItems(choiceProtocolList);
@@ -195,7 +191,7 @@ public class FrontController implements Initializable {
         else
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
 
-        filesList = fileChooser.showOpenMultipleDialog(specialPane.getScene().getWindow());
+        filesList = fileChooser.showOpenMultipleDialog(usbNetPane.getScene().getWindow());
         if (filesList != null && !filesList.isEmpty()) {
             tableFilesListController.setFiles(filesList);
             uploadStopBtn.setDisable(false);
@@ -216,7 +212,7 @@ public class FrontController implements Initializable {
         else
             dirChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
-        splitFile = dirChooser.showDialog(specialPane.getScene().getWindow());
+        splitFile = dirChooser.showDialog(usbNetPane.getScene().getWindow());
 
         if (splitFile != null && splitFile.getName().toLowerCase().endsWith(".nsp")) {
             tableFilesListController.setFile(splitFile);

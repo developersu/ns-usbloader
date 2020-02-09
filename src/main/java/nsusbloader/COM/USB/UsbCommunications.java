@@ -42,14 +42,14 @@ public class UsbCommunications extends Task<Void> {
     protected Void call() {
         logPrinter.print("\tStart chain", EMsgType.INFO);
 
-        UsbConnect usbConnect = new UsbConnect(logPrinter);
+        UsbConnect usbConnect = new UsbConnect(logPrinter, false);
 
         if (! usbConnect.isConnected()){
             close(EFileStatus.FAILED);
             return null;
         }
 
-        DeviceHandle handler = usbConnect.getHandlerNS();
+        DeviceHandle handler = usbConnect.getNsHandler();
 
         TransferModule module;
 

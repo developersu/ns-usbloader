@@ -123,7 +123,7 @@ public class AppPreferences {
     public double getSceneWidth(){ return preferences.getDouble("WIND_WIDTH", 850.0); }
     public void setSceneWidth(double value){ preferences.putDouble("WIND_WIDTH", value); }
 
-    public double getSceneHeight(){ return preferences.getDouble("WIND_HEIGHT", 475.0); }
+    public double getSceneHeight(){ return preferences.getDouble("WIND_HEIGHT", 525.0); }
     public void setSceneHeight(double value){ preferences.putDouble("WIND_HEIGHT", value); }
     // Split and Merge //
     public int getSplitMergeType(){ return preferences.getInt("SM_TYPE", 0); }
@@ -131,4 +131,7 @@ public class AppPreferences {
 
     public String getSplitMergeRecent(){ return preferences.get("SM_RECENT", System.getProperty("user.home")); }
     public void setSplitMergeRecent(String value){ preferences.put("SM_RECENT", value); }
+    // RCM //
+    public String getRecentRcm(int num){ return preferences.get(String.format("RCM_%02d", num), ""); }
+    public void setRecentRcm(int num, String value){ preferences.put(String.format("RCM_%02d", num), value); }
 }

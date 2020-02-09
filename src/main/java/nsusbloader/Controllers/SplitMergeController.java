@@ -88,10 +88,15 @@ public class SplitMergeController implements Initializable {
             if (splitRad.isSelected()) {
                 FileChooser fc = new FileChooser();
                 fc.setTitle(resourceBundle.getString("tabSplMrg_Btn_SelectFile"));
-                if (fileFolderActualPathLbl.getText().isEmpty())
-                    fc.setInitialDirectory(new File(System.getProperty("user.home")));
+                if (! fileFolderActualPathLbl.getText().isEmpty()){
+                    File temporaryFile = new File(fileFolderActualPathLbl.getText()).getParentFile();
+                    if (temporaryFile != null && temporaryFile.exists())
+                        fc.setInitialDirectory(temporaryFile);
+                    else
+                        fc.setInitialDirectory(new File(System.getProperty("user.home")));
+                }
                 else
-                    fc.setInitialDirectory(new File(fileFolderActualPathLbl.getText()).getParentFile());
+                    fc.setInitialDirectory(new File(System.getProperty("user.home")));
                 File fileFile = fc.showOpenDialog(changeSaveToBtn.getScene().getWindow());
                 if (fileFile == null)
                     return;
@@ -101,10 +106,16 @@ public class SplitMergeController implements Initializable {
             else{
                 DirectoryChooser dc = new DirectoryChooser();
                 dc.setTitle(resourceBundle.getString("tabSplMrg_Btn_SelectFolder"));
-                if (fileFolderActualPathLbl.getText().isEmpty())
-                    dc.setInitialDirectory(new File(System.getProperty("user.home")));
+                if (! fileFolderActualPathLbl.getText().isEmpty()){
+                    File temporaryFile = new File(fileFolderActualPathLbl.getText());
+                    if (temporaryFile.exists())
+                        dc.setInitialDirectory(temporaryFile);
+                    else
+                        dc.setInitialDirectory(new File(System.getProperty("user.home")));
+                }
                 else
-                    dc.setInitialDirectory(new File(fileFolderActualPathLbl.getText()));
+                    dc.setInitialDirectory(new File(System.getProperty("user.home")));
+
                 File folderFile = dc.showDialog(changeSaveToBtn.getScene().getWindow());
                 if (folderFile == null)
                     return;
@@ -132,6 +143,8 @@ public class SplitMergeController implements Initializable {
             convertBtn.setText(resourceBundle.getString("btn_Stop"));
             convertRegion.getStyleClass().clear();
             convertRegion.getStyleClass().add("regionStop");
+            convertBtn.getStyleClass().remove("buttonUp");
+            convertBtn.getStyleClass().add("buttonStop");
             return;
         }
         splitRad.setDisable(false);
@@ -142,6 +155,8 @@ public class SplitMergeController implements Initializable {
         convertBtn.setOnAction(e -> setConvertBtnAction());
         convertBtn.setText(resourceBundle.getString("tabSplMrg_Btn_Convert"));
         convertRegion.getStyleClass().clear();
+        convertBtn.getStyleClass().remove("buttonStop");
+        convertBtn.getStyleClass().add("buttonUp");
         if (splitRad.isSelected())
             convertRegion.getStyleClass().add("regionSplitToOne");
         else
@@ -159,6 +174,7 @@ public class SplitMergeController implements Initializable {
      * It's button listener when convert-process NOT in progress
      * */
     private void setConvertBtnAction(){
+        statusLbl.setText("");
         if (MediatorControl.getInstance().getTransferActive()) {
             ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"), resourceBundle.getString("windowBodyPleaseFinishTransfersFirst"));
             return;

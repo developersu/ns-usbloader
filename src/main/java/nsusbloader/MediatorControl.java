@@ -25,6 +25,7 @@ public class MediatorControl {
         isTransferActive.set(isActive);
         mainCtrler.getFrontCtrlr().notifyTransmThreadStarted(isActive, appModuleType);
         mainCtrler.getSmCtrlr().notifySmThreadStarted(isActive, appModuleType);
+        mainCtrler.getRcmCtrlr().notifySmThreadStarted(isActive, appModuleType);
     }
     public synchronized boolean getTransferActive() { return this.isTransferActive.get(); }
 }
