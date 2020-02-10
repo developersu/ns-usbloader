@@ -17,11 +17,9 @@ With GUI and cookies. Works on Windows, macOS and Linux.
 
 Sometimes I add new posts about this project [on my home page](https://developersu.blogspot.com/search/label/NS-USBloader).
 
-<img src="https://live.staticflickr.com/65535/49513701961_2b41747a9f_o.png" alt="screenshot" width="250"/> 
-<img src="https://live.staticflickr.com/65535/49513701841_e09c86b944_o.png" alt="screenshot" width="250"/>
-<img src="https://live.staticflickr.com/65535/49513701896_c4d0a905c0_o.png" alt="screenshot" width="250"/>
-<img src="https://live.staticflickr.com/65535/49513184138_688ee551f8_o.png" alt="screenshot" width="250"/>
-<img src="https://live.staticflickr.com/65535/49513924407_212988e0e9_o.png" alt="screenshot" width="250"/>
+![Application screenshot](https://live.staticflickr.com/65535/49513701961_2b41747a9f_o.png)  
+<img src="https://live.staticflickr.com/65535/49513701841_e09c86b944_o.png" alt="screenshot" width="250"/>  <img src="https://live.staticflickr.com/65535/49513701896_c4d0a905c0_o.png" alt="screenshot" width="250"/>  
+<img src="https://live.staticflickr.com/65535/49513184138_688ee551f8_o.png" alt="screenshot" width="250"/>  <img src="https://live.staticflickr.com/65535/49513924407_212988e0e9_o.png" alt="screenshot" width="250"/>
 
 #### License
 
