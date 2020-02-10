@@ -44,7 +44,7 @@
    <VBox spacing="8.0">
       <children>
          <Label text="Payload: " />
-         <HBox alignment="CENTER_LEFT" spacing="5.0">
+         <HBox fx:id="plHbox1" alignment="CENTER_LEFT" onDragDropped="#handleDrop" onDragOver="#handleDragOver" spacing="5.0">
             <children>
                <RadioButton fx:id="pldrRadio1" mnemonicParsing="false">
                   <toggleGroup>
@@ -76,7 +76,7 @@
             </children>
          </HBox>
          <Separator prefWidth="200.0" />
-         <HBox alignment="CENTER_LEFT" spacing="5.0">
+         <HBox fx:id="plHbox2" alignment="CENTER_LEFT" onDragDropped="#handleDrop" onDragOver="#handleDragOver" spacing="5.0">
             <children>
                <RadioButton fx:id="pldrRadio2" mnemonicParsing="false" toggleGroup="$rcmToggleGrp" />
                <VBox fx:id="pldPane2" onMouseClicked="#selectPldrPane" HBox.hgrow="ALWAYS">
@@ -105,7 +105,7 @@
             </children>
          </HBox>
          <Separator prefWidth="200.0" />
-         <HBox alignment="CENTER_LEFT" spacing="5.0">
+         <HBox fx:id="plHbox3" alignment="CENTER_LEFT" onDragDropped="#handleDrop" onDragOver="#handleDragOver" spacing="5.0">
             <children>
                <RadioButton fx:id="pldrRadio3" mnemonicParsing="false" toggleGroup="$rcmToggleGrp" />
                <VBox fx:id="pldPane3" onMouseClicked="#selectPldrPane" HBox.hgrow="ALWAYS">
@@ -134,7 +134,7 @@
             </children>
          </HBox>
          <Separator prefWidth="200.0" />
-         <HBox alignment="CENTER_LEFT" spacing="5.0">
+         <HBox fx:id="plHbox4" alignment="CENTER_LEFT" onDragDropped="#handleDrop" onDragOver="#handleDragOver" spacing="5.0">
             <children>
                <RadioButton fx:id="pldrRadio4" mnemonicParsing="false" toggleGroup="$rcmToggleGrp" />
                <VBox fx:id="pldPane4" onMouseClicked="#selectPldrPane" HBox.hgrow="ALWAYS">
@@ -163,7 +163,7 @@
             </children>
          </HBox>
          <Separator prefWidth="200.0" />
-         <HBox alignment="CENTER_LEFT" spacing="5.0">
+         <HBox fx:id="plHbox5" alignment="CENTER_LEFT" onDragDropped="#handleDrop" onDragOver="#handleDragOver" spacing="5.0">
             <children>
                <RadioButton fx:id="pldrRadio5" mnemonicParsing="false" toggleGroup="$rcmToggleGrp" />
                <VBox fx:id="pldPane5" onMouseClicked="#selectPldrPane" HBox.hgrow="ALWAYS">

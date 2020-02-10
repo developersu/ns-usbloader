@@ -179,7 +179,7 @@ public class RcmTask extends Task<Boolean> {
             totalSize += 4096;
         // Double-check
         if (totalSize > 0x30298){
-            logPrinter.print("File size of the payload is too bit. Comparing to maximum size, it's greater to "+(totalSize - 0x30298)+" bytes!"+
+            logPrinter.print("File size of the payload is too big. Comparing to maximum size, it's greater to "+(totalSize - 0x30298)+" bytes!"+
                     "\n         1. Double-check that you're using the right payload." +
                     "\n         2. Please report this issue in case you're sure that you're doing everything right." +
                     "\n\n         Nothing has been sent to NS. Execution stopped.", EMsgType.FAIL); // Occurs: never. I'm too lazy to check.

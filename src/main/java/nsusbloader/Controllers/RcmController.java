@@ -9,7 +9,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
@@ -50,7 +52,7 @@ public class RcmController implements Initializable {
     private Label statusLbl;
 
     private ResourceBundle rb;
-
+    private String myRegexp;
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         this.rb = resourceBundle;
@@ -66,12 +68,11 @@ public class RcmController implements Initializable {
         String recentRcm3 = AppPreferences.getInstance().getRecentRcm(3);
         String recentRcm4 = AppPreferences.getInstance().getRecentRcm(4);
         String recentRcm5 = AppPreferences.getInstance().getRecentRcm(5);
-
-        String myRegexp;
+        
         if (File.separator.equals("/"))
-            myRegexp = "^.+/";
+            this.myRegexp = "^.+/";
         else
-            myRegexp = "^.+\\\\";
+            this.myRegexp = "^.+\\\\";
 
         if (! recentRcm1.isEmpty()) {
             payloadFNameLbl1.setText(recentRcm1.replaceAll(myRegexp, ""));
@@ -96,6 +97,81 @@ public class RcmController implements Initializable {
 
        // TODO: write logic ?? Like in case PAYLOADER exist, button active. If not: not active?
         injectPldBtn.setOnAction(actionEvent -> smash());
+    }
+
+    /**
+     * Drag-n-drop support (dragOver consumer)
+     * */
+    @FXML
+    private void handleDragOver(DragEvent event){
+        if (event.getDragboard().hasFiles())
+            event.acceptTransferModes(TransferMode.ANY);
+        event.consume();
+    }
+    /**
+     * Drag-n-drop support (drop consumer)
+     * */
+    @FXML
+    private void handleDrop(DragEvent event){
+        Node sourceNode = (Node) event.getSource();
+        File fileDrpd = event.getDragboard().getFiles().get(0);
+
+        if (fileDrpd.isDirectory()){
+            event.setDropCompleted(true);
+            event.consume();
+            return;
+        }
+
+        String fileNameDrpd = fileDrpd.getAbsolutePath();
+
+        switch (sourceNode.getId()){
+            case "plHbox1":
+                setPayloadFile( 1, fileNameDrpd);
+                break;
+            case "plHbox2":
+                setPayloadFile( 2, fileNameDrpd);
+                break;
+            case "plHbox3":
+                setPayloadFile( 3, fileNameDrpd);
+                break;
+            case "plHbox4":
+                setPayloadFile( 4, fileNameDrpd);
+                break;
+            case "plHbox5":
+                setPayloadFile( 5, fileNameDrpd);
+        }
+        event.setDropCompleted(true);
+        event.consume();
+    }
+
+    private void setPayloadFile(int RcmBoxNo, String fileName){
+        String fileNameShort = fileName.replaceAll(myRegexp, "");
+        switch (RcmBoxNo){
+            case 1:
+                payloadFNameLbl1.setText(fileNameShort);
+                payloadFPathLbl1.setText(fileName);
+                rcmToggleGrp.selectToggle(pldrRadio1);
+                break;
+            case 2:
+                payloadFNameLbl2.setText(fileNameShort);
+                payloadFPathLbl2.setText(fileName);
+                rcmToggleGrp.selectToggle(pldrRadio2);
+                break;
+            case 3:
+                payloadFNameLbl3.setText(fileNameShort);
+                payloadFPathLbl3.setText(fileName);
+                rcmToggleGrp.selectToggle(pldrRadio3);
+                break;
+            case 4:
+                payloadFNameLbl4.setText(fileNameShort);
+                payloadFPathLbl4.setText(fileName);
+                rcmToggleGrp.selectToggle(pldrRadio4);
+                break;
+            case 5:
+                payloadFNameLbl5.setText(fileNameShort);
+                payloadFPathLbl5.setText(fileName);
+                rcmToggleGrp.selectToggle(pldrRadio5);
+        }
     }
 
     private void smash(){
@@ -149,37 +225,31 @@ public class RcmController implements Initializable {
         else
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("bin", "*.bin"));
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("bin", "*.bin"),
+                new FileChooser.ExtensionFilter("Any file", "*.*")
+        );
 
         File payloadFile = fileChooser.showOpenDialog(payloadFPathLbl1.getScene().getWindow());
         if (payloadFile != null) {
+            final String fullFileName = payloadFile.getAbsolutePath();
             final Node btn = (Node)event.getSource();
 
             switch (btn.getId()){
                 case "selPldBtn1":
-                    payloadFNameLbl1.setText(payloadFile.getName());
-                    payloadFPathLbl1.setText(payloadFile.getAbsolutePath());
-                    rcmToggleGrp.selectToggle(pldrRadio1);
+                    setPayloadFile(1, fullFileName);
                     break;
                 case "selPldBtn2":
-                    payloadFNameLbl2.setText(payloadFile.getName());
-                    payloadFPathLbl2.setText(payloadFile.getAbsolutePath());
-                    rcmToggleGrp.selectToggle(pldrRadio2);
+                    setPayloadFile(2, fullFileName);
                     break;
                 case "selPldBtn3":
-                    payloadFNameLbl3.setText(payloadFile.getName());
-                    payloadFPathLbl3.setText(payloadFile.getAbsolutePath());
-                    rcmToggleGrp.selectToggle(pldrRadio3);
+                    setPayloadFile(3, fullFileName);
                     break;
                 case "selPldBtn4":
-                    payloadFNameLbl4.setText(payloadFile.getName());
-                    payloadFPathLbl4.setText(payloadFile.getAbsolutePath());
-                    rcmToggleGrp.selectToggle(pldrRadio4);
+                    setPayloadFile(4, fullFileName);
                     break;
                 case "selPldBtn5":
-                    payloadFNameLbl5.setText(payloadFile.getName());
-                    payloadFPathLbl5.setText(payloadFile.getAbsolutePath());
-                    rcmToggleGrp.selectToggle(pldrRadio5);
+                    setPayloadFile(5, fullFileName);
             }
         }
     }

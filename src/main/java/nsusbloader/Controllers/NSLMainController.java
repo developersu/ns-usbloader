@@ -5,12 +5,9 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.TransferMode;
 import nsusbloader.*;
 import nsusbloader.ModelControllers.UpdatesChecker;
 
-import java.io.File;
 import java.net.*;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -78,38 +75,6 @@ public class NSLMainController implements Initializable {
      * */
     public void setHostServices(HostServices hs ){ SettingsTabController.registerHostServices(hs);}
 
-
-    /**
-     * Drag-n-drop support (dragOver consumer)
-     * */
-    @FXML
-    private void handleDragOver(DragEvent event){
-        if (event.getDragboard().hasFiles())
-            event.acceptTransferModes(TransferMode.ANY);
-    }
-    /**
-     * Drag-n-drop support (drop consumer)
-     * */
-    @FXML
-    private void handleDrop(DragEvent event){
-        if (MediatorControl.getInstance().getTransferActive()) {
-            event.setDropCompleted(true);
-            return;
-        }
-        List<File> filesDropped = event.getDragboard().getFiles();
-
-        if (FrontTabController.getSelectedProtocol().equals("TinFoil") && SettingsTabController.getTfXciNszXczSupport())
-            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches("(.*\\.nsp$)|(.*\\.xci$)|(.*\\.nsz$)|(.*\\.xcz$)"));
-        else if (FrontTabController.getSelectedProtocol().equals("GoldLeaf") && (! SettingsTabController.getNSPFileFilterForGL()))
-            filesDropped.removeIf(file -> (file.isDirectory() && ! file.getName().toLowerCase().matches(".*\\.nsp$")));
-        else
-            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches(".*\\.nsp$"));
-
-        if ( ! filesDropped.isEmpty() )
-            FrontTabController.tableFilesListController.setFiles(filesDropped);
-
-        event.setDropCompleted(true);
-    }
     /**
      * Get 'Settings' controller
      * Used by FrontController

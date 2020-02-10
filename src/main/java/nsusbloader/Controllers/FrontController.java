@@ -6,6 +6,8 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
@@ -284,6 +286,39 @@ public class FrontController implements Initializable {
         if (workThread != null && workThread.isAlive()){
             usbNetCommunications.cancel(false);
         }
+    }
+    /**
+     * Drag-n-drop support (dragOver consumer)
+     * */
+    @FXML
+    private void handleDragOver(DragEvent event){
+        if (event.getDragboard().hasFiles())
+            event.acceptTransferModes(TransferMode.ANY);
+        event.consume();
+    }
+    /**
+     * Drag-n-drop support (drop consumer)
+     * */
+    @FXML
+    private void handleDrop(DragEvent event){
+        if (MediatorControl.getInstance().getTransferActive()) {
+            event.setDropCompleted(true);
+            return;
+        }
+        List<File> filesDropped = event.getDragboard().getFiles();
+
+        if (getSelectedProtocol().equals("TinFoil") && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTfXciNszXczSupport())
+            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches("(.*\\.nsp$)|(.*\\.xci$)|(.*\\.nsz$)|(.*\\.xcz$)"));
+        else if (getSelectedProtocol().equals("GoldLeaf") && (! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getNSPFileFilterForGL()))
+            filesDropped.removeIf(file -> (file.isDirectory() && ! file.getName().toLowerCase().matches(".*\\.nsp$")));
+        else
+            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches(".*\\.nsp$"));
+
+        if ( ! filesDropped.isEmpty() )
+            tableFilesListController.setFiles(filesDropped);
+
+        event.setDropCompleted(true);
+        event.consume();
     }
     /**
      * This thing modify UI for reusing 'Upload to NS' button and make functionality set for "Stop transmission"
