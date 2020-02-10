@@ -292,7 +292,7 @@ public class FrontController implements Initializable {
      * */
     @FXML
     private void handleDragOver(DragEvent event){
-        if (event.getDragboard().hasFiles())
+        if (event.getDragboard().hasFiles() && ! MediatorControl.getInstance().getTransferActive())
             event.acceptTransferModes(TransferMode.ANY);
         event.consume();
     }
@@ -301,10 +301,6 @@ public class FrontController implements Initializable {
      * */
     @FXML
     private void handleDrop(DragEvent event){
-        if (MediatorControl.getInstance().getTransferActive()) {
-            event.setDropCompleted(true);
-            return;
-        }
         List<File> filesDropped = event.getDragboard().getFiles();
 
         if (getSelectedProtocol().equals("TinFoil") && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTfXciNszXczSupport())

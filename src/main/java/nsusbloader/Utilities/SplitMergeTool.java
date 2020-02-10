@@ -175,7 +175,7 @@ class MergeTask extends Task<Boolean> {
     }
     @Override
     protected Boolean call() {
-        logPrinter.print("Merge file:      "+filePath, EMsgType.INFO);
+        logPrinter.print("Merge file: "+filePath, EMsgType.INFO);
 
         File folder = new File(filePath);
 
@@ -183,7 +183,7 @@ class MergeTask extends Task<Boolean> {
 
         File[] chunkFiles = folder.listFiles((file, s) -> s.matches("^[0-9][0-9]$"));
 
-        if (chunkFiles == null){
+        if (chunkFiles == null || chunkFiles.length == 0){
             logPrinter.print("Selected folder doesn't have any chunks. Nothing to do here.", EMsgType.FAIL);
             logPrinter.close();
             return false;

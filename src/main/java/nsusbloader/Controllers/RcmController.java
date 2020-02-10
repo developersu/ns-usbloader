@@ -231,26 +231,28 @@ public class RcmController implements Initializable {
         );
 
         File payloadFile = fileChooser.showOpenDialog(payloadFPathLbl1.getScene().getWindow());
-        if (payloadFile != null) {
-            final String fullFileName = payloadFile.getAbsolutePath();
-            final Node btn = (Node)event.getSource();
 
-            switch (btn.getId()){
-                case "selPldBtn1":
-                    setPayloadFile(1, fullFileName);
-                    break;
-                case "selPldBtn2":
-                    setPayloadFile(2, fullFileName);
-                    break;
-                case "selPldBtn3":
-                    setPayloadFile(3, fullFileName);
-                    break;
-                case "selPldBtn4":
-                    setPayloadFile(4, fullFileName);
-                    break;
-                case "selPldBtn5":
-                    setPayloadFile(5, fullFileName);
-            }
+        if (payloadFile == null)
+            return;
+
+        final String fullFileName = payloadFile.getAbsolutePath();
+        final Node btn = (Node)event.getSource();
+
+        switch (btn.getId()){
+            case "selPldBtn1":
+                setPayloadFile(1, fullFileName);
+                break;
+            case "selPldBtn2":
+                setPayloadFile(2, fullFileName);
+                break;
+            case "selPldBtn3":
+                setPayloadFile(3, fullFileName);
+                break;
+            case "selPldBtn4":
+                setPayloadFile(4, fullFileName);
+                break;
+            case "selPldBtn5":
+                setPayloadFile(5, fullFileName);
         }
     }
     @FXML

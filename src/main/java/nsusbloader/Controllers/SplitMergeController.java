@@ -3,7 +3,10 @@ package nsusbloader.Controllers;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
@@ -101,7 +104,6 @@ public class SplitMergeController implements Initializable {
                 if (fileFile == null)
                     return;
                 fileFolderActualPathLbl.setText(fileFile.getAbsolutePath());
-                convertBtn.setDisable(false);
             }
             else{
                 DirectoryChooser dc = new DirectoryChooser();
@@ -120,14 +122,14 @@ public class SplitMergeController implements Initializable {
                 if (folderFile == null)
                     return;
                 fileFolderActualPathLbl.setText(folderFile.getAbsolutePath());
-                convertBtn.setDisable(false);
             }
+            convertBtn.setDisable(false);
         });
 
         convertBtn.setOnAction(actionEvent -> setConvertBtnAction());
     }
 
-    public void notifySmThreadStarted(boolean isStart, EModule type){
+    public void notifySmThreadStarted(boolean isStart, EModule type){ // todo: refactor: remove everything, place to separate container and just disable.
         if (! type.equals(EModule.SPLIT_MERGE_TOOL)){
             smToolPane.setDisable(isStart);
             return;
@@ -176,7 +178,10 @@ public class SplitMergeController implements Initializable {
     private void setConvertBtnAction(){
         statusLbl.setText("");
         if (MediatorControl.getInstance().getTransferActive()) {
-            ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"), resourceBundle.getString("windowBodyPleaseFinishTransfersFirst"));
+            ServiceWindow.getErrorNotification(
+                    resourceBundle.getString("windowTitleError"),
+                    resourceBundle.getString("windowBodyPleaseFinishTransfersFirst")
+            );
             return;
         }
 
@@ -194,6 +199,32 @@ public class SplitMergeController implements Initializable {
         smThread = new Thread(smTask);
         smThread.setDaemon(true);
         smThread.start();
+    }
+    /**
+     * Drag-n-drop support (dragOver consumer)
+     * */
+    @FXML
+    private void handleDragOver(DragEvent event){
+        if (event.getDragboard().hasFiles() && ! MediatorControl.getInstance().getTransferActive())
+            event.acceptTransferModes(TransferMode.ANY);
+        event.consume();
+    }
+    /**
+     * Drag-n-drop support (drop consumer)
+     * */
+    @FXML
+    private void handleDrop(DragEvent event) {
+        Node sourceNode = (Node) event.getSource();
+        File fileDrpd = event.getDragboard().getFiles().get(0);
+
+        if (fileDrpd.isDirectory())
+            mergeRad.fire();
+        else
+            splitRad.fire();
+        fileFolderActualPathLbl.setText(fileDrpd.getAbsolutePath());
+        convertBtn.setDisable(false);
+        event.setDropCompleted(true);
+        event.consume();
     }
     /**
      * Save application settings on exit
