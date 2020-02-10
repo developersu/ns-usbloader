@@ -269,23 +269,7 @@ public class RcmTask extends Task<Boolean> {
      * MacOS version of RcmSmash class
      * */
     boolean smashMacOS(){
-
-        // Release interface
-        int result = LibUsb.releaseInterface(handler, 1);
-        if (result != LibUsb.SUCCESS) {
-            logPrinter.print("Release interface failed" +
-                    "\n         Returned: " + result, EMsgType.FAIL);
-            return true;
-        }
-        logPrinter.print("Release interface 1.", EMsgType.PASS);
-        // Claim interface
-        result = LibUsb.claimInterface(handler, 0);
-        if (result != LibUsb.SUCCESS) {
-            logPrinter.print("Claim interface 0." +
-                    "\n         Returned: "+UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
-            return true;
-        }
-        logPrinter.print("Claim interface", EMsgType.PASS);
+        int result;
         
         ByteBuffer writeBuffer = ByteBuffer.allocateDirect(28672);   //writeBuffer.order() equals BIG_ENDIAN; 28672
         result = LibUsb.controlTransfer(handler, (byte) 0x82, LibUsb.REQUEST_GET_STATUS, (short) 0, (short) 0, writeBuffer, 1000);

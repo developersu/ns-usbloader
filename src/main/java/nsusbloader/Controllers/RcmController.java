@@ -94,7 +94,7 @@ public class RcmController implements Initializable {
             payloadFPathLbl5.setText(recentRcm5);
         }
 
-        injectPldBtn.setDisable(false);   // TODO: write logic ?? Like in case PAYLOADER exist, button active. If not: not active?
+       // TODO: write logic ?? Like in case PAYLOADER exist, button active. If not: not active?
         injectPldBtn.setOnAction(actionEvent -> smash());
     }
 
