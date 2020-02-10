@@ -91,7 +91,7 @@ public class UsbConnect {
             if (result == LibUsb.ERROR_ACCESS)
                 logPrinter.print("Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!\n\n" +
                         String.format("Steps to set 'udev' rules:\n" +
-                                "root # vim /etc/udev/rules.d/99-NS.rules\n" +
+                                "root # vim /etc/udev/rules.d/99-NS"+(initForRCM?"RCM":"")+".rules\n" +
                                 "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"%04x\", ATTRS{idProduct}==\"%04x\", GROUP=\"plugdev\"\n" +
                                 "root # udevadm control --reload-rules && udevadm trigger\n", VENDOR_ID, PRODUCT_ID)
                         , EMsgType.INFO);
