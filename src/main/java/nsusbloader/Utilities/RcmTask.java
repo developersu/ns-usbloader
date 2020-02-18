@@ -278,7 +278,7 @@ public class RcmTask extends Task<Boolean> {
                     "\n\n         Execution stopped and failed.", EMsgType.FAIL);
             return true;
         }
-        logPrinter.print("Payload complete!", EMsgType.PASS);
+        logPrinter.print(".:: Payload complete ::.", EMsgType.PASS);
         return false;
     }
 
