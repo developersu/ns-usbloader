@@ -124,20 +124,35 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
                     catch (SocketException | UnknownHostException e2) {
                         logPrinter.print("NET: Can't get your computer IP using Renmin Ribao server. Returned:\n\t"+e2.getMessage(), EMsgType.FAIL);
                         logPrinter.print("Try using 'Expert mode' and set IP manually.", EMsgType.INFO);
-                        try {
-                            Enumeration enumeration = NetworkInterface.getNetworkInterfaces();
-                            while (enumeration.hasMoreElements()) {
-                                NetworkInterface n = (NetworkInterface) enumeration.nextElement();
-                                Enumeration enumeration1 = n.getInetAddresses();
-                                while (enumeration1.hasMoreElements()) {
-                                    InetAddress i = (InetAddress) enumeration1.nextElement();
-                                    logPrinter.print("Check for: " + i.getHostAddress(), EMsgType.INFO);
-                                }
-                            }
-                        }
-                        catch (SocketException socketException) {     // Good block.
-                            logPrinter.print("Can't determine possible variants. Returned:\n\t"+socketException.getMessage(), EMsgType.FAIL);
-                        }
+                        this.showAvalIpExamples();
+                        isValid = false;
+                        close(EFileStatus.FAILED);
+                        return;
+                    }
+                }
+            }
+            // Say hello to MacOS Catalina
+            // Also this part could be used instead of what we have above. One day it has to be tested on all platforms and fixed (replace code above).
+            if (hostIP.equals("0.0.0.0")) {
+                Socket scoketK;
+                try {
+                    scoketK = new Socket();
+                    scoketK.connect(new InetSocketAddress("google.com", 80));
+                    hostIP = scoketK.getLocalAddress().getHostAddress();
+                    scoketK.close();
+                } catch (Exception scoketKex) {
+                    scoketKex.printStackTrace();
+                    logPrinter.print("NET: Can't get your computer IP using Google server (InetSocketAddress). Returned:\n\t"+scoketKex.getMessage(), EMsgType.INFO);
+                    try {
+                        scoketK = new Socket();
+                        scoketK.connect(new InetSocketAddress("people.com.cn", 80));
+                        hostIP = scoketK.getLocalAddress().getHostAddress();
+                        scoketK.close();
+                    } catch (Exception scoketKexx) {
+                        scoketKex.printStackTrace();
+                        logPrinter.print("NET: Can't get your computer IP using Renmin Ribao server (InetSocketAddress). Returned:\n\t"+scoketKexx.getMessage(), EMsgType.FAIL);
+                        logPrinter.print("Try using 'Expert mode' and set IP manually.", EMsgType.INFO);
+                        this.showAvalIpExamples();
                         isValid = false;
                         close(EFileStatus.FAILED);
                         return;
@@ -211,6 +226,23 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
             }
         }
         isValid = true;
+    }
+    /**
+     * Show possible variants to log area
+     * */
+    private void showAvalIpExamples(){
+        try {
+            Enumeration<NetworkInterface> enumeration = NetworkInterface.getNetworkInterfaces();
+            while (enumeration.hasMoreElements()) {
+                NetworkInterface n = enumeration.nextElement();
+                Enumeration<InetAddress> enumeration1 = n.getInetAddresses();
+                while (enumeration1.hasMoreElements())
+                    logPrinter.print("Check for: " + enumeration1.nextElement().getHostAddress(), EMsgType.INFO);
+            }
+        }
+        catch (SocketException socketException) {     // Good block.
+            logPrinter.print("Can't determine possible variants. Returned:\n\t"+socketException.getMessage(), EMsgType.FAIL);
+        }
     }
     /**
      * Override cancel block to close connection by ourselves
