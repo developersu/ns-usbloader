@@ -5,7 +5,17 @@ Java application:
 * Execute 
 `# mvn -B -DskipTests clean package`
 
-**Building JNI libraries section**
+NOTE: For building 'legacy' version please update next section in pom.xml to be next: 
+```
+<dependency>
+   <groupId>org.usb4java</groupId>
+   <artifactId>usb4java</artifactId>
+   <version>1.2.0</version>
+   <scope>compile</scope>
+</dependency>
+```
+
+**Building JNI libraries (OPTIONAL)**
 
 First of all install JDK, GCC, make, kernel headers and whatever else (or use Gentoo <3 ).
 

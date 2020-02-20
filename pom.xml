@@ -191,7 +191,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Launch4j -->
+            <!-- Launch4j
             <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <version>1.7.25</version>
@@ -233,6 +233,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
         </plugins>
     </build>
 </project>
