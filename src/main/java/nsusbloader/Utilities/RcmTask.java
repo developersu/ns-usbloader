@@ -269,15 +269,8 @@ public class RcmTask extends Task<Boolean> {
      * MacOS version of RcmSmash class
      * */
     boolean smashMacOS(){
-        int result;
-        
-        ByteBuffer writeBuffer = ByteBuffer.allocateDirect(28672);   //writeBuffer.order() equals BIG_ENDIAN; 28672
-        result = LibUsb.controlTransfer(handler, (byte) 0x82, LibUsb.REQUEST_GET_STATUS, (short) 0, (short) 0, writeBuffer, 1000);
-        if (result < 0){
-            logPrinter.print("Failed to smash the stack ("+UsbErrorCodes.getErrCode(result)+")"+
-                    "\n\n         Execution stopped and failed.", EMsgType.FAIL);
-            return true;
-        }
+        ByteBuffer writeBuffer = ByteBuffer.allocateDirect(28672);
+        LibUsb.controlTransfer(handler, (byte) 0x82, LibUsb.REQUEST_GET_STATUS, (short) 0, (short) 0, writeBuffer, 1000); // Result doesn't matter.
         logPrinter.print(".:: Payload complete ::.", EMsgType.PASS);
         return false;
     }
