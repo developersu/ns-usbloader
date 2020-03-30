@@ -23,7 +23,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 
 #### License
 
-[GNU General Public License v3](https://github.com/developersu/ns-usbloader/blob/master/LICENSE)
+[GNU General Public License version 3]((https://github.com/developersu/ns-usbloader/blob/master/LICENSE)), or (at your option) any later version.
 
 #### Used libraries & resources
 * [OpenJFX](https://wiki.openjdk.java.net/display/OpenJFX/Main)

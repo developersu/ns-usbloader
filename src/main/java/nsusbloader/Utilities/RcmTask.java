@@ -1,12 +1,28 @@
-package nsusbloader.Utilities;
 /*
- * Implementation of the 'Fusée Gelée' RCM payload that is inspired by 'fusee-launcher' application by ktemkin.
- * Definitely uses ideas and even some code.
- * Check original project: https://github.com/reswitched/fusee-launcher
- *
- * This code is not political. It could be used by anyone.
- * Find details in LICENSE file in the root directory of this project.
- **/
+    Copyright 2019-2020 Dmitry Isaenko
+
+    This file is part of NS-USBloader.
+
+    NS-USBloader is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NS-USBloader is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
+    --
+    Implementation of the 'Fusée Gelée' RCM payload that is inspired by 'fusee-launcher' application by ktemkin.
+    Definitely uses ideas and even some code.
+    Check original project: https://github.com/reswitched/fusee-launcher
+
+    This code is not political. It could be used by anyone.
+*/
+package nsusbloader.Utilities;
 
 import javafx.concurrent.Task;
 import nsusbloader.COM.USB.UsbConnect;
@@ -91,7 +107,7 @@ public class RcmTask extends Task<Boolean> {
         // =================
         // Bring up USB connection
 
-        UsbConnect usbConnect = new UsbConnect(logPrinter, true);
+        UsbConnect usbConnect = UsbConnect.connectRcmMode(logPrinter);
         
         if (! usbConnect.isConnected()){
             logPrinter.close();
@@ -147,8 +163,8 @@ public class RcmTask extends Task<Boolean> {
                 logPrinter.close();
                 return false;
             }
-            logPrinter.print(".:: Payload complete ::.", EMsgType.PASS);
         }
+        logPrinter.print(".:: Payload complete ::.", EMsgType.PASS);
 
         usbConnect.close();
         logPrinter.close();
@@ -271,39 +287,6 @@ public class RcmTask extends Task<Boolean> {
     boolean smashMacOS(){
         ByteBuffer writeBuffer = ByteBuffer.allocateDirect(28672);
         LibUsb.controlTransfer(handler, (byte) 0x82, LibUsb.REQUEST_GET_STATUS, (short) 0, (short) 0, writeBuffer, 1000); // Result doesn't matter.
-        logPrinter.print(".:: Payload complete ::.", EMsgType.PASS);
         return false;
     }
-
-    //*****************************************************************************************************************/
-    /*
-    private void writeTestFile(){
-        try {
-            File testFile = new File("/tmp/dmTests.bin");
-            BufferedOutputStream bos = new BufferedOutputStream(
-                    new FileOutputStream(testFile)
-            );
-            bos.write(fullPayload);
-            bos.close();
-        }
-        catch (Exception e){ e.printStackTrace(); }
-        // ------------------ TEST THIS p.2  ----------------------
-         writeUsbTest(fullPayload);
-    }
-
-    private boolean writeUsbTest(byte[] message){
-        for (int i=0; i < message.length / 0x1000 ;i++){
-            try {
-                File testFile = new File(String.format("/tmp/cnk_%02d.bin", i));
-                BufferedOutputStream bos = new BufferedOutputStream(
-                        new FileOutputStream(testFile)
-                );
-                bos.write(Arrays.copyOfRange(message, i*4096, (i+1)*4096));
-                bos.close();
-            }
-            catch (Exception e){ e.printStackTrace(); }
-        }
-        return false;
-    }
-     */
 }

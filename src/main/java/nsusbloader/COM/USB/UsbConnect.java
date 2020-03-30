@@ -1,3 +1,21 @@
+/*
+    Copyright 2019-2020 Dmitry Isaenko
+
+    This file is part of NS-USBloader.
+
+    NS-USBloader is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NS-USBloader is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
+*/
 package nsusbloader.COM.USB;
 
 import nsusbloader.ModelControllers.LogPrinter;
@@ -5,7 +23,17 @@ import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.*;
 
 public class UsbConnect {
-    private int DEFAULT_INTERFACE = 0;
+    private static final int DEFAULT_INTERFACE = 0;
+    private static final int DEFAULT_HOMEBREW_CONFIGURATION = 1;
+
+    private static final short RCM_VID = 0x0955;
+    private static final short RCM_PID = 0x7321;
+
+    private static final short HOMEBREW_VID = 0x057E;
+    private static final short HOMEBREW_PID = 0x3000;
+
+    // private static final short TEST_VID = 0x1a86;
+    // private static final short TEST_PID = 0x7523;
 
     private Context contextNS;
     private DeviceHandle handlerNS;
@@ -15,134 +43,152 @@ public class UsbConnect {
 
     private boolean connected; // TODO: replace to 'connectionFailure' and invert requests everywhere
 
-    public UsbConnect(LogPrinter logPrinter, boolean initForRCM){
+    private short VENDOR_ID;
+    private short PRODUCT_ID;
+
+    private int returningValue;
+    private DeviceList deviceList;
+
+    public static UsbConnect connectRcmMode(LogPrinter logPrinter){
+        UsbConnect usbConnect = new UsbConnect(logPrinter);
+        usbConnect.VENDOR_ID = RCM_VID;
+        usbConnect.PRODUCT_ID = RCM_PID;
+        try{
+            usbConnect.createContextAndInitLibUSB();
+            usbConnect.getDeviceList();
+            usbConnect.findDevice();
+            usbConnect.openDevice();
+            usbConnect.freeDeviceList();
+            usbConnect.setAutoDetachKernelDriver();
+            //this.resetDevice();
+            usbConnect.claimInterface();
+            usbConnect.connected = true;
+        }
+        catch (Exception e){
+            logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            usbConnect.close();
+        }
+
+        return usbConnect;
+    }
+    public static UsbConnect connectHomebrewMode(LogPrinter logPrinter){
+        UsbConnect usbConnect = new UsbConnect(logPrinter);
+        usbConnect.VENDOR_ID = HOMEBREW_VID;
+        usbConnect.PRODUCT_ID = HOMEBREW_PID;
+        try {
+            usbConnect.createContextAndInitLibUSB();
+            usbConnect.getDeviceList();
+            usbConnect.findDevice();
+            usbConnect.openDevice();
+            usbConnect.freeDeviceList();
+            usbConnect.setAutoDetachKernelDriver();
+            //this.resetDevice();
+            usbConnect.setConfiguration(DEFAULT_HOMEBREW_CONFIGURATION);
+            usbConnect.claimInterface();
+            usbConnect.connected = true;
+        }
+        catch (Exception e){
+            logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            usbConnect.close();
+        }
+        return usbConnect;
+    }
+
+    private UsbConnect(){}
+
+    private UsbConnect(LogPrinter logPrinter){
         this.logPrinter = logPrinter;
         this.connected = false;
+    };
 
-        short VENDOR_ID;
-        short PRODUCT_ID;
-
-        if (initForRCM){
-            // CORRECT NV:
-            VENDOR_ID = 0x0955;
-            PRODUCT_ID = 0x7321;
-            /* // QA:
-            VENDOR_ID = 0x1a86;
-            PRODUCT_ID = 0x7523;
-             */
-        }
-        else {
-            VENDOR_ID = 0x057E;
-            PRODUCT_ID = 0x3000;
-        }
-
-        int result;
-
-        // Creating Context required by libusb. Optional. TODO: Consider removing.
+    private void createContextAndInitLibUSB() throws Exception{
+        // Creating Context required by libusb. Optional? Consider removing.
         contextNS = new Context();
-        result = LibUsb.init(contextNS);
-        if (result != LibUsb.SUCCESS) {
-            logPrinter.print("libusb initialization\n  Returned: "+result, EMsgType.FAIL);
-            close();
-            return;
-        }
-        logPrinter.print("libusb initialization", EMsgType.PASS);
 
-        // Searching for NS in devices: obtain list of all devices
-        DeviceList deviceList = new DeviceList();
-        result = LibUsb.getDeviceList(contextNS, deviceList);
-        if (result < 0) {
-            logPrinter.print("Get device list\n  Returned: "+result, EMsgType.FAIL);
-            close();
-            return;
-        }
-        logPrinter.print("Get device list", EMsgType.PASS);
+        returningValue = LibUsb.init(contextNS);
+        if (returningValue != LibUsb.SUCCESS)
+            throw new Exception("libusb initialization\n  Returned: "+UsbErrorCodes.getErrCode(returningValue));
+    }
+
+    private void getDeviceList() throws Exception{
+        deviceList = new DeviceList();
+        returningValue = LibUsb.getDeviceList(contextNS, deviceList);
+        if (returningValue < 0)
+            throw new Exception("Get device list\n  Returned: "+UsbErrorCodes.getErrCode(returningValue));
+    }
+
+    private void findDevice() throws Exception{
         // Searching for NS in devices: looking for NS
         DeviceDescriptor descriptor;
-        deviceNS = null;
+
         for (Device device: deviceList){
-            descriptor = new DeviceDescriptor();                // mmm.. leave it as is.
-            result = LibUsb.getDeviceDescriptor(device, descriptor);
-            if (result != LibUsb.SUCCESS){
-                logPrinter.print("Read file descriptors for USB devices\n  Returned: "+result, EMsgType.FAIL);
-                LibUsb.freeDeviceList(deviceList, true);
-                close();
-                return;
+            descriptor = new DeviceDescriptor();
+            returningValue = LibUsb.getDeviceDescriptor(device, descriptor);
+            if (returningValue != LibUsb.SUCCESS){
+                this.freeDeviceList();
+                throw new Exception("Read file descriptors for USB devices\n  Returned: "+UsbErrorCodes.getErrCode(returningValue));
             }
             if ((descriptor.idVendor() == VENDOR_ID) && descriptor.idProduct() == PRODUCT_ID){
                 deviceNS = device;
-                logPrinter.print("Read file descriptors for USB devices", EMsgType.PASS);
                 break;
             }
         }
-        // Free device list.
-        if (deviceNS == null){
-            logPrinter.print("NS in connected USB devices not found", EMsgType.FAIL);
-            close();
-            return;
+        if (deviceNS == null) {
+            this.freeDeviceList();
+            throw new Exception("NS not found in connected USB devices");
         }
-        logPrinter.print("NS in connected USB devices found", EMsgType.PASS);
+    }
 
+    private void openDevice() throws Exception{
         // Handle NS device
         handlerNS = new DeviceHandle();
-        result = LibUsb.open(deviceNS, handlerNS);
-        if (result != LibUsb.SUCCESS) {
-            logPrinter.print("Open NS USB device\n  Returned: "+UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
-            if (result == LibUsb.ERROR_ACCESS)
-                logPrinter.print("Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!\n\n" +
-                        String.format("Steps to set 'udev' rules:\n" +
-                                "root # vim /etc/udev/rules.d/99-NS"+(initForRCM?"RCM":"")+".rules\n" +
-                                "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"%04x\", ATTRS{idProduct}==\"%04x\", GROUP=\"plugdev\"\n" +
-                                "root # udevadm control --reload-rules && udevadm trigger\n", VENDOR_ID, PRODUCT_ID)
-                        , EMsgType.INFO);
-            // Let's make a bit dirty workaround since such shit happened
-            logPrinter.print("Requested context close", EMsgType.INFO);
-            LibUsb.exit(contextNS);
-            return;         // And close
+        returningValue = LibUsb.open(deviceNS, handlerNS);
+
+        if (returningValue == LibUsb.SUCCESS)
+            return;
+
+        handlerNS = null;  // Avoid issue on close();
+        if (returningValue == LibUsb.ERROR_ACCESS) {
+            throw new Exception(String.format(
+                    "Open NS USB device\n         Returned: %s\n" +
+                    "Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!\n\n" +
+                    "Steps to set 'udev' rules:\n" +
+                    "root # vim /etc/udev/rules.d/99-NS" + ((RCM_VID == VENDOR_ID) ? "RCM" : "") + ".rules\n" +
+                    "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"%04x\", ATTRS{idProduct}==\"%04x\", GROUP=\"plugdev\"\n" +
+                    "root # udevadm control --reload-rules && udevadm trigger\n", UsbErrorCodes.getErrCode(returningValue), VENDOR_ID, PRODUCT_ID));
         }
         else
-            logPrinter.print("Open NS USB device", EMsgType.PASS);
+            throw new Exception("Open NS USB device\n         Returned: "+UsbErrorCodes.getErrCode(returningValue));
+    }
 
-        logPrinter.print("Free device list", EMsgType.INFO);
+    private void freeDeviceList(){
         LibUsb.freeDeviceList(deviceList, true);
+    }
 
-        // DO some stuff to connected NS
-        // Actually, there are not drivers in Linux kernel that are using this device..
-        if (LibUsb.setAutoDetachKernelDriver(handlerNS, true) == LibUsb.SUCCESS)
-            logPrinter.print("Handle kernel driver attach & detach", EMsgType.PASS);
-        else
-            logPrinter.print("Skip kernel driver attach & detach", EMsgType.INFO);
-        /*
-        // Reset device
+    private void setAutoDetachKernelDriver(){
+        // Actually, there are no drivers in Linux kernel which uses this device.
+        returningValue = LibUsb.setAutoDetachKernelDriver(handlerNS, true);
+        if (returningValue != LibUsb.SUCCESS)
+            logPrinter.print("Skip kernel driver attach & detach ("+UsbErrorCodes.getErrCode(returningValue)+")", EMsgType.INFO);
+    }
+
+    /*
+    private void resetDevice(){
         result = LibUsb.resetDevice(handlerNS);
-        if (result == 0)
-            logPrinter.print("Reset device", EMsgType.PASS);
-        else {
-            logPrinter.print("Reset device returned: " + result, EMsgType.FAIL);
-            updateAndClose();
-            return;
-        }
-        */
-        if ( ! initForRCM){
-            // Set configuration (soft reset if needed)
-            result = LibUsb.setConfiguration(handlerNS, 1);     // 1 - configuration all we need
-            if (result != LibUsb.SUCCESS){
-                logPrinter.print("Set active configuration to device\n         Returned: "+UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
-                close();
-                return;
-            }
-            logPrinter.print("Set active configuration to device.", EMsgType.PASS);
-        }
+        if (returningValue != LibUsb.SUCCESS)
+            throw new Exception("Reset device\n         Returned: "+UsbErrorCodes.getErrCode(returningValue));
+    }
+     */
+    private void setConfiguration(int configuration) throws Exception{
+        returningValue = LibUsb.setConfiguration(handlerNS, configuration);
+        if (returningValue != LibUsb.SUCCESS)
+            throw new Exception("Set active configuration to device\n         Returned: "+UsbErrorCodes.getErrCode(returningValue));
+    }
+    private void claimInterface() throws Exception{
         // Claim interface
-        result = LibUsb.claimInterface(handlerNS, DEFAULT_INTERFACE);
-        if (result != LibUsb.SUCCESS) {
-            logPrinter.print("Claim interface\n         Returned: "+UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
-            close();
-            return;
-        }
-        logPrinter.print("Claim interface", EMsgType.PASS);
-
-        this.connected = true;
+        returningValue = LibUsb.claimInterface(handlerNS, DEFAULT_INTERFACE);
+        if (returningValue != LibUsb.SUCCESS)
+            throw new Exception("Claim interface\n         Returned: "+UsbErrorCodes.getErrCode(returningValue));
     }
 
     /**
@@ -174,11 +220,10 @@ public class UsbConnect {
         // Close handler in the end
         if (handlerNS != null) {
             // Try to release interface
-            int result = LibUsb.releaseInterface(handlerNS, DEFAULT_INTERFACE);
+            returningValue = LibUsb.releaseInterface(handlerNS, DEFAULT_INTERFACE);
 
-            if (result != LibUsb.SUCCESS)
-                logPrinter.print("Release interface" +
-                        "\n         Returned: "+result+" (sometimes it's not an issue)", EMsgType.WARNING);
+            if (returningValue != LibUsb.SUCCESS)
+                logPrinter.print("Release interface\n         Returned: "+returningValue+" (sometimes it's not an issue)", EMsgType.WARNING);
             else
                 logPrinter.print("Release interface", EMsgType.PASS);
 
