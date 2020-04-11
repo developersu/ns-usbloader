@@ -197,7 +197,7 @@ public class FrontController implements Initializable {
         fileChooser.setTitle(resourceBundle.getString("btn_OpenFile"));
 
         File validator = new File(previouslyOpenedPath);
-        if (validator.exists())
+        if (validator.exists() && validator.isDirectory())
             fileChooser.setInitialDirectory(validator);
         else
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -227,7 +227,7 @@ public class FrontController implements Initializable {
         dirChooser.setTitle(resourceBundle.getString("btn_OpenFile"));
 
         File validator = new File(previouslyOpenedPath);
-        if (validator.exists())
+        if (validator.exists() && validator.isDirectory())
             dirChooser.setInitialDirectory(validator);
         else
             dirChooser.setInitialDirectory(new File(System.getProperty("user.home")));

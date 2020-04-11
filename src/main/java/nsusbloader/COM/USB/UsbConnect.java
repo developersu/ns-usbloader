@@ -107,14 +107,14 @@ public class UsbConnect {
 
         returningValue = LibUsb.init(contextNS);
         if (returningValue != LibUsb.SUCCESS)
-            throw new Exception("libusb initialization\n  Returned: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("LibUSB initialization failed: "+UsbErrorCodes.getErrCode(returningValue));
     }
 
     private void getDeviceList() throws Exception{
         deviceList = new DeviceList();
         returningValue = LibUsb.getDeviceList(contextNS, deviceList);
         if (returningValue < 0)
-            throw new Exception("Get device list\n  Returned: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Can't get device list: "+UsbErrorCodes.getErrCode(returningValue));
     }
 
     private void findDevice() throws Exception{
@@ -122,12 +122,8 @@ public class UsbConnect {
         DeviceDescriptor descriptor;
 
         for (Device device: deviceList){
-            descriptor = new DeviceDescriptor();
-            returningValue = LibUsb.getDeviceDescriptor(device, descriptor);
-            if (returningValue != LibUsb.SUCCESS){
-                this.freeDeviceList();
-                throw new Exception("Read file descriptors for USB devices\n  Returned: "+UsbErrorCodes.getErrCode(returningValue));
-            }
+            descriptor = getDeviceDescriptor(device);
+
             if ((descriptor.idVendor() == VENDOR_ID) && descriptor.idProduct() == PRODUCT_ID){
                 deviceNS = device;
                 break;
@@ -137,6 +133,18 @@ public class UsbConnect {
             this.freeDeviceList();
             throw new Exception("NS not found in connected USB devices");
         }
+    }
+
+    private DeviceDescriptor getDeviceDescriptor(Device device) throws Exception{
+        DeviceDescriptor descriptor = new DeviceDescriptor();
+
+        returningValue = LibUsb.getDeviceDescriptor(device, descriptor);
+
+        if (returningValue != LibUsb.SUCCESS){
+            this.freeDeviceList();
+            throw new Exception("Get USB device descriptor failure: "+UsbErrorCodes.getErrCode(returningValue));
+        }
+        return descriptor;
     }
 
     private void openDevice() throws Exception{
@@ -150,7 +158,7 @@ public class UsbConnect {
         handlerNS = null;  // Avoid issue on close();
         if (returningValue == LibUsb.ERROR_ACCESS) {
             throw new Exception(String.format(
-                    "Open NS USB device\n         Returned: %s\n" +
+                    "Can't open NS USB device: %s\n" +
                     "Double check that you have administrator privileges (you're 'root') or check 'udev' rules set for this user (linux only)!\n\n" +
                     "Steps to set 'udev' rules:\n" +
                     "root # vim /etc/udev/rules.d/99-NS" + ((RCM_VID == VENDOR_ID) ? "RCM" : "") + ".rules\n" +
@@ -158,7 +166,7 @@ public class UsbConnect {
                     "root # udevadm control --reload-rules && udevadm trigger\n", UsbErrorCodes.getErrCode(returningValue), VENDOR_ID, PRODUCT_ID));
         }
         else
-            throw new Exception("Open NS USB device\n         Returned: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Can't open NS USB device: "+UsbErrorCodes.getErrCode(returningValue));
     }
 
     private void freeDeviceList(){
@@ -182,13 +190,13 @@ public class UsbConnect {
     private void setConfiguration(int configuration) throws Exception{
         returningValue = LibUsb.setConfiguration(handlerNS, configuration);
         if (returningValue != LibUsb.SUCCESS)
-            throw new Exception("Set active configuration to device\n         Returned: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Unable to set active configuration on device: "+UsbErrorCodes.getErrCode(returningValue));
     }
     private void claimInterface() throws Exception{
         // Claim interface
         returningValue = LibUsb.claimInterface(handlerNS, DEFAULT_INTERFACE);
         if (returningValue != LibUsb.SUCCESS)
-            throw new Exception("Claim interface\n         Returned: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Claim interface failure: "+UsbErrorCodes.getErrCode(returningValue));
     }
 
     /**
@@ -222,18 +230,16 @@ public class UsbConnect {
             // Try to release interface
             returningValue = LibUsb.releaseInterface(handlerNS, DEFAULT_INTERFACE);
 
-            if (returningValue != LibUsb.SUCCESS)
-                logPrinter.print("Release interface\n         Returned: "+returningValue+" (sometimes it's not an issue)", EMsgType.WARNING);
-            else
-                logPrinter.print("Release interface", EMsgType.PASS);
+            if (returningValue != LibUsb.SUCCESS) {
+                logPrinter.print("Release interface failure: " +
+                        UsbErrorCodes.getErrCode(returningValue) +
+                        " (sometimes it's not an issue)", EMsgType.WARNING);
+            }
 
             LibUsb.close(handlerNS);
-            logPrinter.print("Requested handler close", EMsgType.INFO);
         }
         // Close context in the end
-        if (contextNS != null) {
+        if (contextNS != null)
             LibUsb.exit(contextNS);
-            logPrinter.print("Requested context close", EMsgType.INFO);
-        }
     }
 }

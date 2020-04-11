@@ -24,11 +24,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseButton;
+import javafx.scene.input.*;
+import javafx.scene.paint.Paint;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
 
@@ -39,6 +40,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class NSTableViewController implements Initializable {
+    private static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
+
     @FXML
     private TableView<NSLRowModel> table;
     private ObservableList<NSLRowModel> rowsObsLst;
@@ -124,6 +127,51 @@ public class NSTableViewController implements Initializable {
         table.setRowFactory(        // this shit is made to implement context menu. It's such a pain..
                 nslRowModelTableView -> {
                     final TableRow<NSLRowModel> row = new TableRow<>();
+                    /*
+                    // Add ability to move rows by mouse hold and move
+                    row.setOnDragDetected(mouseEvent -> {
+                        if (! row.isEmpty()){
+                            Integer rowIndex = row.getIndex();
+                            Dragboard dragboard = row.startDragAndDrop(TransferMode.MOVE);
+                            dragboard.setDragView(row.snapshot(null, null));
+                            ClipboardContent cContent = new ClipboardContent();
+                            cContent.put(SERIALIZED_MIME_TYPE, rowIndex);
+                            dragboard.setContent(cContent);
+                            mouseEvent.consume();
+                        }
+                    });
+
+                    row.setOnDragOver(dragEvent -> {
+                        Dragboard dragboard = dragEvent.getDragboard();
+                        if (! dragboard.hasContent(SERIALIZED_MIME_TYPE))
+                            return;
+                        if (row.getIndex() != (Integer) dragboard.getContent(SERIALIZED_MIME_TYPE)) {
+                            dragEvent.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                            dragEvent.consume();
+                        }
+                    });
+
+                    row.setOnDragDropped(dragEvent -> {
+                        Dragboard dragboard = dragEvent.getDragboard();
+                        if (! dragboard.hasContent(SERIALIZED_MIME_TYPE))
+                            return;
+                        int draggedRowIndex = (Integer) dragboard.getContent(SERIALIZED_MIME_TYPE);
+                        NSLRowModel draggedRow = table.getItems().remove(draggedRowIndex);
+
+                        int dropIndex;
+
+                        if (row.isEmpty())
+                            dropIndex = table.getItems().size();
+                        else
+                            dropIndex = row.getIndex();
+
+                        table.getItems().add(dropIndex, draggedRow);
+                        dragEvent.setDropCompleted(true);
+                        table.getSelectionModel().select(dropIndex);
+                        dragEvent.consume();
+                    });
+                    //*/
+
                     ContextMenu contextMenu = new ContextMenu();
                     MenuItem deleteMenuItem = new MenuItem(resourceBundle.getString("tab1_table_contextMenu_Btn_BtnDelete"));
                     deleteMenuItem.setOnAction(actionEvent -> {
@@ -254,7 +302,10 @@ public class NSTableViewController implements Initializable {
                     current.getNspFileName().toLowerCase().endsWith("xcz"));
         }
         else
-            rowsObsLst.removeIf(current -> ! current.getNspFileName().toLowerCase().endsWith("nsp"));
+            rowsObsLst.removeIf(current -> (! current.getNspFileName().toLowerCase().endsWith("nsp")) ||
+                    (! current.getNspFileName().toLowerCase().endsWith("nsz")) ||
+                    (! current.getNspFileName().toLowerCase().endsWith("xci")) ||
+                    (! current.getNspFileName().toLowerCase().endsWith("xcz")));
         table.refresh();
     }
     /**
