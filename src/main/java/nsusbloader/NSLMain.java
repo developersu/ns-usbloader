@@ -31,7 +31,7 @@ import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
 
-    public static final String appVersion = "v2.2";
+    public static final String appVersion = "v2.2.1";
 
     @Override
     public void start(Stage primaryStage) throws Exception{
