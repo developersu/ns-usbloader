@@ -98,15 +98,19 @@ Set 'Security & Privacy' settings if needed.
 ##### Windows: 
 
 * Download Zadig: [https://zadig.akeo.ie/](https://zadig.akeo.ie/)
-* Open TinFoil. Set 'Title Management' -> 'Usb install NSP'
+* Open GoldLeaf. 
 * Connect NS to PC
 * Open Zadig
 * Click 'Options' and select 'List All Devices'
-* Select NS in drop-down, select 'libusbK (v3.0.7.0)' (version may vary), click 'Install WCID Driver'
+* Select NS in drop-down, select 'libusbK (v3.0.7.0)' (version may vary), click 'Install Driver' (see screenshot below)
 * Check that in device list of you system you have 'libusbK USB Devices' folder and your NS inside of it
 * [Download and install Java JRE](http://java.com/download/) (8u60 or higher)
 * Get this application (JAR file) double-click on on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
 * Remember to have fun!
+
+![Zadig driver install example for homebrew mode](https://live.staticflickr.com/65535/49856252581_9fc5a913bb_o.png) (That's how it looks before and after)
+
+NOTE: You also have to install drivers for RCM device in case you're going to use RCM functions. For installation please connect NS in RCM mode enabled and repeat steps ('USB ID' will be different).
 
 #### And how to use it?
 
