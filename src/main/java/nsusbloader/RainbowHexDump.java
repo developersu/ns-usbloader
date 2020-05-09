@@ -41,9 +41,20 @@ public class RainbowHexDump {
         System.out.println(">"+ANSI_RED+byteArray.length+ANSI_RESET);
         for (byte b: byteArray)
             System.out.print(String.format("%02x ", b));
-        //System.out.println();
+        System.out.println();
         System.out.print("\t\t\t"
                 + new String(byteArray, StandardCharsets.UTF_8)
+                + "\n");
+    }
+
+    public static void hexDumpUTF8ForWin(byte[] byteArray){
+        for (int i=0; i < byteArray.length; i++)
+            System.out.print(String.format("%02d-", i%100));
+        System.out.println(">"+byteArray.length);
+        for (byte b: byteArray)
+            System.out.print(String.format("%02x ", b));
+        System.out.println();
+        System.out.print(new String(byteArray, StandardCharsets.UTF_8)
                 + "\n");
     }
 
@@ -54,8 +65,7 @@ public class RainbowHexDump {
         System.out.println(">"+ANSI_RED+byteArray.length+ANSI_RESET);
         for (byte b: byteArray)
             System.out.print(String.format("%02x ", b));
-        System.out.print("\t\t\t"
-                + new String(byteArray, StandardCharsets.UTF_16LE)
+        System.out.print(new String(byteArray, StandardCharsets.UTF_16LE)
                 + "\n");
     }
 }

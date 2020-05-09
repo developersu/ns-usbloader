@@ -26,12 +26,14 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import nsusbloader.Controllers.NSLMainController;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
 
-    public static final String appVersion = "v2.2.1";
+    public static final String appVersion = "v3.0";
 
     @Override
     public void start(Stage primaryStage) throws Exception{

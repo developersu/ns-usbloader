@@ -48,6 +48,8 @@ public class NSLMainController implements Initializable {
     private SplitMergeController SplitMergeTabController;
     @FXML
     private RcmController RcmTabController;
+    @FXML
+    private NxdtController NXDTabController;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -110,6 +112,8 @@ public class NSLMainController implements Initializable {
     }
 
     public RcmController getRcmCtrlr(){ return RcmTabController; }
+
+    public NxdtController getNXDTabController(){ return NXDTabController; }
     /**
      * Save preferences before exit
      * */
@@ -135,5 +139,6 @@ public class NSLMainController implements Initializable {
 
         SplitMergeTabController.updatePreferencesOnExit(); // NOTE: This shit above should be re-written to similar pattern
         RcmTabController.updatePreferencesOnExit();
+        NXDTabController.updatePreferencesOnExit();
     }
 }

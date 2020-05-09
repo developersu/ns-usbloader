@@ -152,4 +152,7 @@ public class AppPreferences {
     // RCM //
     public String getRecentRcm(int num){ return preferences.get(String.format("RCM_%02d", num), ""); }
     public void setRecentRcm(int num, String value){ preferences.put(String.format("RCM_%02d", num), value); }
+    // NXDT //
+    public String getNXDTSaveToLocation(){ return preferences.get("nxdt_saveto", System.getProperty("user.home")); }
+    public void setNXDTSaveToLocation(String value){ preferences.put("nxdt_saveto", value); }
 }

@@ -44,6 +44,7 @@ public class MediatorControl {
         mainCtrler.getFrontCtrlr().notifyTransmThreadStarted(isActive, appModuleType);
         mainCtrler.getSmCtrlr().notifySmThreadStarted(isActive, appModuleType);
         mainCtrler.getRcmCtrlr().notifySmThreadStarted(isActive, appModuleType);
+        mainCtrler.getNXDTabController().notifyThreadStarted(isActive, appModuleType);
     }
     public synchronized boolean getTransferActive() { return this.isTransferActive.get(); }
 }
