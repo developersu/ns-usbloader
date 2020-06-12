@@ -403,6 +403,14 @@
 .nxdt.label .text {
     -fx-fill: #cb0010;
 }
+
+.regionWindows {
+    -fx-shape: "M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z";
+    -fx-background-color: #f7fafa;
+    -size: 17.5;
+    -fx-min-height: -size;
+    -fx-min-width: 17.5;
+}
 //
 //.lineGradient {
 //    -fx-background-color: linear-gradient(from 41px 34px to 50px 50px, reflect,  #00c8fc 30%, transparent  45%);

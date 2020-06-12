@@ -30,6 +30,7 @@ import javafx.scene.layout.VBox;
 import nsusbloader.AppPreferences;
 import nsusbloader.ServiceWindow;
 import nsusbloader.ModelControllers.UpdatesChecker;
+import nsusbloader.Utilities.WindowsDrivers.DriversInstall;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,22 +43,16 @@ import java.util.jar.JarFile;
 
 public class SettingsController implements Initializable {
     @FXML
-    private CheckBox nspFilesFilterForGLCB;
-    @FXML
-    private CheckBox validateNSHostNameCb;
-    @FXML
-    private CheckBox expertModeCb;
-    @FXML
-    private CheckBox autoDetectIpCb;
-    @FXML
-    private CheckBox randPortCb;
+    private CheckBox nspFilesFilterForGLCB,
+            validateNSHostNameCb,
+            expertModeCb,
+            autoDetectIpCb,
+            randPortCb;
 
     @FXML
-    private TextField pcIpTextField;
-    @FXML
-    private TextField pcPortTextField;
-    @FXML
-    private TextField pcExtraTextField;
+    private TextField pcIpTextField,
+            pcPortTextField,
+            pcExtraTextField;
 
     @FXML
     private CheckBox dontServeCb;
@@ -69,13 +64,14 @@ public class SettingsController implements Initializable {
     private CheckBox autoCheckUpdCb;
     @FXML
     private Hyperlink newVersionLink;
-    @FXML
-    private Button checkForUpdBtn;
+
     @FXML
     private CheckBox tfXciSpprtCb;
 
     @FXML
-    private Button langBtn;
+    private Button langBtn,
+            checkForUpdBtn,
+            drvInstBtn;
     @FXML
     private ChoiceBox<String> langCB;
 
@@ -215,6 +211,15 @@ public class SettingsController implements Initializable {
             updates.setDaemon(true);
             updates.start();
         });
+
+        if (isWindows()){
+            Region btnDrvImage = new Region();
+            btnDrvImage.getStyleClass().add("regionWindows");
+            drvInstBtn.setGraphic(btnDrvImage);
+            drvInstBtn.setVisible(true);
+            drvInstBtn.setOnAction(actionEvent -> new DriversInstall(resourceBundle));
+        }
+
         tfXciSpprtCb.setSelected(AppPreferences.getInstance().getTfXCI());
 
         // Language settings area
@@ -282,6 +287,11 @@ public class SettingsController implements Initializable {
         }
         glOldVerCheck.setOnAction(e-> glOldVerChoice.setDisable(! glOldVerCheck.isSelected()) );
     }
+
+    private boolean isWindows(){
+        return System.getProperty("os.name").toLowerCase().replace(" ", "").contains("windows");
+    }
+
     public boolean getNSPFileFilterForGL(){return nspFilesFilterForGLCB.isSelected(); }
     public boolean getExpertModeSelected(){ return expertModeCb.isSelected(); }
     public boolean getAutoIpSelected(){ return autoDetectIpCb.isSelected(); }

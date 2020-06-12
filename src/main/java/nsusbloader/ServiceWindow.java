@@ -54,9 +54,8 @@ public class ServiceWindow   {
                 new Image("/res/warn_ico64x64.png"),
                 new Image("/res/warn_ico128x128.png")
         );
-        dialogStage.toFront();
-
         alertBox.show();
+        dialogStage.toFront();
     }
     /**
      * Create notification window with confirm/deny

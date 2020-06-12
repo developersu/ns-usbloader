@@ -22,6 +22,11 @@
                         <Label text="%tab2_Lbl_Language" />
                         <ChoiceBox fx:id="langCB" prefWidth="100.0" />
                         <Button fx:id="langBtn" mnemonicParsing="false" text="OK" />
+               <VBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+                  <children>
+                     <Button fx:id="drvInstBtn" mnemonicParsing="false" text="%tab2_Btn_InstallDrivers" visible="false" />
+                  </children>
+               </VBox>
                      </children>
             <VBox.margin>
                <Insets left="5.0" />
