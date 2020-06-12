@@ -26,10 +26,9 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import nsusbloader.Controllers.NSLMainController;
 
-import java.io.File;
-import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.prefs.Preferences;
 
 public class NSLMain extends Application {
 
@@ -81,9 +80,43 @@ public class NSLMain extends Application {
     }
 
     public static void main(String[] args) {
-        if ((args.length == 1) && (args[0].equals("-v") || args[0].equals("--version")))
-            System.out.println("NS-USBloader "+NSLMain.appVersion);
-        else
-            launch(args);
+        if (handleCli(args))
+            return;
+        launch(args);
+    }
+
+    private static boolean handleCli(String[] args){
+        if (args.length != 1)
+            return false;
+
+        try {
+            switch (args[0]) {
+                case "-v":
+                case "--version":
+                    System.out.println("NS-USBloader " + NSLMain.appVersion);
+                    return true;
+                case "-c":
+                case "--clean":
+                    if (Preferences.userRoot().nodeExists("NS-USBloader")) {
+                        Preferences.userRoot().node("NS-USBloader").removeNode();
+                        System.out.println("Settings removed");
+                    }
+                    else
+                        System.out.println("Nothing to remove");
+                    return true;
+                case "--help":
+                    System.out.println("CLI Usage:\n"
+                            + "\t-c, --clean\tRemove/reset settings and exit\n"
+                            + "\t-v, --version \tShow application version\n"
+                            + "\t--help\t\tShow this message");
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
     }
 }
