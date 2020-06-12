@@ -108,7 +108,7 @@ public class NSLMain extends Application {
                     System.out.println("CLI Usage:\n"
                             + "\t-c, --clean\tRemove/reset settings and exit\n"
                             + "\t-v, --version \tShow application version\n"
-                            + "\t--help\t\tShow this message");
+                            + "\t-h, --help\t\tShow this message");
                     return true;
                 default:
                     return false;

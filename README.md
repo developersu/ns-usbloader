@@ -97,20 +97,11 @@ Set 'Security & Privacy' settings if needed.
 
 ##### Windows: 
 
-* Download Zadig: [https://zadig.akeo.ie/](https://zadig.akeo.ie/)
-* Open GoldLeaf. 
-* Connect NS to PC
-* Open Zadig
-* Click 'Options' and select 'List All Devices'
-* Select NS in drop-down, select 'libusbK (v3.0.7.0)' (version may vary), click 'Install Driver' (see screenshot below)
-* Check that in device list of you system you have 'libusbK USB Devices' folder and your NS inside of it
 * [Download and install Java JRE](http://java.com/download/) (8u60 or higher)
-* Get this application (JAR file) double-click on on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
-* Remember to have fun!
-
-![Zadig driver install example for homebrew mode](https://live.staticflickr.com/65535/49856252581_9fc5a913bb_o.png) (That's how it looks before and after)
-
-NOTE: You also have to install drivers for RCM device in case you're going to use RCM functions. For installation please connect NS in RCM mode enabled and repeat steps ('USB ID' will be different).
+* Get this application (JAR file) and double-click on on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
+* Once application opens click on 'Gear' icon. 
+* Click 'Download and install drivers'
+* Install drivers
 
 #### And how to use it?
 
@@ -122,7 +113,7 @@ Take a look on app, find where is the option to install from USB and/or Network.
 
 There are three tabs. First one is main.
 
-##### First tab.
+##### 'List' tab.
 
 At the top of you selecting from drop-down application and protocol that you're going to use. For GoldLeaf only USB is available. Lamp icon stands for switching themes (light or dark).
 
@@ -138,7 +129,15 @@ For GoldLeaf v0.6.1 and NS-USBloader v0.6 (and higher) you will have to use 'Exp
 
 Also, for GoldLeaf write files (from NS to PC): You have to 'Stop execution' properly before accessing files transferred from GL. Usually you have to wait 5sec or less. It will guarantee that your files properly written to PC.
 
-##### Second tab.
+##### 'RCM' tab
+
+On this tab you can select payloader like Hekate or LockPick_RCM and send it to NS. Drag-n-drop supported. Also some in-app validations for payload takes place ;)
+
+##### 'Folder with arrows and zeroes' tab
+
+On this tab you can split and merge files. Select 'Split' or 'Merge' and split (or merge).
+
+##### 'Gears' tab.
 
 Here you can configure settings for network file transmission. Usually you shouldn't change anything. But it you're cool hacker, go ahead! The most interesting option here is 'Don't serve requests'. Architecture of the TinFoil's NET part is working interesting way. When you select in TF network NSP transfer, application will wait at port 2000 for the information about where should it take files from. Like '192.168.1.5:6060/my file.nsp'. Usually NS-USBloader serves requests by implementing simplified HTTP server and bringing it up and so on. But if this option selected, you can define path to remote location of the files. For example if you set in settings '192.168.4.2:80/ROMS/NS/' and add in table file 'my file.nsp' then NS-USBloader will simply tell TinFoil "Hey, go take files from '192.168.4.2:80/ROMS/NS/my%20file.nsp' ". Of course you have to bring '192.168.4.2' host up and make file accessible from such address (just go install nginx). As I said, this feature is interesting, but I guess won't be popular.
 
@@ -146,9 +145,19 @@ Also here you can:
 * Set 'Auto-check for updates' for checking for updates when application starts, or click button to verify if new version released immediately.
 * Set 'Show only *.nsp in GoldLeaf' to filter all files displayed at HOME:/ drive. So only NSP files will appear.
 
-##### Third tab.
+##### 'Dialog with three dots' tab.
 
 That's where all logs dropped. Verbose information about transmissions comes here.
+
+
+
+##### CLI (command line interface)
+
+```
+-c, --clean   Remove/reset settings and exit
+-v, --version Show application version
+-h, --help    Shows this message
+```
 
 ### Known bugs
 * 'NET' once started it never ends:
