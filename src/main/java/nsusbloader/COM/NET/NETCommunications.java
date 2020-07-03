@@ -19,8 +19,9 @@
 package nsusbloader.COM.NET;
 
 import javafx.concurrent.Task;
+import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.COM.Helpers.NSSplitReader;
@@ -33,7 +34,7 @@ import java.util.*;
 
 public class NETCommunications extends Task<Void> { // todo: thows IOException?
 
-    private LogPrinter logPrinter;
+    private ILogPrinter logPrinter;
 
     private String hostIP;
     private int hostPort;
@@ -61,7 +62,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         else
             this.extras = "";
         this.switchIP = switchIP;
-        this.logPrinter = new LogPrinter(EModule.USB_NET_TRANSFERS);
+        this.logPrinter = Log.getPrinter(EModule.USB_NET_TRANSFERS);
         this.nspMap = new HashMap<>();
         this.nspFileSizes = new HashMap<>();
         // Filter and remove empty/incorrect split-files

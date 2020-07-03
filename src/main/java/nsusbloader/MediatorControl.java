@@ -41,9 +41,9 @@ public class MediatorControl {
 
     public synchronized void setBgThreadActive(boolean isActive, EModule appModuleType) {
         isTransferActive.set(isActive);
-        mainCtrler.getFrontCtrlr().notifyTransmThreadStarted(isActive, appModuleType);
+        mainCtrler.getFrontCtrlr().notifyThreadStarted(isActive, appModuleType);
         mainCtrler.getSmCtrlr().notifySmThreadStarted(isActive, appModuleType);
-        mainCtrler.getRcmCtrlr().notifySmThreadStarted(isActive, appModuleType);
+        mainCtrler.getRcmCtrlr().notifyThreadStarted(isActive, appModuleType);
         mainCtrler.getNXDTabController().notifyThreadStarted(isActive, appModuleType);
     }
     public synchronized boolean getTransferActive() { return this.isTransferActive.get(); }

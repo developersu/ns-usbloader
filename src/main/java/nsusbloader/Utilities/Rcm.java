@@ -24,10 +24,10 @@
 */
 package nsusbloader.Utilities;
 
-import javafx.concurrent.Task;
 import nsusbloader.COM.USB.UsbConnect;
 import nsusbloader.COM.USB.UsbErrorCodes;
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
+import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.*;
@@ -37,13 +37,15 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
 
-public class RcmTask extends Task<Boolean> {
+public class Rcm implements Runnable{
+
+    private boolean status = false;
 
     private enum ECurrentOS {
         win, lin, mac, unsupported
     }
 
-    private LogPrinter logPrinter;
+    private ILogPrinter logPrinter;
     private String filePath;
 
     private DeviceHandle handler;
@@ -65,13 +67,13 @@ public class RcmTask extends Task<Boolean> {
 
     private static final byte[] sprayPttrn = { 0x00, 0x00, 0x01, 0x40};
 
-    public RcmTask(String filePath){
-        this.logPrinter = new LogPrinter(EModule.RCM);
+    public Rcm(String filePath){
+        this.logPrinter = Log.getPrinter(EModule.RCM);
         this.filePath = filePath;
     }
 
     @Override
-    protected Boolean call() {
+    public void run() {
         logPrinter.print("Selected: "+filePath, EMsgType.INFO);
         logPrinter.print("=============== RCM ===============", EMsgType.INFO);
 
@@ -94,13 +96,13 @@ public class RcmTask extends Task<Boolean> {
                         "\n         But you could file a bug with request."+
                         "\n\n         Nothing has been sent to NS. Execution stopped.", EMsgType.FAIL);
                 logPrinter.close();
-                return false;
+                return;
             }
         }
 
         if (preparePayload()){
             logPrinter.close();
-            return false;
+            return;
         }
         // === TEST THIS ===
         // writeTestFile();
@@ -111,7 +113,7 @@ public class RcmTask extends Task<Boolean> {
         
         if (! usbConnect.isConnected()){
             logPrinter.close();
-            return false;
+            return;
         }
         this.handler = usbConnect.getNsHandler();
 
@@ -119,7 +121,7 @@ public class RcmTask extends Task<Boolean> {
         if (readUsbDeviceID()){
             usbConnect.close();
             logPrinter.close();
-            return false;
+            return;
         }
         // Send payload
         for (int i=0; i < fullPayload.length / 4096 ; i++){
@@ -128,7 +130,7 @@ public class RcmTask extends Task<Boolean> {
                         "\n\n         Execution stopped.", EMsgType.FAIL);
                 usbConnect.close();
                 logPrinter.close();
-                return false;
+                return;
             }
         }
         logPrinter.print("Information sent to NS.", EMsgType.PASS);
@@ -137,7 +139,7 @@ public class RcmTask extends Task<Boolean> {
             if (smashMacOS()){
                 usbConnect.close();
                 logPrinter.close();
-                return false;
+                return;
             }
         }
         else {
@@ -153,7 +155,7 @@ public class RcmTask extends Task<Boolean> {
                         "\n\n         Execution stopped and failed. And it's strange.", EMsgType.FAIL);
                 usbConnect.close();
                 logPrinter.close();
-                return false;
+                return;
             }
 
             if (retval != 0){
@@ -161,14 +163,13 @@ public class RcmTask extends Task<Boolean> {
                         "\n\n         Execution stopped and failed.", EMsgType.FAIL);
                 usbConnect.close();
                 logPrinter.close();
-                return false;
+                return;
             }
         }
         logPrinter.print(".:: Payload complete ::.", EMsgType.PASS);
-
         usbConnect.close();
+        logPrinter.updateOneLinerStatus(true);
         logPrinter.close();
-        return true;
     }
     /**
      * Prepare the 'big' or full-size byte-buffer that is actually is a payload that we're about to use.

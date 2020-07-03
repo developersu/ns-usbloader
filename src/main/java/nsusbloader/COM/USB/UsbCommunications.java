@@ -19,7 +19,8 @@
 package nsusbloader.COM.USB;
 
 import javafx.concurrent.Task;
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
+import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -32,7 +33,7 @@ import java.util.*;
 // TODO: add filter option to show only NSP files
 public class UsbCommunications extends Task<Void> {
 
-    private LogPrinter logPrinter;
+    private ILogPrinter logPrinter;
     private LinkedHashMap<String, File> nspMap;
     private String protocol;
     private boolean nspFilterForGl;
@@ -43,7 +44,7 @@ public class UsbCommunications extends Task<Void> {
         this.nspMap = new LinkedHashMap<>();
         for (File f: nspList)
             nspMap.put(f.getName(), f);
-        this.logPrinter = new LogPrinter(EModule.USB_NET_TRANSFERS);
+        this.logPrinter = Log.getPrinter(EModule.USB_NET_TRANSFERS);
     }
 
     @Override

@@ -19,7 +19,8 @@
 package nsusbloader.Utilities;
 
 import javafx.concurrent.Task;
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
+import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 
@@ -39,14 +40,14 @@ public class SplitMergeTool {
 
 class SplitTask extends Task<Boolean>{
 
-    private LogPrinter logPrinter;
+    private ILogPrinter logPrinter;
     private String saveToPath;
     private String filePath;
 
     SplitTask(String filePath, String saveToPath){
         this.filePath = filePath;
         this.saveToPath = saveToPath;
-        logPrinter = new LogPrinter(EModule.SPLIT_MERGE_TOOL);
+        logPrinter = Log.getPrinter(EModule.SPLIT_MERGE_TOOL);
     }
 
     @Override
@@ -182,14 +183,14 @@ class SplitTask extends Task<Boolean>{
 
 class MergeTask extends Task<Boolean> {
 
-    private LogPrinter logPrinter;
+    private ILogPrinter logPrinter;
     private String saveToPath;
     private String filePath;
 
     MergeTask(String filePath, String saveToPath) {
         this.filePath = filePath;
         this.saveToPath = saveToPath;
-        logPrinter = new LogPrinter(EModule.SPLIT_MERGE_TOOL);
+        logPrinter = Log.getPrinter(EModule.SPLIT_MERGE_TOOL);
     }
     @Override
     protected Boolean call() {

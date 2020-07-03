@@ -19,7 +19,7 @@
 package nsusbloader.COM.USB;
 
 import javafx.concurrent.Task;
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.DeviceHandle;
@@ -31,11 +31,11 @@ public abstract class TransferModule {
     EFileStatus status = EFileStatus.UNKNOWN;
 
     LinkedHashMap<String, File> nspMap;
-    LogPrinter logPrinter;
+    ILogPrinter logPrinter;
     DeviceHandle handlerNS;
     Task<Void> task;
 
-    TransferModule(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, LogPrinter printer){
+    TransferModule(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, ILogPrinter printer){
         this.handlerNS = handler;
         this.nspMap = nspMap;
         this.task = task;

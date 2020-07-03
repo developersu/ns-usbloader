@@ -20,7 +20,7 @@ package nsusbloader.Utilities;
 
 import javafx.concurrent.Task;
 import nsusbloader.COM.USB.UsbErrorCodes;
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
@@ -33,7 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 class NxdtUsbAbi1 {
-    private LogPrinter logPrinter;
+    private ILogPrinter logPrinter;
     private DeviceHandle handlerNS;
     private Task<Boolean> task;
     private String saveToPath;
@@ -80,7 +80,7 @@ class NxdtUsbAbi1 {
 
     public NxdtUsbAbi1(DeviceHandle handler,
                        Task<Boolean> task,
-                       LogPrinter logPrinter,
+                       ILogPrinter logPrinter,
                        String saveToPath
     ){
         this.handlerNS = handler;

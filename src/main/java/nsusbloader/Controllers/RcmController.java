@@ -18,7 +18,6 @@
 */
 package nsusbloader.Controllers;
 
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -36,7 +35,7 @@ import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
-import nsusbloader.Utilities.RcmTask;
+import nsusbloader.Utilities.Rcm;
 
 import java.io.File;
 import java.net.URL;
@@ -199,37 +198,32 @@ public class RcmController implements Initializable {
             return;
         }
 
-        Task<Boolean> RcmTask;
+        Rcm rcmTask;
         RadioButton selectedRadio = (RadioButton)rcmToggleGrp.getSelectedToggle();
         switch (selectedRadio.getId()){
             case "pldrRadio1":
-                RcmTask = new RcmTask(payloadFPathLbl1.getText());
+                rcmTask = new Rcm(payloadFPathLbl1.getText());
                 break;
             case "pldrRadio2":
-                RcmTask = new RcmTask(payloadFPathLbl2.getText());
+                rcmTask = new Rcm(payloadFPathLbl2.getText());
                 break;
             case "pldrRadio3":
-                RcmTask = new RcmTask(payloadFPathLbl3.getText());
+                rcmTask = new Rcm(payloadFPathLbl3.getText());
                 break;
             case "pldrRadio4":
-                RcmTask = new RcmTask(payloadFPathLbl4.getText());
+                rcmTask = new Rcm(payloadFPathLbl4.getText());
                 break;
             case "pldrRadio5":
-                RcmTask = new RcmTask(payloadFPathLbl5.getText());
+                rcmTask = new Rcm(payloadFPathLbl5.getText());
                 break;
             default:
                 return;
         }
 
-        RcmTask.setOnSucceeded(event -> {
-            if (RcmTask.getValue())
-                statusLbl.setText(rb.getString("done_txt"));
-            else
-                statusLbl.setText(rb.getString("failure_txt"));
-        });
-        Thread RcmThread = new Thread(RcmTask);
-        RcmThread.setDaemon(true);
-        RcmThread.start();
+        Thread rcmThread = new Thread(rcmTask);
+
+        rcmThread.setDaemon(true);
+        rcmThread.start();
     }
 
     @FXML
@@ -328,7 +322,14 @@ public class RcmController implements Initializable {
         }
     }
 
-    public void notifySmThreadStarted(boolean isStart, EModule type){
+    public void setOneLineStatus(boolean statusSuccess){
+        if (statusSuccess)
+            statusLbl.setText(rb.getString("done_txt"));
+        else
+            statusLbl.setText(rb.getString("failure_txt"));
+    }
+
+    public void notifyThreadStarted(boolean isStart, EModule type){
         rcmToolPane.setDisable(isStart);
         if (type.equals(EModule.RCM) && isStart){
             MediatorControl.getInstance().getContoller().logArea.clear();

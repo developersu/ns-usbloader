@@ -26,10 +26,12 @@ import nsusbloader.Controllers.NSTableViewController;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EModule;
+import nsusbloader.NSLDataTypes.EMsgType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MessagesConsumer extends AnimationTimer {
     private final BlockingQueue<String> msgQueue;
@@ -41,9 +43,15 @@ public class MessagesConsumer extends AnimationTimer {
     private final NSTableViewController tableViewController;
     private final EModule appModuleType;
 
+    private AtomicBoolean oneLinerStatus;
+
     private boolean isInterrupted;
 
-    MessagesConsumer(EModule appModuleType, BlockingQueue<String> msgQueue, BlockingQueue<Double> progressQueue, HashMap<String, EFileStatus> statusMap){
+    MessagesConsumer(EModule appModuleType,
+                     BlockingQueue<String> msgQueue,
+                     BlockingQueue<Double> progressQueue,
+                     HashMap<String, EFileStatus> statusMap,
+                     AtomicBoolean oneLinerStatus) {
         this.appModuleType = appModuleType;
         this.isInterrupted = false;
 
@@ -55,6 +63,8 @@ public class MessagesConsumer extends AnimationTimer {
 
         this.statusMap = statusMap;
         this.tableViewController = MediatorControl.getInstance().getContoller().FrontTabController.tableFilesListController;
+
+        this.oneLinerStatus = oneLinerStatus;
 
         progressBar.setProgress(0.0);
 
@@ -84,9 +94,15 @@ public class MessagesConsumer extends AnimationTimer {
             MediatorControl.getInstance().setBgThreadActive(false, appModuleType);
             progressBar.setProgress(0.0);
 
-            if (statusMap.size() > 0)
+            if (statusMap.size() > 0){
                 for (String key : statusMap.keySet())
                     tableViewController.setFileStatus(key, statusMap.get(key));
+            }
+            //TODO: rewrite
+            if (appModuleType.equals(EModule.RCM)){
+                MediatorControl.getInstance().getContoller().getRcmCtrlr().setOneLineStatus(oneLinerStatus.get());
+            }
+
             this.stop();
         }
     }

@@ -18,7 +18,7 @@
 */
 package nsusbloader.COM.USB.PFS;
 
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
 
 import java.io.*;
@@ -38,7 +38,7 @@ public class PFSProvider {
     private long bodySize;
     private int ticketID = -1;
 
-    public PFSProvider(File nspFile, LogPrinter logPrinter) throws Exception{
+    public PFSProvider(File nspFile, ILogPrinter logPrinter) throws Exception{
         if (nspFile.isDirectory()) {
             nspFileName = nspFile.getName();
             nspFile = new File(nspFile.getAbsolutePath() + File.separator + "00");

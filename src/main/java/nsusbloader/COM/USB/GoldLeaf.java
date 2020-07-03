@@ -22,7 +22,7 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.stage.FileChooser;
 import nsusbloader.MediatorControl;
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.COM.Helpers.NSSplitReader;
 import org.usb4java.DeviceHandle;
@@ -69,7 +69,7 @@ class GoldLeaf extends TransferModule {
     // For using in CMD_SelectFile with SPEC:/ prefix
     private File selectedFile;
 
-    GoldLeaf(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, LogPrinter logPrinter, boolean nspFilter){
+    GoldLeaf(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, ILogPrinter logPrinter, boolean nspFilter){
         super(handler, nspMap, task, logPrinter);
 
         final byte CMD_GetDriveCount       = 1;

@@ -19,7 +19,7 @@
 package nsusbloader.COM.USB;
 
 import javafx.concurrent.Task;
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.COM.Helpers.NSSplitReader;
@@ -53,7 +53,7 @@ public class GoldLeaf_05 extends TransferModule {
     private RandomAccessFile raf;   // NSP File
     private NSSplitReader nsr;      // It'a also NSP File
 
-    GoldLeaf_05(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, LogPrinter logPrinter){
+    GoldLeaf_05(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, ILogPrinter logPrinter){
         super(handler, nspMap, task, logPrinter);
         status = EFileStatus.FAILED;
 

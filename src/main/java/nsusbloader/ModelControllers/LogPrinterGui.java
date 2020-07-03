@@ -26,23 +26,27 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class LogPrinter {
-    private MessagesConsumer msgConsumer;
-    private BlockingQueue<String> msgQueue;
-    private BlockingQueue<Double> progressQueue;
-    private HashMap<String, EFileStatus> statusMap;      // BlockingQueue for literally one object. TODO: read more books ; replace to hashMap
+public class LogPrinterGui implements ILogPrinter {
+    private final MessagesConsumer msgConsumer;
+    private final BlockingQueue<String> msgQueue;
+    private final BlockingQueue<Double> progressQueue;
+    private final HashMap<String, EFileStatus> statusMap;      // BlockingQueue for literally one object. TODO: read more books ; replace to hashMap
+    private AtomicBoolean oneLinerStatus;
 
-    public LogPrinter(EModule whoIsAsking){
+    public LogPrinterGui(EModule whoIsAsking){
         this.msgQueue = new LinkedBlockingQueue<>();
         this.progressQueue = new LinkedBlockingQueue<>();
         this.statusMap =  new HashMap<>();
-        this.msgConsumer = new MessagesConsumer(whoIsAsking, this.msgQueue, this.progressQueue, this.statusMap);
+        this.oneLinerStatus = new AtomicBoolean();
+        this.msgConsumer = new MessagesConsumer(whoIsAsking, this.msgQueue, this.progressQueue, this.statusMap, this.oneLinerStatus);
         this.msgConsumer.start();
     }
     /**
      * This is what will print to textArea of the application.
      * */
+    @Override
     public void print(String message, EMsgType type){
         try {
             switch (type){
@@ -69,6 +73,7 @@ public class LogPrinter {
     /**
      * Update progress for progress bar
      * */
+    @Override
     public void updateProgress(Double value) {
         try {
             progressQueue.put(value);
@@ -78,6 +83,7 @@ public class LogPrinter {
     /**
      * When we're done - update status
      * */
+    @Override
     public void update(HashMap<String, File> nspMap, EFileStatus status){
         for (File file: nspMap.values())
             statusMap.putIfAbsent(file.getName(), status);
@@ -85,12 +91,19 @@ public class LogPrinter {
     /**
      * When we're done - update status
      * */
+    @Override
     public void update(File file, EFileStatus status){
         statusMap.putIfAbsent(file.getName(), status);
+    }
+
+    @Override
+    public void updateOneLinerStatus(boolean status){
+        oneLinerStatus.set(status);
     }
     /**
      * When we're done - close it
      * */
+    @Override
     public void close(){
         msgConsumer.interrupt();
     }

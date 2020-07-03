@@ -18,7 +18,7 @@
 */
 package nsusbloader.COM.USB;
 
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.*;
 
@@ -39,7 +39,7 @@ public class UsbConnect {
     private DeviceHandle handlerNS;
     private Device deviceNS;
 
-    private LogPrinter logPrinter;
+    private ILogPrinter logPrinter;
 
     private boolean connected; // TODO: replace to 'connectionFailure' and invert requests everywhere
 
@@ -49,7 +49,7 @@ public class UsbConnect {
     private int returningValue;
     private DeviceList deviceList;
 
-    public static UsbConnect connectRcmMode(LogPrinter logPrinter){
+    public static UsbConnect connectRcmMode(ILogPrinter logPrinter){
         UsbConnect usbConnect = new UsbConnect(logPrinter);
         usbConnect.VENDOR_ID = RCM_VID;
         usbConnect.PRODUCT_ID = RCM_PID;
@@ -71,7 +71,7 @@ public class UsbConnect {
 
         return usbConnect;
     }
-    public static UsbConnect connectHomebrewMode(LogPrinter logPrinter){
+    public static UsbConnect connectHomebrewMode(ILogPrinter logPrinter){
         UsbConnect usbConnect = new UsbConnect(logPrinter);
         usbConnect.VENDOR_ID = HOMEBREW_VID;
         usbConnect.PRODUCT_ID = HOMEBREW_PID;
@@ -96,7 +96,7 @@ public class UsbConnect {
 
     private UsbConnect(){}
 
-    private UsbConnect(LogPrinter logPrinter){
+    private UsbConnect(ILogPrinter logPrinter){
         this.logPrinter = logPrinter;
         this.connected = false;
     };

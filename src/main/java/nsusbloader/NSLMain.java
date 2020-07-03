@@ -25,14 +25,17 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import nsusbloader.Controllers.NSLMainController;
+import nsusbloader.Utilities.Rcm;
 
+import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.prefs.Preferences;
 
 public class NSLMain extends Application {
 
-    public static final String appVersion = "v3.0";
+    public static final String appVersion = "v4.0";
+    public static boolean isCli;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -86,8 +89,10 @@ public class NSLMain extends Application {
     }
 
     private static boolean handleCli(String[] args){
-        if (args.length != 1)
+        if (args.length == 0)
             return false;
+
+        NSLMain.isCli = true;
 
         try {
             switch (args[0]) {
@@ -104,19 +109,44 @@ public class NSLMain extends Application {
                     else
                         System.out.println("Nothing to remove");
                     return true;
+                case "--rcm":               // TODO: rewrite
+                    if (args.length < 2){
+                        System.out.println("No payload file specified. Expected:\n"
+                                + "... file.jar --rcm payload.bin\n" + "or\n"
+                                + "... file.jar --rcm /home/user/payload.bin\n");
+                        return true;
+                    }
+
+                    boolean isWindows = false;
+                    if (System.getProperty("os.name").toLowerCase().replace(" ", "").contains("windows"))
+                        isWindows = true;
+
+                    if (isWindows) {
+                        if (! args[1].matches("^.:\\\\.*$"))
+                            args[1] = System.getProperty("user.dir") + File.separator + args[1];
+                    }
+                    else {
+                        if (! args[1].startsWith("/"))
+                            args[1] = System.getProperty("user.dir") + File.separator + args[1];
+                    }
+
+                    Rcm rcm = new Rcm(args[1]);
+                    Thread rcmThread = new Thread(rcm);
+                    rcmThread.start();
+                    return true;
                 case "--help":
+                default:
                     System.out.println("CLI Usage:\n"
+                            + "\t    --rcm payload.bin\tSend payload\n"
                             + "\t-c, --clean\tRemove/reset settings and exit\n"
                             + "\t-v, --version \tShow application version\n"
                             + "\t-h, --help\t\tShow this message");
                     return true;
-                default:
-                    return false;
             }
         }
         catch (Exception e){
             e.printStackTrace();
-            return false;
+            return true;
         }
     }
 }

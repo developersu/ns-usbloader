@@ -20,18 +20,19 @@ package nsusbloader.Utilities;
 
 import javafx.concurrent.Task;
 import nsusbloader.COM.USB.UsbConnect;
-import nsusbloader.ModelControllers.LogPrinter;
+import nsusbloader.ModelControllers.ILogPrinter;
+import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.DeviceHandle;
 
 public class NxdtTask extends Task<Boolean> {
 
-    private LogPrinter logPrinter;
+    private ILogPrinter logPrinter;
     private String saveToLocation;
 
     public NxdtTask(String saveToLocation){
-        this.logPrinter = new LogPrinter(EModule.NXDT);
+        this.logPrinter = Log.getPrinter(EModule.NXDT);
         this.saveToLocation = saveToLocation;
     }
 

@@ -89,10 +89,7 @@ public class FrontController implements Initializable {
                 }
             }
             // Really bad disable-enable upload button function
-            if (tableFilesListController.isFilesForUploadListEmpty())
-                disableUploadStopBtn(true);
-            else
-                disableUploadStopBtn(false);
+            disableUploadStopBtn(tableFilesListController.isFilesForUploadListEmpty());
         });  // Add listener to notify tableView controller
         tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem());   // Notify tableView controller
 
@@ -132,10 +129,7 @@ public class FrontController implements Initializable {
         this.switchThemeBtn.setOnAction(e->switchTheme());
 
 
-        if (getSelectedProtocol().equals("TinFoil"))
-            uploadStopBtn.setDisable(true);
-        else
-            uploadStopBtn.setDisable(false);
+        uploadStopBtn.setDisable(getSelectedProtocol().equals("TinFoil"));
         selectNspBtn.setOnAction(e-> selectFilesBtnAction());
 
         selectSplitNspBtn.setOnAction(e-> selectSplitBtnAction());
@@ -157,15 +151,19 @@ public class FrontController implements Initializable {
      * Changes UI theme on the go
      * */
     private void switchTheme(){
-        if (switchThemeBtn.getScene().getStylesheets().get(0).equals("/res/app_dark.css")) {
-            switchThemeBtn.getScene().getStylesheets().remove("/res/app_dark.css");
-            switchThemeBtn.getScene().getStylesheets().add("/res/app_light.css");
+        final String darkTheme = "/res/app_dark.css";
+        final String lightTheme = "/res/app_light.css";
+        final ObservableList<String> styleSheets = switchThemeBtn.getScene().getStylesheets();
+
+        if (styleSheets.get(0).equals(darkTheme)) {
+            styleSheets.remove(darkTheme);
+            styleSheets.add(lightTheme);
         }
         else {
-            switchThemeBtn.getScene().getStylesheets().remove("/res/app_light.css");
-            switchThemeBtn.getScene().getStylesheets().add("/res/app_dark.css");
+            styleSheets.remove(lightTheme);
+            styleSheets.add(darkTheme);
         }
-        AppPreferences.getInstance().setTheme(switchThemeBtn.getScene().getStylesheets().get(0));
+        AppPreferences.getInstance().setTheme(styleSheets.get(0));
     }
     /**
      * Get selected protocol (GL/TF)
@@ -186,8 +184,6 @@ public class FrontController implements Initializable {
         return nsIpTextField.getText();
     }
     
-    
-    /*-****************************************************************************************************************-*/
     /**
      * Functionality for selecting NSP button.
      * */
@@ -244,58 +240,59 @@ public class FrontController implements Initializable {
      * It's button listener when no transmission executes
      * */
     private void uploadBtnAction(){
-        if ((workThread == null || !workThread.isAlive())){
-            // Collect files
-            List<File> nspToUpload;
-            if (tableFilesListController.getFilesForUpload() == null && getSelectedProtocol().equals("TinFoil")) {
-                MediatorControl.getInstance().getContoller().logArea.setText(resourceBundle.getString("tab3_Txt_NoFolderOrFileSelected"));
-                return;
+        if (workThread != null && workThread.isAlive())
+            return;
+
+        // Collect files
+        List<File> nspToUpload;
+
+        TextArea logArea = MediatorControl.getInstance().getContoller().logArea;
+
+        if (getSelectedProtocol().equals("TinFoil") && tableFilesListController.getFilesForUpload() == null) {
+            logArea.setText(resourceBundle.getString("tab3_Txt_NoFolderOrFileSelected"));
+            return;
+        }
+
+        if ((nspToUpload = tableFilesListController.getFilesForUpload()) != null){
+            logArea.setText(resourceBundle.getString("tab3_Txt_FilesToUploadTitle")+"\n");
+            nspToUpload.forEach(item -> logArea.appendText(" "+item.getAbsolutePath()+"\n"));
+        }
+        else {
+            logArea.clear();
+            nspToUpload = new LinkedList<>();
+        }
+
+        SettingsController settings = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
+        // If USB selected
+        if (getSelectedProtocol().equals("GoldLeaf") || ( getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("USB") ) ){
+            usbNetCommunications = new UsbCommunications(nspToUpload, getSelectedProtocol() + settings.getGlOldVer(), settings.getNSPFileFilterForGL());
+        }
+        else {      // NET INSTALL OVER TINFOIL
+            final String ipValidationPattern = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+
+            if (settings.isNsIpValidate() && ! getNsIp().matches(ipValidationPattern)) {
+                if (!ServiceWindow.getConfirmationWindow(resourceBundle.getString("windowTitleBadIp"), resourceBundle.getString("windowBodyBadIp")))
+                    return;
             }
+
+            String nsIP = getNsIp();
+
+            if (! settings.getExpertModeSelected())
+                usbNetCommunications = new NETCommunications(nspToUpload, nsIP, false, "", "", "");
             else {
-                if ((nspToUpload = tableFilesListController.getFilesForUpload()) != null){
-                    MediatorControl.getInstance().getContoller().logArea.setText(resourceBundle.getString("tab3_Txt_FilesToUploadTitle")+"\n");
-                    for (File item: nspToUpload)
-                        MediatorControl.getInstance().getContoller().logArea.appendText("  "+item.getAbsolutePath()+"\n");
-                }
-                else {
-                    MediatorControl.getInstance().getContoller().logArea.clear();
-                    nspToUpload = new LinkedList<>();
-                }
-            }
-            // If USB selected
-            if (getSelectedProtocol().equals("GoldLeaf") ||
-                    ( getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("USB") )
-            ){
-                usbNetCommunications = new UsbCommunications(nspToUpload, getSelectedProtocol()+MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGlOldVer(), MediatorControl.getInstance().getContoller().getSettingsCtrlr().getNSPFileFilterForGL());
-                workThread = new Thread(usbNetCommunications);
-                workThread.setDaemon(true);
-                workThread.start();
-            }
-            else {      // NET INSTALL OVER TINFOIL
-                if (MediatorControl.getInstance().getContoller().getSettingsCtrlr().isNsIpValidate() && ! getNsIp().matches("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"))
-                    if (!ServiceWindow.getConfirmationWindow(resourceBundle.getString("windowTitleBadIp"),resourceBundle.getString("windowBodyBadIp")))
-                        return;
-
-                String nsIP = getNsIp();
-
-                if (! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getExpertModeSelected())
-                    usbNetCommunications = new NETCommunications(nspToUpload, nsIP, false, "", "", "");
-                else {
-                    usbNetCommunications = new NETCommunications(
-                            nspToUpload,
-                            nsIP,
-                            MediatorControl.getInstance().getContoller().getSettingsCtrlr().getNotServeSelected(),
-                            MediatorControl.getInstance().getContoller().getSettingsCtrlr().getAutoIpSelected()?"":MediatorControl.getInstance().getContoller().getSettingsCtrlr().getHostIp(),
-                            MediatorControl.getInstance().getContoller().getSettingsCtrlr().getRandPortSelected()?"":MediatorControl.getInstance().getContoller().getSettingsCtrlr().getHostPort(),
-                            MediatorControl.getInstance().getContoller().getSettingsCtrlr().getNotServeSelected()?MediatorControl.getInstance().getContoller().getSettingsCtrlr().getHostExtra():""
-                    );
-                }
-
-                workThread = new Thread(usbNetCommunications);
-                workThread.setDaemon(true);
-                workThread.start();
+                usbNetCommunications = new NETCommunications(
+                        nspToUpload,
+                        nsIP,
+                        settings.getNotServeSelected(),
+                        settings.getAutoIpSelected()?"":settings.getHostIp(),
+                        settings.getRandPortSelected()?"":settings.getHostPort(),
+                        settings.getNotServeSelected()?settings.getHostExtra():""
+                );
             }
         }
+        workThread = new Thread(usbNetCommunications);
+        workThread.setDaemon(true);
+        workThread.start();
     }
     /**
      * It's button listener when transmission in progress
@@ -320,10 +317,11 @@ public class FrontController implements Initializable {
     @FXML
     private void handleDrop(DragEvent event){
         List<File> filesDropped = event.getDragboard().getFiles();
+        SettingsController settingsController = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
 
-        if (getSelectedProtocol().equals("TinFoil") && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTfXciNszXczSupport())
+        if (getSelectedProtocol().equals("TinFoil") && settingsController.getTfXciNszXczSupport())
             filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches("(.*\\.nsp$)|(.*\\.xci$)|(.*\\.nsz$)|(.*\\.xcz$)"));
-        else if (getSelectedProtocol().equals("GoldLeaf") && (! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getNSPFileFilterForGL()))
+        else if (getSelectedProtocol().equals("GoldLeaf") && (! settingsController.getNSPFileFilterForGL()))
             filesDropped.removeIf(file -> (file.isDirectory() && ! file.getName().toLowerCase().matches(".*\\.nsp$")));
         else
             filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches(".*\\.nsp$"));
@@ -339,7 +337,7 @@ public class FrontController implements Initializable {
      * Called from mediator
      * TODO: remove shitcoding practices
      * */
-    public void notifyTransmThreadStarted(boolean isActive, EModule type){
+    public void notifyThreadStarted(boolean isActive, EModule type){
         if (! type.equals(EModule.USB_NET_TRANSFERS)){
             usbNetPane.setDisable(isActive);
             return;
