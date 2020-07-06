@@ -123,7 +123,7 @@ public class TinfoilNet {
         }
 
         if (filesList.size() == 0) {
-            throw new IncorrectSetupException("File(s) doesn't exists.\n" +
+            throw new IncorrectSetupException("File(s) doesn't exist.\n" +
                     "Try 'ns-usbloader -n help' for more information.");
         }
     }

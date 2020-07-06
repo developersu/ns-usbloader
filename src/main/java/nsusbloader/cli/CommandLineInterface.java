@@ -61,6 +61,11 @@ public class CommandLineInterface {
                 new TinfoilNet(tfnArguments);
                 return;
             }
+            if (cli.hasOption("t") || cli.hasOption("tinfoil")){
+                final String[] tfArguments = cli.getOptionValues("tinfoil");
+                new TinfoilUsb(tfArguments);
+                return;
+            }
         }
         catch (ParseException pe){
             System.out.println(pe.getLocalizedMessage() +
@@ -116,6 +121,13 @@ public class CommandLineInterface {
                 .hasArgs()
                 .argName("...")
                 .build();
+        /* Tinfoil/Awoo USB */
+        final Option tinfoilOption = Option.builder("t")
+                .longOpt("tinfoil")
+                .desc("Install via Tinfoil/Awoo USB mode.")
+                .hasArgs()
+                .argName("FILE1 ...")
+                .build();
 
 
         final OptionGroup group = new OptionGroup();
@@ -124,6 +136,7 @@ public class CommandLineInterface {
         group.addOption(cleanSettingsOption);
         group.addOption(versionOption);
         group.addOption(helpOption);
+        group.addOption(tinfoilOption);
 
         options.addOptionGroup(group);
 
