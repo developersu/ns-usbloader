@@ -40,6 +40,7 @@ public class GoldLeaf {
 
         if (arguments.length > 1 && arguments[1].equals("filter")){
             filterForNsp = true;
+            parseFileSince = 2;
         }
     }
     private boolean isHelpDirective(String argument){
@@ -55,7 +56,7 @@ public class GoldLeaf {
                 + getGlSupportedVersions());
     }
     private String getGlSupportedVersions(){
-        StringBuilder builder = new StringBuilder("Supported version: \n");
+        StringBuilder builder = new StringBuilder("Supported versions: \n");
 
         for (String a : SettingsController.glSupportedVersions){
             builder.append("\t");
