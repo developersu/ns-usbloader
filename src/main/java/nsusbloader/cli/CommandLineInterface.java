@@ -66,6 +66,9 @@ public class CommandLineInterface {
             System.out.println(pe.getLocalizedMessage() +
                     "\nTry 'ns-usbloader --help' for more information.");
         }
+        catch (IncorrectSetupException iee){
+            System.out.println(iee.getLocalizedMessage());
+        }
         catch (InterruptedException ignore){}
         catch (Exception e){
             System.out.println("CLI error");
