@@ -24,7 +24,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO: Add 'don't serve requests' option
 public class TinfoilNet {
 
     private final String[] arguments;
@@ -33,7 +32,7 @@ public class TinfoilNet {
 
     private String hostIp = "";
     private String hostPortNum = "";
-    private String hostExtras = "";
+    //private String hostExtras = ""; // TODO: Add 'don't serve requests' option or remove this
 
     private int parseFileSince = 1;
 
@@ -79,21 +78,23 @@ public class TinfoilNet {
                 + "\tns-usbloader --tfn nsip=<arg1> [hostip=<arg2>] FILE1 ..."
                 + "\n\nOptions:"
                 + "\n\tnsip=<ip>\t\t\tDefine NS IP address (mandatory)"
-                + "\n\thostip=<ip[:port][/extra]>\tDefine this host IP address. Will be obtained automatically if not set.");
+                + "\n\thostip=<ip[:port]>\tDefine this host IP address. Will be obtained automatically if not set.");
     }
 
     private void parseNsIP() throws IncorrectSetupException{
         String argument1 = arguments[0];
 
-        if (! argument1.startsWith("nsip="))
+        if (! argument1.startsWith("nsip=")) {
             throw new IncorrectSetupException("First argument must be 'nsip=<ip_address>'\n" +
                     "Try 'ns-usbloader -n help' for more information.");
+        }
 
         nsIp = argument1.replaceAll("^nsip=", "");
 
-        if (nsIp.isEmpty())
+        if (nsIp.isEmpty()) {
             throw new IncorrectSetupException("No spaces allowed before or after 'nsip=<ip_address>' argument.\n" +
                     "Try 'ns-usbloader -n help' for more information.");
+        }
     }
 
     private void parseHostSettings(){
@@ -106,10 +107,10 @@ public class TinfoilNet {
         hostIp = argument2.replaceAll("(^hostip=)|(:.+?$)|(:$)", "");
 
         if (argument2.contains(":"))
-            hostPortNum = argument2.replaceAll("(^.+:)|(/.+?$)|(/$)", "");
-
-        if (argument2.contains("/"))
-            hostExtras = argument2.replaceAll("^[^/]*/", "");
+            hostPortNum = argument2.replaceAll("(^.+:)", "");
+        //    hostPortNum = argument2.replaceAll("(^.+:)|(/.+?$)|(/$)", "");
+        //if (argument2.contains("/"))
+        //    hostExtras = argument2.replaceAll("^[^/]*/", "");
     }
 
     private void parseFilesArguments() throws IncorrectSetupException{
@@ -135,7 +136,7 @@ public class TinfoilNet {
                 false,
                 hostIp,
                 hostPortNum,
-                hostExtras);
+                "");
         Thread netCommThread = new Thread(netCommunications);
         netCommThread.start();
         netCommThread.join();

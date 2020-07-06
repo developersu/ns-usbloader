@@ -76,14 +76,11 @@ public class SettingsController implements Initializable {
     private ChoiceBox<String> langCB;
 
     @FXML
-    private CheckBox glOldVerCheck;
-
-    @FXML
-    private ChoiceBox<String> glOldVerChoice;
+    private ChoiceBox<String> glVersionChoiceBox;
 
     private HostServices hs;
 
-    private static final String[] oldGlSupportedVersions = {"v0.5", "v0.7.x"};
+    public static final String[] glSupportedVersions = {"v0.5", "v0.7.x", "v0.8"};
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -273,19 +270,9 @@ public class SettingsController implements Initializable {
                             .getString("windowBodyRestartToApplyLang"));
         });
         // Set supported old versions
-        glOldVerChoice.getItems().addAll(oldGlSupportedVersions);
-        String oldVer = AppPreferences.getInstance().getUseOldGlVersion();  // Overhead; Too much validation of consistency
-        if (Arrays.asList(oldGlSupportedVersions).contains(oldVer)) {
-            glOldVerChoice.getSelectionModel().select(oldVer);
-            glOldVerChoice.setDisable(false);
-            glOldVerCheck.setSelected(true);
-        }
-        else {
-            glOldVerChoice.getSelectionModel().select(0);
-            glOldVerChoice.setDisable(true);
-            glOldVerCheck.setSelected(false);
-        }
-        glOldVerCheck.setOnAction(e-> glOldVerChoice.setDisable(! glOldVerCheck.isSelected()) );
+        glVersionChoiceBox.getItems().addAll(glSupportedVersions);
+        String oldVer = AppPreferences.getInstance().getGlVersion();  // Overhead; Too much validation of consistency
+        glVersionChoiceBox.getSelectionModel().select(oldVer);
     }
 
     private boolean isWindows(){
@@ -313,10 +300,24 @@ public class SettingsController implements Initializable {
         newVersionLink.setText("https://github.com/developersu/ns-usbloader/releases/tag/"+newVer);
     }
 
-    public String getGlOldVer() {
-        if (glOldVerCheck.isSelected())
-            return glOldVerChoice.getValue();
-        else
-            return "";
+    public String getGlVer() {
+        return glVersionChoiceBox.getValue();
+    }
+    
+    public void updatePreferencesOnExit(){
+        AppPreferences preferences = AppPreferences.getInstance();
+
+        preferences.setNsIpValidationNeeded(isNsIpValidate());
+        preferences.setExpertMode(getExpertModeSelected());
+        preferences.setAutoDetectIp(getAutoIpSelected());
+        preferences.setRandPort(getRandPortSelected());
+        preferences.setNotServeRequests(getNotServeSelected());
+        preferences.setHostIp(getHostIp());
+        preferences.setHostPort(getHostPort());
+        preferences.setHostExtra(getHostExtra());
+        preferences.setAutoCheckUpdates(getAutoCheckForUpdates());
+        preferences.setTfXCI(getTfXciNszXczSupport());
+        preferences.setNspFileFilterGL(getNSPFileFilterForGL());
+        preferences.setGlVersion(getGlVer());
     }
 }

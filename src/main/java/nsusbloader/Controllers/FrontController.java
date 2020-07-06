@@ -20,7 +20,6 @@ package nsusbloader.Controllers;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -267,7 +266,7 @@ public class FrontController implements Initializable {
         SettingsController settings = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
         // If USB selected
         if (getSelectedProtocol().equals("GoldLeaf") || ( getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("USB") ) ){
-            usbNetCommunications = new UsbCommunications(nspToUpload, getSelectedProtocol() + settings.getGlOldVer(), settings.getNSPFileFilterForGL());
+            usbNetCommunications = new UsbCommunications(nspToUpload, getSelectedProtocol() + settings.getGlVer(), settings.getNSPFileFilterForGL());
         }
         else {      // NET INSTALL OVER TINFOIL
             final String ipValidationPattern = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
@@ -380,5 +379,14 @@ public class FrontController implements Initializable {
      */
     public String getRecentPath(){
         return previouslyOpenedPath;
+    }
+
+    public void updatePreferencesOnExit(){
+        AppPreferences preferences = AppPreferences.getInstance();
+
+        preferences.setProtocol(getSelectedProtocol());
+        preferences.setRecent(getRecentPath());
+        preferences.setNetUsb(getSelectedNetUsb());
+        preferences.setNsIp(getNsIp());
     }
 }

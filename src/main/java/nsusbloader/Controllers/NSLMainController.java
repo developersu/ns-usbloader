@@ -118,25 +118,8 @@ public class NSLMainController implements Initializable {
      * Save preferences before exit
      * */
     public void exit(){
-        AppPreferences.getInstance().setAll(
-                FrontTabController.getSelectedProtocol(),
-                FrontTabController.getRecentPath(),
-                FrontTabController.getSelectedNetUsb(),
-                FrontTabController.getNsIp(),
-                SettingsTabController.isNsIpValidate(),
-                SettingsTabController.getExpertModeSelected(),
-                SettingsTabController.getAutoIpSelected(),
-                SettingsTabController.getRandPortSelected(),
-                SettingsTabController.getNotServeSelected(),
-                SettingsTabController.getHostIp(),
-                SettingsTabController.getHostPort(),
-                SettingsTabController.getHostExtra(),
-                SettingsTabController.getAutoCheckForUpdates(),
-                SettingsTabController.getTfXciNszXczSupport(),
-                SettingsTabController.getNSPFileFilterForGL(),
-                SettingsTabController.getGlOldVer()
-        );
-
+        FrontTabController.updatePreferencesOnExit();
+        SettingsTabController.updatePreferencesOnExit();
         SplitMergeTabController.updatePreferencesOnExit(); // NOTE: This shit above should be re-written to similar pattern
         RcmTabController.updatePreferencesOnExit();
         NXDTabController.updatePreferencesOnExit();

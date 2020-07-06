@@ -18,6 +18,8 @@
 */
 package nsusbloader;
 
+import nsusbloader.Controllers.SettingsController;
+
 import java.util.Locale;
 import java.util.prefs.Preferences;
 
@@ -29,41 +31,6 @@ public class AppPreferences {
 
     private AppPreferences(){ preferences = Preferences.userRoot().node("NS-USBloader"); }
 
-    public void setAll(
-            String Protocol,
-            String PreviouslyOpened,
-            String NetUsb,
-            String NsIp,
-            boolean NsIpValidate,
-            boolean ExpertMode,
-            boolean AutoIp,
-            boolean RandPort,
-            boolean NotServe,
-            String HostIp,
-            String HostPort,
-            String HostExtra,
-            boolean autoCheck4Updates,
-            boolean tinfoilXciSupport,
-            boolean nspFileFilterForGl,
-            String useOldGlVersion
-            ){
-        setProtocol(Protocol);
-        setRecent(PreviouslyOpened);
-        setNetUsb(NetUsb);
-        setNsIp(NsIp);
-        setNsIpValidationNeeded(NsIpValidate);
-        setExpertMode(ExpertMode);
-        setAutoDetectIp(AutoIp);
-        setRandPort(RandPort);
-        setNotServeRequests(NotServe);
-        setHostIp(HostIp);
-        setHostPort(HostPort);
-        setHostExtra(HostExtra);
-        setAutoCheckUpdates(autoCheck4Updates);
-        setTfXCI(tinfoilXciSupport);
-        setNspFileFilterGL(nspFileFilterForGl);
-        setUseOldGlVersion(useOldGlVersion);
-    }
     public String getTheme(){
         String theme = preferences.get("THEME", "/res/app_dark.css");           // Don't let user to change settings manually
         if (!theme.matches("(^/res/app_dark.css$)|(^/res/app_light.css$)"))
@@ -135,8 +102,12 @@ public class AppPreferences {
     public boolean getNspFileFilterGL(){return preferences.getBoolean("GL_NSP_FILTER", false); }
     public void setNspFileFilterGL(boolean prop){preferences.putBoolean("GL_NSP_FILTER", prop);}
 
-    public String getUseOldGlVersion(){ return preferences.get("OldGlVersion", ""); }
-    public void setUseOldGlVersion(String version){ preferences.put("OldGlVersion", version);}
+    public String getGlVersion(){
+        int recentGlVersionIndex = SettingsController.glSupportedVersions.length - 1;
+        String recentGlVersion = SettingsController.glSupportedVersions[recentGlVersionIndex];
+        return preferences.get("gl_version", recentGlVersion);
+    }
+    public void setGlVersion(String version){ preferences.put("gl_version", version);}
 
     public double getSceneWidth(){ return preferences.getDouble("WIND_WIDTH", 850.0); }
     public void setSceneWidth(double value){ preferences.putDouble("WIND_WIDTH", value); }

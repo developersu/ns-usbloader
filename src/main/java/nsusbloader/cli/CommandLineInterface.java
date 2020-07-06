@@ -66,6 +66,10 @@ public class CommandLineInterface {
                 new TinfoilUsb(tfArguments);
                 return;
             }
+            if (cli.hasOption("g") || cli.hasOption("goldleaf")){
+                final String[] glArguments = cli.getOptionValues("goldleaf");
+                new GoldLeaf(glArguments);
+            }
         }
         catch (ParseException pe){
             System.out.println(pe.getLocalizedMessage() +
@@ -128,7 +132,13 @@ public class CommandLineInterface {
                 .hasArgs()
                 .argName("FILE1 ...")
                 .build();
-
+        /* GoldLeaf USB */
+        final Option glOption = Option.builder("g")
+                .longOpt("goldleaf")
+                .desc("Install via GoldLeaf mode. Check '-g help' for information.")
+                .hasArgs()
+                .argName("...")
+                .build();
 
         final OptionGroup group = new OptionGroup();
         group.addOption(rcmOption);
@@ -137,6 +147,7 @@ public class CommandLineInterface {
         group.addOption(versionOption);
         group.addOption(helpOption);
         group.addOption(tinfoilOption);
+        group.addOption(glOption);
 
         options.addOptionGroup(group);
 

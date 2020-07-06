@@ -18,7 +18,6 @@
 */
 package nsusbloader.COM.USB;
 
-import javafx.concurrent.Task;
 import nsusbloader.COM.ICommunications;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
@@ -69,8 +68,8 @@ public class UsbCommunications implements ICommunications {
             case "TinFoil":
                 module = new TinFoil(handler, nspMap, this, logPrinter);
                 break;
-            case "GoldLeaf":
-                module = new GoldLeaf(handler, nspMap, this, logPrinter, nspFilterForGl);
+            case "GoldLeafv0.8":
+                module = new GoldLeaf_08(handler, nspMap, this, logPrinter, nspFilterForGl);
                 break;
             case "GoldLeafv0.7.x":
                 module = new GoldLeaf_07(handler, nspMap, this, logPrinter, nspFilterForGl);

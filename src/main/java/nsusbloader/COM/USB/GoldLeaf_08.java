@@ -40,7 +40,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * GoldLeaf 0.8 processing
  */
-class GoldLeaf extends TransferModule {
+class GoldLeaf_08 extends TransferModule {
     private boolean nspFilterForGl;
 
     //                     CMD
@@ -70,7 +70,7 @@ class GoldLeaf extends TransferModule {
     // For using in CMD_SelectFile with SPEC:/ prefix
     private File selectedFile;
 
-    GoldLeaf(DeviceHandle handler, LinkedHashMap<String, File> nspMap, ICommunications task, ILogPrinter logPrinter, boolean nspFilter){
+    GoldLeaf_08(DeviceHandle handler, LinkedHashMap<String, File> nspMap, ICommunications task, ILogPrinter logPrinter, boolean nspFilter){
         super(handler, nspMap, task, logPrinter);
 
         final byte CMD_GetDriveCount       = 1;
