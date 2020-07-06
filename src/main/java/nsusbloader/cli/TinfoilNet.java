@@ -27,7 +27,7 @@ import java.util.List;
 // TODO: Add 'don't serve requests' option
 public class TinfoilNet {
 
-    private String[] arguments;
+    private final String[] arguments;
 
     private String nsIp;
 
@@ -43,7 +43,7 @@ public class TinfoilNet {
         this.arguments = arguments;
         checkArguments();
         parseNsIP();
-        parseHostIPAndExtras();
+        parseHostSettings();
         parseFilesArguments();
         runTinfoilNetBackend();
     }
@@ -73,8 +73,8 @@ public class TinfoilNet {
     private boolean isHelpDirective(String argument){
         return argument.equals("help");
     }
-    private void showHelp(){
-        System.out.println("Usage:\n"
+    private void showHelp() throws IncorrectSetupException{
+        throw new IncorrectSetupException("Usage:\n"
                 + "\tns-usbloader -n nsip=<arg1> [hostip=<arg2>] FILE1 ...\n"
                 + "\tns-usbloader --tfn nsip=<arg1> [hostip=<arg2>] FILE1 ..."
                 + "\n\nOptions:"
@@ -96,7 +96,7 @@ public class TinfoilNet {
                     "Try 'ns-usbloader -n help' for more information.");
     }
 
-    private void parseHostIPAndExtras(){
+    private void parseHostSettings(){
         String argument2 = arguments[1];
 
         if (! argument2.startsWith("hostip="))
