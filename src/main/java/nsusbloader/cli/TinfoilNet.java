@@ -1,0 +1,130 @@
+/*
+    Copyright 2019-2020 Dmitry Isaenko
+
+    This file is part of NS-USBloader.
+
+    NS-USBloader is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NS-USBloader is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
+*/
+package nsusbloader.cli;
+
+import nsusbloader.COM.NET.NETCommunications;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+// TODO: Add 'don't serve requests' option
+// TODO: Refactor: remove duplicates; make logic flow more 'exception-driven'
+public class TinfoilNet {
+
+    private String nsIp;
+
+    private String hostIp = "";
+    private String hostPortNum = "";
+    private String hostExtras = "";
+
+    private int parseFileSince = 1;
+
+    TinfoilNet(String[] arguments) throws InterruptedException{
+
+        if (arguments == null) {
+            showIncorrectCommandMessage();
+            return;
+        }
+
+        if (arguments.length == 1){
+            if (isHelp(arguments[0]))
+                showHelp();
+            else
+                showIncorrectCommandMessage();
+            return;
+        }
+
+        if (arguments.length < 2){
+            showIncorrectCommandMessage();
+            return;
+        }
+
+        if (parseNsIP(arguments[0]))
+            return;
+        parseHostIPAndExtras(arguments[1]);
+        if (checkArgumentsCount(arguments.length))
+            return;
+
+        List<File> filesList = new ArrayList<>();
+        for (; parseFileSince < arguments.length; parseFileSince++)
+            filesList.add(new File(arguments[parseFileSince]));
+
+        NETCommunications netCommunications = new NETCommunications(
+                filesList,
+                nsIp,
+                false,
+                hostIp,
+                hostPortNum,
+                hostExtras);
+        Thread netCommThread = new Thread(netCommunications);
+        netCommThread.start();
+        netCommThread.join();
+    }
+
+    private boolean isHelp(String argument){
+        return argument.equals("help");
+    }
+    private void showHelp(){
+        System.out.println("Usage:\n"
+                + "\tns-usbloader -n nsip=<arg1> [hostip=<arg2>] FILE1 ...\n"
+                + "\tns-usbloader --tfn nsip=<arg1> [hostip=<arg2>] FILE1 ..."
+                + "\n\nOptions:"
+                + "\n\tnsip=<ip>\t\t\tDefine NS IP address (mandatory)"
+                + "\n\thostip=<ip[:port][/extra]>\tDefine this host IP address. Will be obtained automatically if not set.");
+    }
+    private void showIncorrectCommandMessage(){
+        System.out.println("Try 'ns-usbloader -n help' for more information.");
+    }
+
+    private boolean parseNsIP(String argument1){
+        if (argument1.startsWith("nsip=")){
+            nsIp = argument1.replaceAll("^nsip=", "");
+
+            if (nsIp.isEmpty()) {
+                showIncorrectCommandMessage();
+                return true;
+            }
+        }
+        else{
+            showIncorrectCommandMessage();
+            return true;
+        }
+        return false;
+    }
+    private void parseHostIPAndExtras(String argument2){
+        if (argument2.startsWith("hostip=")){
+            parseFileSince = 2;
+            hostIp = argument2.replaceAll("(^hostip=)|(:.+?$)|(:$)", "");
+
+            if (argument2.contains(":"))
+                hostPortNum = argument2.replaceAll("(^.+:)|(/.+?$)|(/$)", "");
+
+            if (argument2.contains("/"))
+                hostExtras = argument2.replaceAll("^[^/]*/", "");
+        }
+    }
+    private boolean checkArgumentsCount(int argumentsLength){
+        if (argumentsLength == parseFileSince){
+            showIncorrectCommandMessage();
+            return true;
+        }
+        return false;
+    }
+}

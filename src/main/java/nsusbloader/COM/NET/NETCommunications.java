@@ -18,7 +18,7 @@
 */
 package nsusbloader.COM.NET;
 
-import javafx.concurrent.Task;
+import nsusbloader.COM.ICommunications;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.ModelControllers.Log;
@@ -32,7 +32,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class NETCommunications extends Task<Void> { // todo: thows IOException?
+public class NETCommunications implements ICommunications { // todo: rewrite
 
     private ILogPrinter logPrinter;
 
@@ -52,10 +52,17 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
 
     private OutputStream currSockOS;
     private PrintWriter currSockPW;
+
+    private volatile boolean cancel;
     /**
      * Simple constructor that everybody uses
      * */
-    public NETCommunications(List<File> filesList, String switchIP, boolean doNotServeRequests, String hostIPaddr, String hostPortNum, String extras){
+    public NETCommunications(List<File> filesList,
+                             String switchIP,
+                             boolean doNotServeRequests,
+                             String hostIPaddr,
+                             String hostPortNum,
+                             String extras) {
         this.doNotServeRequests = doNotServeRequests;
         if (doNotServeRequests)
             this.extras = extras;
@@ -263,19 +270,21 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
             logPrinter.print("Can't determine possible variants. Returned:\n\t"+socketException.getMessage(), EMsgType.FAIL);
         }
     }
-    /**
-     * Override cancel block to close connection by ourselves
-     * */
     @Override
-    protected void cancelled() {
-        this.close(EFileStatus.UNKNOWN);
-        super.cancelled();
+    public boolean isCancelled(){
+        return cancel;
     }
 
     @Override
-    protected Void call() {
+    public void cancel() {
+        cancel = true;
+    }
+
+    @Override
+    public void run() {
+
         if (!isValid | isCancelled())
-            return null;
+            return;
         logPrinter.print("\tStart chain", EMsgType.INFO);
         // Create string that we'll send to TF and which initiates chain 
         StringBuilder myStrBuilder;
@@ -307,13 +316,13 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         catch (IOException uhe){
             logPrinter.print("NET: Unable to connect to NS and send files list. Returned:\n\t"+uhe.getMessage(), EMsgType.FAIL);
             close(EFileStatus.UNKNOWN);
-            return null;
+            return;
         }
         // Check if we should serve requests
         if (this.doNotServeRequests){
             logPrinter.print("NET: List of files transferred. Replies won't be served.", EMsgType.PASS);
             close(EFileStatus.UNKNOWN);
-            return null;
+            return;
         }
         logPrinter.print("NET: Initiation files list has been sent to NS.", EMsgType.PASS);
 
@@ -353,7 +362,7 @@ public class NETCommunications extends Task<Void> { // todo: thows IOException?
         }
         if ( ! isCancelled() )
             close(EFileStatus.UNKNOWN);
-        return null;
+        return;
     }
 
     // 200 206 400 (inv range) 404 416 (Range Not Satisfiable )

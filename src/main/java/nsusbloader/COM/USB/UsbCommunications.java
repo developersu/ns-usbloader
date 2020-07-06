@@ -19,6 +19,7 @@
 package nsusbloader.COM.USB;
 
 import javafx.concurrent.Task;
+import nsusbloader.COM.ICommunications;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EFileStatus;
@@ -31,12 +32,14 @@ import java.io.*;
 import java.util.*;
 
 // TODO: add filter option to show only NSP files
-public class UsbCommunications extends Task<Void> {
+public class UsbCommunications implements ICommunications {
 
     private ILogPrinter logPrinter;
     private LinkedHashMap<String, File> nspMap;
     private String protocol;
     private boolean nspFilterForGl;
+
+    private volatile boolean cancel;
 
     public UsbCommunications(List<File> nspList, String protocol, boolean filterNspFilesOnlyForGl){
         this.protocol = protocol;
@@ -48,14 +51,14 @@ public class UsbCommunications extends Task<Void> {
     }
 
     @Override
-    protected Void call() {
+    public void run() {
         logPrinter.print("\tStart", EMsgType.INFO);
 
         UsbConnect usbConnect = UsbConnect.connectHomebrewMode(logPrinter);
 
         if (! usbConnect.isConnected()){
             close(EFileStatus.FAILED);
-            return null;
+            return;
         }
 
         DeviceHandle handler = usbConnect.getNsHandler();
@@ -81,7 +84,7 @@ public class UsbCommunications extends Task<Void> {
 
         close(module.getStatus());
 
-        return null;
+        return;
     }
 
     /**
@@ -93,4 +96,13 @@ public class UsbCommunications extends Task<Void> {
         logPrinter.close();
     }
 
+    @Override
+    public boolean isCancelled() {
+        return cancel;
+    }
+
+    @Override
+    public void cancel() {
+        cancel = true;
+    }
 }

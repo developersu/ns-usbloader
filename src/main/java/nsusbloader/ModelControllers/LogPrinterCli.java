@@ -34,9 +34,7 @@ public class LogPrinterCli implements ILogPrinter{
     @Override
     public void update(File file, EFileStatus status) { }
     @Override
-    public void updateOneLinerStatus(boolean status){  }
+    public void updateOneLinerStatus(boolean status){ }
     @Override
-    public void close() {
-        System.out.println("\n-\n");
-    }
+    public void close() { }
 }

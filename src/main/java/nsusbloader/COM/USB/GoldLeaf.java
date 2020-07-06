@@ -21,6 +21,7 @@ package nsusbloader.COM.USB;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.stage.FileChooser;
+import nsusbloader.COM.ICommunications;
 import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -69,7 +70,7 @@ class GoldLeaf extends TransferModule {
     // For using in CMD_SelectFile with SPEC:/ prefix
     private File selectedFile;
 
-    GoldLeaf(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, ILogPrinter logPrinter, boolean nspFilter){
+    GoldLeaf(DeviceHandle handler, LinkedHashMap<String, File> nspMap, ICommunications task, ILogPrinter logPrinter, boolean nspFilter){
         super(handler, nspMap, task, logPrinter);
 
         final byte CMD_GetDriveCount       = 1;

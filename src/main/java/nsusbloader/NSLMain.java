@@ -25,12 +25,10 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import nsusbloader.Controllers.NSLMainController;
-import nsusbloader.Utilities.Rcm;
+import nsusbloader.cli.CommandLineInterface;
 
-import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.prefs.Preferences;
 
 public class NSLMain extends Application {
 
@@ -83,70 +81,12 @@ public class NSLMain extends Application {
     }
 
     public static void main(String[] args) {
-        if (handleCli(args))
-            return;
-        launch(args);
-    }
-
-    private static boolean handleCli(String[] args){
-        if (args.length == 0)
-            return false;
-
-        NSLMain.isCli = true;
-
-        try {
-            switch (args[0]) {
-                case "-v":
-                case "--version":
-                    System.out.println("NS-USBloader " + NSLMain.appVersion);
-                    return true;
-                case "-c":
-                case "--clean":
-                    if (Preferences.userRoot().nodeExists("NS-USBloader")) {
-                        Preferences.userRoot().node("NS-USBloader").removeNode();
-                        System.out.println("Settings removed");
-                    }
-                    else
-                        System.out.println("Nothing to remove");
-                    return true;
-                case "--rcm":               // TODO: rewrite
-                    if (args.length < 2){
-                        System.out.println("No payload file specified. Expected:\n"
-                                + "... file.jar --rcm payload.bin\n" + "or\n"
-                                + "... file.jar --rcm /home/user/payload.bin\n");
-                        return true;
-                    }
-
-                    boolean isWindows = false;
-                    if (System.getProperty("os.name").toLowerCase().replace(" ", "").contains("windows"))
-                        isWindows = true;
-
-                    if (isWindows) {
-                        if (! args[1].matches("^.:\\\\.*$"))
-                            args[1] = System.getProperty("user.dir") + File.separator + args[1];
-                    }
-                    else {
-                        if (! args[1].startsWith("/"))
-                            args[1] = System.getProperty("user.dir") + File.separator + args[1];
-                    }
-
-                    Rcm rcm = new Rcm(args[1]);
-                    Thread rcmThread = new Thread(rcm);
-                    rcmThread.start();
-                    return true;
-                case "--help":
-                default:
-                    System.out.println("CLI Usage:\n"
-                            + "\t    --rcm payload.bin\tSend payload\n"
-                            + "\t-c, --clean\tRemove/reset settings and exit\n"
-                            + "\t-v, --version \tShow application version\n"
-                            + "\t-h, --help\t\tShow this message");
-                    return true;
-            }
+        if (args.length == 0) {
+            launch(args);
         }
-        catch (Exception e){
-            e.printStackTrace();
-            return true;
+        else {
+            NSLMain.isCli = true;
+            new CommandLineInterface(args);
         }
     }
 }

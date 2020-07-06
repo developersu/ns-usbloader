@@ -31,6 +31,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
+import nsusbloader.COM.ICommunications;
 import nsusbloader.COM.NET.NETCommunications;
 import nsusbloader.COM.USB.UsbCommunications;
 import nsusbloader.MediatorControl;
@@ -63,19 +64,20 @@ public class FrontController implements Initializable {
     private String previouslyOpenedPath;
     private Region btnUpStopImage;
     private ResourceBundle resourceBundle;
-    private Task<Void> usbNetCommunications;
+    private ICommunications usbNetCommunications;
     private Thread workThread;
-    
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
 
         ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "GoldLeaf");
+
         choiceProtocol.setItems(choiceProtocolList);
         choiceProtocol.getSelectionModel().select(AppPreferences.getInstance().getProtocol());
         choiceProtocol.setOnAction(e-> {
-            tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem());
-            if (choiceProtocol.getSelectionModel().getSelectedItem().equals("GoldLeaf")) {
+            tableFilesListController.setNewProtocol(getSelectedProtocol());
+            if (getSelectedProtocol().equals("GoldLeaf")) {
                 choiceNetUsb.setDisable(true);
                 choiceNetUsb.getSelectionModel().select("USB");
                 nsIpLbl.setVisible(false);
@@ -83,7 +85,7 @@ public class FrontController implements Initializable {
             }
             else {
                 choiceNetUsb.setDisable(false);
-                if (choiceNetUsb.getSelectionModel().getSelectedItem().equals("NET")) {
+                if (getSelectedNetUsb().equals("NET")) {
                     nsIpLbl.setVisible(true);
                     nsIpTextField.setVisible(true);
                 }
@@ -91,17 +93,17 @@ public class FrontController implements Initializable {
             // Really bad disable-enable upload button function
             disableUploadStopBtn(tableFilesListController.isFilesForUploadListEmpty());
         });  // Add listener to notify tableView controller
-        tableFilesListController.setNewProtocol(choiceProtocol.getSelectionModel().getSelectedItem());   // Notify tableView controller
+        tableFilesListController.setNewProtocol(getSelectedProtocol());   // Notify tableView controller
 
         ObservableList<String> choiceNetUsbList = FXCollections.observableArrayList("USB", "NET");
         choiceNetUsb.setItems(choiceNetUsbList);
         choiceNetUsb.getSelectionModel().select(AppPreferences.getInstance().getNetUsb());
-        if (choiceProtocol.getSelectionModel().getSelectedItem().equals("GoldLeaf")) {
+        if (getSelectedProtocol().equals("GoldLeaf")) {
             choiceNetUsb.setDisable(true);
             choiceNetUsb.getSelectionModel().select("USB");
         }
         choiceNetUsb.setOnAction(e->{
-            if (choiceNetUsb.getSelectionModel().getSelectedItem().equals("NET")){
+            if (getSelectedNetUsb().equals("NET")){
                 nsIpLbl.setVisible(true);
                 nsIpTextField.setVisible(true);
             }
@@ -112,7 +114,7 @@ public class FrontController implements Initializable {
         });
         // Set and configure NS IP field behavior
         nsIpTextField.setText(AppPreferences.getInstance().getNsIp());
-        if (choiceProtocol.getSelectionModel().getSelectedItem().equals("TinFoil") && choiceNetUsb.getSelectionModel().getSelectedItem().equals("NET")){
+        if (getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("NET")){
             nsIpLbl.setVisible(true);
             nsIpTextField.setVisible(true);
         }
@@ -299,7 +301,7 @@ public class FrontController implements Initializable {
      * */
     private void stopBtnAction(){
         if (workThread != null && workThread.isAlive()){
-            usbNetCommunications.cancel(false);
+            usbNetCommunications.cancel();
         }
     }
     /**

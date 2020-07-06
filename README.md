@@ -30,6 +30,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * [usb4java](https://mvnrepository.com/artifact/org.usb4java/usb4java)
 * Few icons taken from: [materialdesignicons.com](http://materialdesignicons.com/)
 * Information, ideas and data from ['fusee-launcher'](https://github.com/reswitched/fusee-launcher) application
+* [Apache Commons CLI](https://commons.apache.org/proper/commons-cli/)
 
 #### List of awesome contributors!
 

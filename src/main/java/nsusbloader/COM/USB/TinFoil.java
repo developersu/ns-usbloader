@@ -19,6 +19,7 @@
 package nsusbloader.COM.USB;
 
 import javafx.concurrent.Task;
+import nsusbloader.COM.ICommunications;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -48,7 +49,7 @@ class TinFoil extends TransferModule {
     /*  byte[] magic = new byte[4];
         ByteBuffer bb = StandardCharsets.UTF_8.encode("TUC0").rewind().get(magic); // Let's rephrase this 'string' */
 
-    TinFoil(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Task<Void> task, ILogPrinter logPrinter){
+    TinFoil(DeviceHandle handler, LinkedHashMap<String, File> nspMap, ICommunications task, ILogPrinter logPrinter){
         super(handler, nspMap, task, logPrinter);
         logPrinter.print("============= Tinfoil =============", EMsgType.INFO);
 

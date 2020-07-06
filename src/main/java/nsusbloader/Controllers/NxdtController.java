@@ -28,7 +28,7 @@ import javafx.stage.DirectoryChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EModule;
-import nsusbloader.Utilities.NxdtTask;
+import nsusbloader.Utilities.nxdumptool.NxdtTask;
 
 import java.io.File;
 import java.net.URL;
