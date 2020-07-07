@@ -57,19 +57,27 @@ public class CommandLineInterface {
                 return;
             }
             if (cli.hasOption("n") || cli.hasOption("tfn")){
-                final String[] tfnArguments = cli.getOptionValues("tfn");
-                new TinfoilNet(tfnArguments);
+                final String[] arguments = cli.getOptionValues("tfn");
+                new TinfoilNet(arguments);
                 return;
             }
             if (cli.hasOption("t") || cli.hasOption("tinfoil")){
-                final String[] tfArguments = cli.getOptionValues("tinfoil");
-                new TinfoilUsb(tfArguments);
+                final String[] arguments = cli.getOptionValues("tinfoil");
+                new TinfoilUsb(arguments);
                 return;
             }
             if (cli.hasOption("g") || cli.hasOption("goldleaf")){
-                final String[] glArguments = cli.getOptionValues("goldleaf");
-                new GoldLeaf(glArguments);
+                final String[] arguments = cli.getOptionValues("goldleaf");
+                new GoldLeaf(arguments);
+                return;
             }
+            /*
+            if (cli.hasOption("x") || cli.hasOption("nxdt")){
+                final String[] arguments = cli.getOptionValues("nxdt");
+                new NXDT(arguments);
+                return;
+            }
+            */
         }
         catch (ParseException pe){
             System.out.println(pe.getLocalizedMessage() +
@@ -139,6 +147,15 @@ public class CommandLineInterface {
                 .hasArgs()
                 .argName("...")
                 .build();
+        /* nxdumptool */
+        /*
+        final Option nxdtOption = Option.builder("x")
+                .longOpt("nxdt")
+                .desc("Handle nxdumptool connections.")
+                .hasArg()
+                .argName("DIRECTORY")
+                .build();
+         */
 
         final OptionGroup group = new OptionGroup();
         group.addOption(rcmOption);
@@ -148,6 +165,7 @@ public class CommandLineInterface {
         group.addOption(helpOption);
         group.addOption(tinfoilOption);
         group.addOption(glOption);
+        //group.addOption(nxdtOption);
 
         options.addOptionGroup(group);
 

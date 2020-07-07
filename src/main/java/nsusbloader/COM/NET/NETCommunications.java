@@ -18,7 +18,7 @@
 */
 package nsusbloader.COM.NET;
 
-import nsusbloader.COM.ICommunications;
+import nsusbloader.COM.INSTask;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.ModelControllers.Log;
@@ -32,7 +32,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class NETCommunications implements ICommunications { // todo: rewrite
+public class NETCommunications implements INSTask { // todo: rewrite
 
     private ILogPrinter logPrinter;
 

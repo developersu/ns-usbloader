@@ -18,7 +18,7 @@
 */
 package nsusbloader.COM;
 
-public interface ICommunications extends Runnable {
+public interface INSTask extends Runnable {
     void cancel();
     boolean isCancelled();
 }

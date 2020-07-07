@@ -18,7 +18,7 @@
 */
 package nsusbloader.Utilities.nxdumptool;
 
-import javafx.concurrent.Task;
+import nsusbloader.COM.INSTask;
 import nsusbloader.COM.USB.UsbErrorCodes;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -35,7 +35,7 @@ import java.util.Arrays;
 class NxdtUsbAbi1 {
     private ILogPrinter logPrinter;
     private DeviceHandle handlerNS;
-    private Task<Boolean> task;
+    private INSTask task;
     private String saveToPath;
 
     private boolean isWindows;
@@ -79,7 +79,7 @@ class NxdtUsbAbi1 {
                                                     0x00, 0x00, 0x00, 0x00 };
 
     public NxdtUsbAbi1(DeviceHandle handler,
-                       Task<Boolean> task,
+                       INSTask task,
                        ILogPrinter logPrinter,
                        String saveToPath
     ){

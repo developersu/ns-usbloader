@@ -98,9 +98,14 @@ public class MessagesConsumer extends AnimationTimer {
                 for (String key : statusMap.keySet())
                     tableViewController.setFileStatus(key, statusMap.get(key));
             }
-            //TODO: rewrite
-            if (appModuleType.equals(EModule.RCM)){
-                MediatorControl.getInstance().getContoller().getRcmCtrlr().setOneLineStatus(oneLinerStatus.get());
+
+            switch (appModuleType){
+                case RCM:
+                    MediatorControl.getInstance().getContoller().getRcmCtrlr().setOneLineStatus(oneLinerStatus.get());
+                    break;
+                case NXDT:
+                    MediatorControl.getInstance().getContoller().getNXDTabController().setOneLineStatus(oneLinerStatus.get());
+                    break;
             }
 
             this.stop();

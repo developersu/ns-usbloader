@@ -18,8 +18,7 @@
 */
 package nsusbloader.COM.USB;
 
-import javafx.concurrent.Task;
-import nsusbloader.COM.ICommunications;
+import nsusbloader.COM.INSTask;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -34,9 +33,9 @@ public abstract class TransferModule {
     LinkedHashMap<String, File> nspMap;
     ILogPrinter logPrinter;
     DeviceHandle handlerNS;
-    ICommunications task;
+    INSTask task;
 
-    TransferModule(DeviceHandle handler, LinkedHashMap<String, File> nspMap, ICommunications task, ILogPrinter printer){
+    TransferModule(DeviceHandle handler, LinkedHashMap<String, File> nspMap, INSTask task, ILogPrinter printer){
         this.handlerNS = handler;
         this.nspMap = nspMap;
         this.task = task;

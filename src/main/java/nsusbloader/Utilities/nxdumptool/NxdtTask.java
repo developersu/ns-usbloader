@@ -18,7 +18,7 @@
 */
 package nsusbloader.Utilities.nxdumptool;
 
-import javafx.concurrent.Task;
+import nsusbloader.COM.INSTask;
 import nsusbloader.COM.USB.UsbConnect;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
@@ -26,10 +26,12 @@ import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.DeviceHandle;
 
-public class NxdtTask extends Task<Boolean> {
+public class NxdtTask implements INSTask {
 
     private ILogPrinter logPrinter;
     private String saveToLocation;
+
+    private volatile boolean cancel;
 
     public NxdtTask(String saveToLocation){
         this.logPrinter = Log.getPrinter(EModule.NXDT);
@@ -37,7 +39,7 @@ public class NxdtTask extends Task<Boolean> {
     }
 
     @Override
-    protected Boolean call() {
+    public void run() {
         logPrinter.print("Save to location: "+ saveToLocation, EMsgType.INFO);
         logPrinter.print("=============== nxdumptool ===============", EMsgType.INFO);
 
@@ -45,7 +47,7 @@ public class NxdtTask extends Task<Boolean> {
         
         if (! usbConnect.isConnected()){
             logPrinter.close();
-            return false;
+            return;
         }
 
         DeviceHandle handler = usbConnect.getNsHandler();
@@ -55,7 +57,18 @@ public class NxdtTask extends Task<Boolean> {
         logPrinter.print(".:: Complete ::.", EMsgType.PASS);
 
         usbConnect.close();
+        logPrinter.updateOneLinerStatus(true);
         logPrinter.close();
-        return true;
+        return;
+    }
+
+    @Override
+    public void cancel() {
+        cancel = true;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancel;
     }
 }

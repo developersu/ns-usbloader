@@ -1,6 +1,24 @@
+/*
+    Copyright 2019-2020 Dmitry Isaenko
+
+    This file is part of NS-USBloader.
+
+    NS-USBloader is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NS-USBloader is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
+*/
 package nsusbloader.cli;
 
-import nsusbloader.COM.ICommunications;
+import nsusbloader.COM.INSTask;
 import nsusbloader.COM.USB.UsbCommunications;
 import nsusbloader.Controllers.SettingsController;
 
@@ -51,8 +69,8 @@ public class GoldLeaf {
                 + "\tns-usbloader -g ver=<arg1> [filter] FILE1 ...\n"
                 + "\tns-usbloader --goldleaf ver=<arg1> [filter] FILE1 ..."
                 + "\n\nOption:"
-                + "\n\tver=<goldleaf_version>\tDefine GoldLeaf version (mandatory)\n\n"
-                + "\n\tfilter\t\nShow only *.nsp in GoldLeaf (optional)\n\n"
+                + "\n\tver=<goldleaf_version>\tDefine GoldLeaf version (mandatory)"
+                + "\n\tfilter\t\t\tShow only *.nsp in GoldLeaf (optional)\n\n"
                 + getGlSupportedVersions());
     }
     private String getGlSupportedVersions(){
@@ -107,7 +125,7 @@ public class GoldLeaf {
     }
 
     public void runGoldLeafBackend() throws InterruptedException {
-        ICommunications task = new UsbCommunications(filesList,
+        INSTask task = new UsbCommunications(filesList,
                 "GoldLeaf"+goldLeafVersion,
                 filterForNsp);
         Thread thread = new Thread(task);

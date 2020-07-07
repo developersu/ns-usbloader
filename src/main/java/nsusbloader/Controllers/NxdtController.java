@@ -18,7 +18,6 @@
 */
 package nsusbloader.Controllers;
 
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -26,6 +25,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import nsusbloader.AppPreferences;
+import nsusbloader.COM.INSTask;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.Utilities.nxdumptool.NxdtTask;
@@ -45,7 +45,7 @@ public class NxdtController implements Initializable {
 
     private Region btnDumpStopImage;
 
-    private Task<Boolean> NxdtTask;
+    private INSTask NxdtTask;
     private Thread workThread;
 
     @Override
@@ -84,13 +84,6 @@ public class NxdtController implements Initializable {
             MediatorControl.getInstance().getContoller().logArea.clear();
 
             NxdtTask = new NxdtTask(saveToLocationLbl.getText());
-            NxdtTask.setOnSucceeded(event -> {
-                if (NxdtTask.getValue())
-                    statusLbl.setText(rb.getString("done_txt"));
-                else
-                    statusLbl.setText(rb.getString("failure_txt"));
-            });
-
             workThread = new Thread(NxdtTask);
             workThread.setDaemon(true);
             workThread.start();
@@ -102,7 +95,7 @@ public class NxdtController implements Initializable {
      * */
     private void stopBtnAction(){
         if (workThread != null && workThread.isAlive()){
-            NxdtTask.cancel(false);
+            NxdtTask.cancel();
         }
     }
 
@@ -129,6 +122,12 @@ public class NxdtController implements Initializable {
         injectPldBtn.setText(rb.getString("tabNXDT_Btn_Start"));
         injectPldBtn.getStyleClass().remove("buttonStop");
         injectPldBtn.getStyleClass().add("buttonUp");
+    }
+    public void setOneLineStatus(boolean status){
+        if (status)
+            statusLbl.setText(rb.getString("done_txt"));
+        else
+            statusLbl.setText(rb.getString("failure_txt"));
     }
     /**
      * Save application settings on exit

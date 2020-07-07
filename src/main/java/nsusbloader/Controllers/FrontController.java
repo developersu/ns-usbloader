@@ -30,7 +30,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
-import nsusbloader.COM.ICommunications;
+import nsusbloader.COM.INSTask;
 import nsusbloader.COM.NET.NETCommunications;
 import nsusbloader.COM.USB.UsbCommunications;
 import nsusbloader.MediatorControl;
@@ -63,7 +63,7 @@ public class FrontController implements Initializable {
     private String previouslyOpenedPath;
     private Region btnUpStopImage;
     private ResourceBundle resourceBundle;
-    private ICommunications usbNetCommunications;
+    private INSTask usbNetCommunications;
     private Thread workThread;
 
     @Override
