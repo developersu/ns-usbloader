@@ -18,7 +18,6 @@
 */
 package nsusbloader.COM.USB;
 
-import nsusbloader.COM.INSTask;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -53,7 +52,7 @@ public class GoldLeaf_05 extends TransferModule {
     private RandomAccessFile raf;   // NSP File
     private NSSplitReader nsr;      // It'a also NSP File
 
-    GoldLeaf_05(DeviceHandle handler, LinkedHashMap<String, File> nspMap, INSTask task, ILogPrinter logPrinter){
+    GoldLeaf_05(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Runnable task, ILogPrinter logPrinter){
         super(handler, nspMap, task, logPrinter);
         status = EFileStatus.FAILED;
 
@@ -335,7 +334,7 @@ public class GoldLeaf_05 extends TransferModule {
         IntBuffer writeBufTransferred = IntBuffer.allocate(1);
         int result;
 
-        while (! task.isCancelled()) {
+        while (! Thread.interrupted()) {
             result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
 
             switch (result){
@@ -368,7 +367,7 @@ public class GoldLeaf_05 extends TransferModule {
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
 
         int result;
-        while (! task.isCancelled()) {
+        while (! Thread.interrupted()) {
             result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
             switch (result) {

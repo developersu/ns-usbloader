@@ -30,7 +30,6 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
-import nsusbloader.COM.INSTask;
 import nsusbloader.COM.NET.NETCommunications;
 import nsusbloader.COM.USB.UsbCommunications;
 import nsusbloader.MediatorControl;
@@ -63,7 +62,7 @@ public class FrontController implements Initializable {
     private String previouslyOpenedPath;
     private Region btnUpStopImage;
     private ResourceBundle resourceBundle;
-    private INSTask usbNetCommunications;
+    private Runnable usbNetCommunications;
     private Thread workThread;
 
     @Override
@@ -265,8 +264,11 @@ public class FrontController implements Initializable {
 
         SettingsController settings = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
         // If USB selected
-        if (getSelectedProtocol().equals("GoldLeaf") || ( getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("USB") ) ){
-            usbNetCommunications = new UsbCommunications(nspToUpload, getSelectedProtocol() + settings.getGlVer(), settings.getNSPFileFilterForGL());
+        if (getSelectedProtocol().equals("GoldLeaf") ){
+            usbNetCommunications = new UsbCommunications(nspToUpload, "GoldLeaf" + settings.getGlVer(), settings.getNSPFileFilterForGL());
+        }
+        else if (( getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("USB") )){
+            usbNetCommunications = new UsbCommunications(nspToUpload, "TinFoil", settings.getNSPFileFilterForGL());
         }
         else {      // NET INSTALL OVER TINFOIL
             final String ipValidationPattern = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
@@ -300,7 +302,15 @@ public class FrontController implements Initializable {
      * */
     private void stopBtnAction(){
         if (workThread != null && workThread.isAlive()){
-            usbNetCommunications.cancel();
+            workThread.interrupt();
+
+            if (usbNetCommunications instanceof NETCommunications){
+                try{
+                    ((NETCommunications) usbNetCommunications).getServerSocket().close();
+                    ((NETCommunications) usbNetCommunications).getClientSocket().close();
+                }
+                catch (Exception ignore){ }
+            }
         }
     }
     /**

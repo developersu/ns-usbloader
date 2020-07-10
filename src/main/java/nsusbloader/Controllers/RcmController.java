@@ -194,7 +194,8 @@ public class RcmController implements Initializable {
     private void smash(){
         statusLbl.setText("");
         if (MediatorControl.getInstance().getTransferActive()) {
-            ServiceWindow.getErrorNotification(rb.getString("windowTitleError"), rb.getString("windowBodyPleaseFinishTransfersFirst"));
+            ServiceWindow.getErrorNotification(rb.getString("windowTitleError"),
+                    rb.getString("windowBodyPleaseStopOtherProcessFirst"));
             return;
         }
 

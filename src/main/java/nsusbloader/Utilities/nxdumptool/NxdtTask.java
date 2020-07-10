@@ -18,7 +18,6 @@
 */
 package nsusbloader.Utilities.nxdumptool;
 
-import nsusbloader.COM.INSTask;
 import nsusbloader.COM.USB.UsbConnect;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
@@ -26,12 +25,10 @@ import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.DeviceHandle;
 
-public class NxdtTask implements INSTask {
+public class NxdtTask implements Runnable {
 
-    private ILogPrinter logPrinter;
-    private String saveToLocation;
-
-    private volatile boolean cancel;
+    private final ILogPrinter logPrinter;
+    private final String saveToLocation;
 
     public NxdtTask(String saveToLocation){
         this.logPrinter = Log.getPrinter(EModule.NXDT);
@@ -52,23 +49,12 @@ public class NxdtTask implements INSTask {
 
         DeviceHandle handler = usbConnect.getNsHandler();
 
-        new NxdtUsbAbi1(handler, this, logPrinter, saveToLocation);
+        new NxdtUsbAbi1(handler, logPrinter, saveToLocation);
 
         logPrinter.print(".:: Complete ::.", EMsgType.PASS);
 
         usbConnect.close();
         logPrinter.updateOneLinerStatus(true);
         logPrinter.close();
-        return;
-    }
-
-    @Override
-    public void cancel() {
-        cancel = true;
-    }
-
-    @Override
-    public boolean isCancelled() {
-        return cancel;
     }
 }

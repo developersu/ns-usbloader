@@ -18,7 +18,6 @@
 */
 package nsusbloader.cli;
 
-import nsusbloader.COM.INSTask;
 import nsusbloader.COM.USB.UsbCommunications;
 import nsusbloader.Controllers.SettingsController;
 
@@ -125,7 +124,7 @@ public class GoldLeaf {
     }
 
     public void runGoldLeafBackend() throws InterruptedException {
-        INSTask task = new UsbCommunications(filesList,
+        Runnable task = new UsbCommunications(filesList,
                 "GoldLeaf"+goldLeafVersion,
                 filterForNsp);
         Thread thread = new Thread(task);

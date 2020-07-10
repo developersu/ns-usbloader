@@ -35,7 +35,7 @@ public class LogPrinterGui implements ILogPrinter {
     private final HashMap<String, EFileStatus> statusMap;      // BlockingQueue for literally one object. TODO: read more books ; replace to hashMap
     private final AtomicBoolean oneLinerStatus;
 
-    public LogPrinterGui(EModule whoIsAsking){
+    LogPrinterGui(EModule whoIsAsking){
         this.msgQueue = new LinkedBlockingQueue<>();
         this.progressQueue = new LinkedBlockingQueue<>();
         this.statusMap =  new HashMap<>();

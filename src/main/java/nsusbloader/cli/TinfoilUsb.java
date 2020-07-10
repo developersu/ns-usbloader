@@ -18,7 +18,6 @@
 */
 package nsusbloader.cli;
 
-import nsusbloader.COM.INSTask;
 import nsusbloader.COM.USB.UsbCommunications;
 
 import java.io.File;
@@ -61,7 +60,7 @@ public class TinfoilUsb {
     }
 
     private void runTinfoilBackend() throws InterruptedException{
-        INSTask task = new UsbCommunications(filesList, "TinFoil", false);
+        Runnable task = new UsbCommunications(filesList, "TinFoil", false);
         Thread thread = new Thread(task);
         thread.start();
         thread.join();

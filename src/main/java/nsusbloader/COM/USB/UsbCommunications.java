@@ -18,7 +18,6 @@
 */
 package nsusbloader.COM.USB;
 
-import nsusbloader.COM.INSTask;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EFileStatus;
@@ -31,14 +30,12 @@ import java.io.*;
 import java.util.*;
 
 // TODO: add filter option to show only NSP files
-public class UsbCommunications implements INSTask {
+public class UsbCommunications implements Runnable {
 
-    private ILogPrinter logPrinter;
-    private LinkedHashMap<String, File> nspMap;
-    private String protocol;
-    private boolean nspFilterForGl;
-
-    private volatile boolean cancel;
+    private final ILogPrinter logPrinter;
+    private final LinkedHashMap<String, File> nspMap;
+    private final String protocol;
+    private final boolean nspFilterForGl;
 
     public UsbCommunications(List<File> nspList, String protocol, boolean filterNspFilesOnlyForGl){
         this.protocol = protocol;
@@ -82,8 +79,6 @@ public class UsbCommunications implements INSTask {
         usbConnect.close();
 
         close(module.getStatus());
-
-        return;
     }
 
     /**
@@ -93,15 +88,5 @@ public class UsbCommunications implements INSTask {
         logPrinter.update(nspMap, status);
         logPrinter.print("\tEnd", EMsgType.INFO);
         logPrinter.close();
-    }
-
-    @Override
-    public boolean isCancelled() {
-        return cancel;
-    }
-
-    @Override
-    public void cancel() {
-        cancel = true;
     }
 }

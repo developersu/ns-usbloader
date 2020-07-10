@@ -21,7 +21,7 @@ package nsusbloader.ModelControllers;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLMain;
 
-public class Log {
+public abstract class Log {
 
     private Log(){}
 
