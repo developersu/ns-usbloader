@@ -33,7 +33,8 @@ import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
-import nsusbloader.Utilities.SplitMergeTool;
+import nsusbloader.Utilities.splitmerge.MergeTask;
+import nsusbloader.Utilities.splitmerge.SplitTask;
 
 import java.io.File;
 import java.net.URL;
@@ -204,9 +205,9 @@ public class SplitMergeController implements Initializable {
         }
 
         if (splitRad.isSelected())
-            smTask = SplitMergeTool.splitFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
+            smTask = new SplitTask(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
         else
-            smTask = SplitMergeTool.mergeFile(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
+            smTask = new MergeTask(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
         smTask.setOnCancelled(event -> statusLbl.setText(resourceBundle.getString("failure_txt")));
         smTask.setOnSucceeded(event -> {
             if (smTask.getValue())

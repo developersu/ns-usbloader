@@ -307,7 +307,7 @@ public class NETCommunications implements Runnable {
     private void handleSplitFile(File file, long start, long end) throws Exception{
         long count = end - start + 1;
 
-        int readPice = 8388608;
+        int readPice = 1024;// NOTE: keep it small for better speed
         byte[] byteBuf;
         long currentOffset = 0;
 
@@ -333,7 +333,7 @@ public class NETCommunications implements Runnable {
     private void handleRegularFile(File file, long start, long end) throws Exception{
         long count = end - start + 1;
 
-        int readPice = 8388608;
+        int readPice = 1024; // NOTE: keep it small for better speed
         byte[] byteBuf;
         long currentOffset = 0;
 

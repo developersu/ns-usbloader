@@ -62,6 +62,7 @@ public class TinfoilUsb {
     private void runTinfoilBackend() throws InterruptedException{
         Runnable task = new UsbCommunications(filesList, "TinFoil", false);
         Thread thread = new Thread(task);
+        thread.setDaemon(true);
         thread.start();
         thread.join();
     }

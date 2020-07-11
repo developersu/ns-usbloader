@@ -77,7 +77,7 @@ public class TinfoilNet {
                 + "\tns-usbloader -n nsip=<arg1> [hostip=<arg2>] FILE1 ...\n"
                 + "\tns-usbloader --tfn nsip=<arg1> [hostip=<arg2>] FILE1 ..."
                 + "\n\nOptions:"
-                + "\n\tnsip=<ip>\t\t\tDefine NS IP address (mandatory)"
+                + "\n\tnsip=<ip>\t\tDefine NS IP address (mandatory)"
                 + "\n\thostip=<ip[:port]>\tDefine this host IP address. Will be obtained automatically if not set.");
     }
 
@@ -138,6 +138,7 @@ public class TinfoilNet {
                 hostPortNum,
                 "");
         Thread netCommThread = new Thread(netCommunications);
+        netCommThread.setDaemon(true);
         netCommThread.start();
         netCommThread.join();
     }

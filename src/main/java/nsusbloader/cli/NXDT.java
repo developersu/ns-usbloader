@@ -52,6 +52,7 @@ public class NXDT {
     private void runBackend() throws InterruptedException{
         NxdtTask nxdtTask = new NxdtTask(saveTo);
         Thread thread = new Thread(nxdtTask);
+        thread.setDaemon(true);
         thread.start();
         thread.join();
     }
