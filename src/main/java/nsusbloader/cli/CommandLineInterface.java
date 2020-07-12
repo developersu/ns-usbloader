@@ -78,6 +78,17 @@ public class CommandLineInterface {
                 return;
             }
             */
+
+            if (cli.hasOption("s") || cli.hasOption("split")){
+                final String[] arguments = cli.getOptionValues("split");
+                new Split(arguments);
+                return;
+            }
+            if (cli.hasOption("m") || cli.hasOption("merge")){
+                final String[] arguments = cli.getOptionValues("merge");
+                new Merge(arguments);
+                return;
+            }
         }
         catch (ParseException pe){
             System.out.println(pe.getLocalizedMessage() +
@@ -138,7 +149,7 @@ public class CommandLineInterface {
                 .longOpt("tinfoil")
                 .desc("Install via Tinfoil/Awoo USB mode.")
                 .hasArgs()
-                .argName("FILE1 ...")
+                .argName("FILE...")
                 .build();
         /* GoldLeaf USB */
         final Option glOption = Option.builder("g")
@@ -156,6 +167,18 @@ public class CommandLineInterface {
                 .argName("DIRECTORY")
                 .build();
          */
+        final Option splitOption = Option.builder("s")
+                .longOpt("split")
+                .desc("Split files. Check '-s help' for information.")
+                .hasArgs()
+                .argName("...")
+                .build();
+        final Option mergeOption = Option.builder("m")
+                .longOpt("merge")
+                .desc("Merge files. Check '-m help' for information.")
+                .hasArgs()
+                .argName("...")
+                .build();
 
         final OptionGroup group = new OptionGroup();
         group.addOption(rcmOption);
@@ -166,6 +189,8 @@ public class CommandLineInterface {
         group.addOption(tinfoilOption);
         group.addOption(glOption);
         //group.addOption(nxdtOption);
+        group.addOption(splitOption);
+        group.addOption(mergeOption);
 
         options.addOptionGroup(group);
 

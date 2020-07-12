@@ -18,6 +18,7 @@
 */
 package nsusbloader.COM.USB;
 
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -47,7 +48,7 @@ class TinFoil extends TransferModule {
     /*  byte[] magic = new byte[4];
         ByteBuffer bb = StandardCharsets.UTF_8.encode("TUC0").rewind().get(magic); // Let's rephrase this 'string' */
 
-    TinFoil(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Runnable task, ILogPrinter logPrinter){
+    TinFoil(DeviceHandle handler, LinkedHashMap<String, File> nspMap, CancellableRunnable task, ILogPrinter logPrinter){
         super(handler, nspMap, task, logPrinter);
         logPrinter.print("============= Tinfoil =============", EMsgType.INFO);
 
@@ -304,7 +305,7 @@ class TinFoil extends TransferModule {
         IntBuffer writeBufTransferred = IntBuffer.allocate(1);
         int result;
         //int varVar = 0; //todo:remove
-        while (! Thread.interrupted() ) {
+        while (! task.isCancelled() ) {
             /*
             if (varVar != 0)
                 logPrinter.print("writeUsb() retry cnt: "+varVar, EMsgType.INFO); //NOTE: DEBUG
@@ -344,7 +345,7 @@ class TinFoil extends TransferModule {
         // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
         int result;
-        while (! Thread.interrupted()) {
+        while (! task.isCancelled()) {
             result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
             switch (result) {

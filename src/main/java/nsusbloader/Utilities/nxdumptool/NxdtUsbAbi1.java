@@ -32,9 +32,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 class NxdtUsbAbi1 {
-    private ILogPrinter logPrinter;
-    private DeviceHandle handlerNS;
-    private String saveToPath;
+    private final ILogPrinter logPrinter;
+    private final DeviceHandle handlerNS;
+    private final String saveToPath;
+    private final NxdtTask parent;
 
     private boolean isWindows;
     private boolean isWindows10;
@@ -78,10 +79,12 @@ class NxdtUsbAbi1 {
 
     public NxdtUsbAbi1(DeviceHandle handler,
                        ILogPrinter logPrinter,
-                       String saveToPath
+                       String saveToPath,
+                       NxdtTask parent
     ){
         this.handlerNS = handler;
         this.logPrinter = logPrinter;
+        this.parent = parent;
         this.isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
 
         if (isWindows)
@@ -306,7 +309,7 @@ class NxdtUsbAbi1 {
         writeBuffer.put(message);
         IntBuffer writeBufTransferred = IntBuffer.allocate(1);
 
-        if ( Thread.interrupted() )
+        if ( parent.isCancelled() )
             throw new InterruptedException("Execution interrupted");
 
         int result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 5050);
@@ -335,7 +338,7 @@ class NxdtUsbAbi1 {
         // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
         int result;
-        while (! Thread.interrupted()) {
+        while (! parent.isCancelled()) {
             result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
             switch (result) {
@@ -364,7 +367,7 @@ class NxdtUsbAbi1 {
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
         int result;
         int countDown = 0;
-        while (! Thread.interrupted() && countDown < 5) {
+        while (! parent.isCancelled() && countDown < 5) {
             result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);
 
             switch (result) {

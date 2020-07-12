@@ -18,6 +18,7 @@
 */
 package nsusbloader.COM.USB;
 
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
@@ -32,9 +33,9 @@ public abstract class TransferModule {
     LinkedHashMap<String, File> nspMap;
     ILogPrinter logPrinter;
     DeviceHandle handlerNS;
-    Runnable task;
+    CancellableRunnable task;
 
-    TransferModule(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Runnable task, ILogPrinter printer){
+    TransferModule(DeviceHandle handler, LinkedHashMap<String, File> nspMap, CancellableRunnable task, ILogPrinter printer){
         this.handlerNS = handler;
         this.nspMap = nspMap;
         this.task = task;

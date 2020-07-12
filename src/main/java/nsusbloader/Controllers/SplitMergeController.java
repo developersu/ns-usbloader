@@ -18,7 +18,6 @@
 */
 package nsusbloader.Controllers;
 
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -31,6 +30,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
 import nsusbloader.Utilities.splitmerge.MergeTask;
@@ -61,8 +61,8 @@ public class SplitMergeController implements Initializable {
     private ResourceBundle resourceBundle;
 
     private Region convertRegion;
-    private Task<Boolean> smTask;
     private Thread smThread;
+    private CancellableRunnable smTask;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -188,8 +188,9 @@ public class SplitMergeController implements Initializable {
      * It's button listener when convert-process in progress
      * */
     private void stopBtnAction(){
-        if (smThread != null && smThread.isAlive())
-            smTask.cancel(false);
+        if (smThread != null && smThread.isAlive()) {
+            smTask.cancel();
+        }
     }
     /**
      * It's button listener when convert-process NOT in progress
@@ -208,13 +209,6 @@ public class SplitMergeController implements Initializable {
             smTask = new SplitTask(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
         else
             smTask = new MergeTask(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
-        smTask.setOnCancelled(event -> statusLbl.setText(resourceBundle.getString("failure_txt")));
-        smTask.setOnSucceeded(event -> {
-            if (smTask.getValue())
-                statusLbl.setText(resourceBundle.getString("done_txt"));
-            else
-                statusLbl.setText(resourceBundle.getString("failure_txt"));
-        });
         smThread = new Thread(smTask);
         smThread.setDaemon(true);
         smThread.start();
@@ -244,6 +238,13 @@ public class SplitMergeController implements Initializable {
         convertBtn.setDisable(false);
         event.setDropCompleted(true);
         event.consume();
+    }
+
+    public void setOneLineStatus(boolean status){
+        if (status)
+            statusLbl.setText(resourceBundle.getString("done_txt"));
+        else
+            statusLbl.setText(resourceBundle.getString("failure_txt"));
     }
     /**
      * Save application settings on exit

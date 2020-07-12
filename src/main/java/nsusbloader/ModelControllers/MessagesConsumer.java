@@ -106,6 +106,9 @@ public class MessagesConsumer extends AnimationTimer {
                 case NXDT:
                     MediatorControl.getInstance().getContoller().getNXDTabController().setOneLineStatus(oneLinerStatus.get());
                     break;
+                case SPLIT_MERGE_TOOL:
+                    MediatorControl.getInstance().getContoller().getSmCtrlr().setOneLineStatus(oneLinerStatus.get());
+                    break;
             }
 
             this.stop();

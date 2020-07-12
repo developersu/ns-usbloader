@@ -22,6 +22,7 @@ import javafx.application.Platform;
 import javafx.stage.FileChooser;
 import nsusbloader.COM.Helpers.NSSplitReader;
 import nsusbloader.MediatorControl;
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.DeviceHandle;
@@ -68,7 +69,7 @@ class GoldLeaf_07 extends TransferModule {
     // For using in CMD_SelectFile with SPEC:/ prefix
     private File selectedFile;
 
-    GoldLeaf_07(DeviceHandle handler, LinkedHashMap<String, File> nspMap, Runnable task, ILogPrinter logPrinter, boolean nspFilter){
+    GoldLeaf_07(DeviceHandle handler, LinkedHashMap<String, File> nspMap, CancellableRunnable task, ILogPrinter logPrinter, boolean nspFilter){
         super(handler, nspMap, task, logPrinter);
 
         final byte CMD_GetDriveCount       = 0x00;
@@ -992,7 +993,7 @@ class GoldLeaf_07 extends TransferModule {
 
         int result;
 
-        while (! Thread.interrupted()) {
+        while (! task.isCancelled()) {
             result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
             switch (result) {
@@ -1022,7 +1023,7 @@ class GoldLeaf_07 extends TransferModule {
 
         int result;
 
-        while (! Thread.interrupted()) {
+        while (! task.isCancelled()) {
             result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
             switch (result) {
@@ -1082,7 +1083,7 @@ class GoldLeaf_07 extends TransferModule {
         IntBuffer writeBufTransferred = IntBuffer.allocate(1);
         int result;
 
-        while (! Thread.interrupted()) {
+        while (! task.isCancelled()) {
             result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
 
             switch (result){

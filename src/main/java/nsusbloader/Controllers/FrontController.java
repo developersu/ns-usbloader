@@ -33,6 +33,7 @@ import nsusbloader.AppPreferences;
 import nsusbloader.COM.NET.NETCommunications;
 import nsusbloader.COM.USB.UsbCommunications;
 import nsusbloader.MediatorControl;
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
 
@@ -62,7 +63,7 @@ public class FrontController implements Initializable {
     private String previouslyOpenedPath;
     private Region btnUpStopImage;
     private ResourceBundle resourceBundle;
-    private Runnable usbNetCommunications;
+    private CancellableRunnable usbNetCommunications;
     private Thread workThread;
 
     @Override
@@ -302,7 +303,7 @@ public class FrontController implements Initializable {
      * */
     private void stopBtnAction(){
         if (workThread != null && workThread.isAlive()){
-            workThread.interrupt();
+            usbNetCommunications.cancel();
 
             if (usbNetCommunications instanceof NETCommunications){
                 try{

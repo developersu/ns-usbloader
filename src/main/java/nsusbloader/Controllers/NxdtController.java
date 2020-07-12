@@ -26,6 +26,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.Utilities.nxdumptool.NxdtTask;
 
@@ -45,6 +46,7 @@ public class NxdtController implements Initializable {
     private Region btnDumpStopImage;
 
     private Thread workThread;
+    private CancellableRunnable nxdtTask;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -81,8 +83,8 @@ public class NxdtController implements Initializable {
         if ((workThread == null || ! workThread.isAlive())){
             MediatorControl.getInstance().getContoller().logArea.clear();
 
-            Runnable NxdtTask = new NxdtTask(saveToLocationLbl.getText());
-            workThread = new Thread(NxdtTask);
+            nxdtTask = new NxdtTask(saveToLocationLbl.getText());
+            workThread = new Thread(nxdtTask);
             workThread.setDaemon(true);
             workThread.start();
         }
@@ -93,7 +95,7 @@ public class NxdtController implements Initializable {
      * */
     private void stopBtnAction(){
         if (workThread != null && workThread.isAlive()){
-            workThread.interrupt();
+            nxdtTask.cancel();
         }
     }
 

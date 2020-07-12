@@ -18,6 +18,7 @@
 */
 package nsusbloader.COM.USB;
 
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EFileStatus;
@@ -30,7 +31,7 @@ import java.io.*;
 import java.util.*;
 
 // TODO: add filter option to show only NSP files
-public class UsbCommunications implements Runnable {
+public class UsbCommunications extends CancellableRunnable {
 
     private final ILogPrinter logPrinter;
     private final LinkedHashMap<String, File> nspMap;

@@ -18,7 +18,7 @@
 */
 package nsusbloader.Utilities.splitmerge;
 
-import javafx.concurrent.Task;
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
@@ -27,7 +27,7 @@ import nsusbloader.NSLDataTypes.EMsgType;
 import java.io.*;
 import java.util.Arrays;
 
-public class SplitTask extends Task<Boolean> {
+public class SplitTask extends CancellableRunnable {
 
     private final ILogPrinter logPrinter;
     private final String saveToPath;
@@ -40,11 +40,11 @@ public class SplitTask extends Task<Boolean> {
     public SplitTask(String filePath, String saveToPath){
         this.filePath = filePath;
         this.saveToPath = saveToPath;
-        logPrinter = Log.getPrinter(EModule.SPLIT_MERGE_TOOL);
+        this.logPrinter = Log.getPrinter(EModule.SPLIT_MERGE_TOOL);
     }
 
     @Override
-    protected Boolean call() {
+    public void run() {
         try {
             logPrinter.print("Split file: "+filePath, EMsgType.INFO);
             this.file = new File(filePath);
@@ -53,14 +53,14 @@ public class SplitTask extends Task<Boolean> {
             splitFileToChunks();
             validateSplitFile();
 
-            logPrinter.print("Split task complete!", EMsgType.INFO);
+            logPrinter.print(".:: Split complete ::.", EMsgType.INFO);
+            logPrinter.updateOneLinerStatus(true);
             logPrinter.close();
-            return true;
         }
         catch (Exception e){
             logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            logPrinter.updateOneLinerStatus(false);
             logPrinter.close();
-            return false;
         }
     }
 
@@ -68,8 +68,7 @@ public class SplitTask extends Task<Boolean> {
         splitFile = new File(saveToPath+File.separator+"!_"+file.getName());
 
         for (int i = 0; i < 50 ; i++){
-
-            if (this.isCancelled()){
+            if (isCancelled()){
                 throw new InterruptedException("Split task interrupted!");
             }
 
@@ -112,7 +111,7 @@ public class SplitTask extends Task<Boolean> {
 
             while (counter < 1024){      // 0xffff0000 total
 
-                if (this.isCancelled()){
+                if (isCancelled()){
                     fragmentBos.close();
                     bis.close();
                     boolean isDeleted = splitFile.delete();
@@ -170,6 +169,5 @@ public class SplitTask extends Task<Boolean> {
             throw new Exception("Sizes are different! Do NOT use this file for installations!");
 
         logPrinter.print("Sizes are the same! Split file should be good!", EMsgType.PASS);
-
     }
 }

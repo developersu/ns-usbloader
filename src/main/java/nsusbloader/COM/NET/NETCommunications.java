@@ -18,6 +18,7 @@
 */
 package nsusbloader.COM.NET;
 
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.ModelControllers.Log;
@@ -31,7 +32,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class NETCommunications implements Runnable {
+public class NETCommunications extends CancellableRunnable {
 
     private final ILogPrinter logPrinter;
 
@@ -84,7 +85,7 @@ public class NETCommunications implements Runnable {
 
     @Override
     public void run() {
-        if (! isValid || Thread.interrupted() )
+        if (! isValid || isCancelled() )
             return;
 
         logPrinter.print("\tStart chain", EMsgType.INFO);
@@ -175,7 +176,7 @@ public class NETCommunications implements Runnable {
             }
         }
         catch (Exception e){
-            if (Thread.interrupted())
+            if (isCancelled())
                 logPrinter.print("Interrupted by user.", EMsgType.INFO);
             else
                 logPrinter.print(e.getMessage(), EMsgType.INFO);

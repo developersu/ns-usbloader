@@ -18,7 +18,7 @@
 */
 package nsusbloader.Utilities.splitmerge;
 
-import javafx.concurrent.Task;
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
@@ -27,7 +27,7 @@ import nsusbloader.NSLDataTypes.EMsgType;
 import java.io.*;
 import java.util.Arrays;
 
-public class MergeTask extends Task<Boolean> {
+public class MergeTask extends CancellableRunnable {
 
     private final ILogPrinter logPrinter;
     private final String saveToPath;
@@ -44,8 +44,9 @@ public class MergeTask extends Task<Boolean> {
         this.saveToPath = saveToPath;
         logPrinter = Log.getPrinter(EModule.SPLIT_MERGE_TOOL);
     }
+
     @Override
-    protected Boolean call() {
+    public void run() {
         try {
             logPrinter.print("Merge file: " + filePath, EMsgType.INFO);
             splitFile = new File(filePath);
@@ -59,14 +60,14 @@ public class MergeTask extends Task<Boolean> {
             mergeChunksToFile();
             validateFile();
 
-            logPrinter.print("Merge task complete!", EMsgType.INFO);
+            logPrinter.print(".:: Merge complete ::.", EMsgType.INFO);
+            logPrinter.updateOneLinerStatus(true);
             logPrinter.close();
-            return true;
         }
         catch (Exception e){
             logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            logPrinter.updateOneLinerStatus(false);
             logPrinter.close();
-            return false;
         }
     }
 
@@ -98,7 +99,7 @@ public class MergeTask extends Task<Boolean> {
         resultFile = new File(saveToPath+File.separator+"!_"+splitFileName);
 
         for (int i = 0; i < 50 ; i++){
-            if (this.isCancelled()){
+            if (isCancelled()){
                 throw new InterruptedException("Split task interrupted!");
             }
 
@@ -128,7 +129,7 @@ public class MergeTask extends Task<Boolean> {
             bis = new BufferedInputStream(new FileInputStream(chunkFile));
             while (true){
 
-                if (this.isCancelled()){
+                if (isCancelled()){
                     bos.close();
                     bis.close();
                     boolean isDeleted = resultFile.delete();

@@ -19,13 +19,14 @@
 package nsusbloader.Utilities.nxdumptool;
 
 import nsusbloader.COM.USB.UsbConnect;
+import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.DeviceHandle;
 
-public class NxdtTask implements Runnable {
+public class NxdtTask extends CancellableRunnable {
 
     private final ILogPrinter logPrinter;
     private final String saveToLocation;
@@ -49,7 +50,7 @@ public class NxdtTask implements Runnable {
 
         DeviceHandle handler = usbConnect.getNsHandler();
 
-        new NxdtUsbAbi1(handler, logPrinter, saveToLocation);
+        new NxdtUsbAbi1(handler, logPrinter, saveToLocation, this);
 
         logPrinter.print(".:: Complete ::.", EMsgType.PASS);
 
