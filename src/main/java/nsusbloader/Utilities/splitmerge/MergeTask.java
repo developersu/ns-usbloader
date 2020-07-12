@@ -33,6 +33,12 @@ public class MergeTask extends Task<Boolean> {
     private final String saveToPath;
     private final String filePath;
 
+    private File splitFile;
+
+    private File[] chunkFiles;
+    private long chunksTotalSize;
+    private File resultFile;
+
     public MergeTask(String filePath, String saveToPath) {
         this.filePath = filePath;
         this.saveToPath = saveToPath;
@@ -40,111 +46,123 @@ public class MergeTask extends Task<Boolean> {
     }
     @Override
     protected Boolean call() {
-        logPrinter.print("Merge file: "+filePath, EMsgType.INFO);
+        try {
+            logPrinter.print("Merge file: " + filePath, EMsgType.INFO);
+            splitFile = new File(filePath);
 
-        File folder = new File(filePath);
+            collectChunks();
+            validateChunks();
+            sortChunks();
+            calculateChunksSizeSum();
 
-        long cnkTotalSize = 0;
+            createFile();
+            mergeChunksToFile();
+            validateFile();
 
-        File[] chunkFiles = folder.listFiles((file, s) -> s.matches("^[0-9][0-9]$"));
-
-        if (chunkFiles == null || chunkFiles.length == 0){
-            logPrinter.print("Selected folder doesn't have any chunks. Nothing to do here.", EMsgType.FAIL);
+            logPrinter.print("Merge task complete!", EMsgType.INFO);
+            logPrinter.close();
+            return true;
+        }
+        catch (Exception e){
+            logPrinter.print(e.getMessage(), EMsgType.FAIL);
             logPrinter.close();
             return false;
         }
+    }
 
+    private void collectChunks(){
+        chunkFiles = splitFile.listFiles((file, s) -> s.matches("^[0-9][0-9]$"));
+    }
+
+    private void validateChunks() throws Exception{
+        if (chunkFiles == null || chunkFiles.length == 0){
+            throw new Exception("Selected folder doesn't have any chunks. Nothing to do here.");
+        }
+    }
+
+    private void sortChunks(){
         Arrays.sort(chunkFiles);
+    }
 
+    private void calculateChunksSizeSum(){
         logPrinter.print("Next files will be merged in following order: ", EMsgType.INFO);
         for (File cnk : chunkFiles){
             logPrinter.print("    "+cnk.getName(), EMsgType.INFO);
-            cnkTotalSize += cnk.length();
+            chunksTotalSize += cnk.length();
         }
+    }
 
-        double chunkPercent = (4194240.0 / (cnkTotalSize / 100.0) / 100.0);
-        long totalSizeCnt = 0;
+    private void createFile() throws Exception{
+        final String splitFileName = splitFile.getName();
 
-        File resultFile = new File(saveToPath+File.separator+"!_"+folder.getName());
-        //*******
-        for (int i = 0;  ; i++){
+        resultFile = new File(saveToPath+File.separator+"!_"+splitFileName);
+
+        for (int i = 0; i < 50 ; i++){
             if (this.isCancelled()){
-                logPrinter.print("Split task interrupted!", EMsgType.PASS);
-                logPrinter.close();
-                return false;
+                throw new InterruptedException("Split task interrupted!");
             }
 
             if (resultFile.exists()){
-                if (i >= 50){
-                    logPrinter.print("Can't create new file.", EMsgType.FAIL);
-                    logPrinter.close();
-                    return false;
-                }
-
                 logPrinter.print("Trying to create a good new file...", EMsgType.WARNING);
-                resultFile = new File(saveToPath+File.separator+"!_"+i+"_"+folder.getName());
+                resultFile = new File(saveToPath+File.separator+"!_"+i+"_"+splitFileName);
                 continue;
             }
+
             logPrinter.print("Save results to: "+resultFile.getAbsolutePath(), EMsgType.INFO);
-            break;
+            return;
         }
-        //*******
+        throw new Exception("Can't create new file.");
+    }
 
-        try {
-            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(resultFile));
+    private void mergeChunksToFile() throws Exception{
+        double chunkPercent = (4194240.0 / (chunksTotalSize / 100.0) / 100.0);
+        long totalSizeCnt = 0;
 
-            BufferedInputStream bis;
-            byte[] chunk;
-            int readBytesCnt;
+        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(resultFile));
 
-            for (File cnk : chunkFiles){
-                bis = new BufferedInputStream(new FileInputStream(cnk));
-                while (true){
+        BufferedInputStream bis;
+        byte[] chunk;
+        int readBytesCnt;
 
-                    if (this.isCancelled()){
-                        bos.close();
-                        bis.close();
-                        boolean isDeleted = resultFile.delete();
-                        logPrinter.print("Split task interrupted and file "+(isDeleted?"deleted.":"is not deleted."), EMsgType.PASS);
-                        logPrinter.close();
-                        return false;
-                    }
+        for (File chunkFile : chunkFiles){
+            bis = new BufferedInputStream(new FileInputStream(chunkFile));
+            while (true){
 
-                    chunk = new byte[4194240];
-                    readBytesCnt = bis.read(chunk);
-
-                    logPrinter.updateProgress(chunkPercent * totalSizeCnt);
-                    totalSizeCnt++;
-
-                    if (readBytesCnt < 4194240){
-                        if (readBytesCnt > 0)
-                            bos.write(chunk, 0, readBytesCnt);
-                        break;
-                    }
-
-                    bos.write(chunk);
+                if (this.isCancelled()){
+                    bos.close();
+                    bis.close();
+                    boolean isDeleted = resultFile.delete();
+                    throw new InterruptedException("Merge task interrupted and file "
+                            + (isDeleted ? "deleted." : "is not deleted."));
                 }
-                bis.close();
-            }
-            bos.close();
-            //=============== let's check what we have ==============
-            long resultFileSize = resultFile.length();
-            logPrinter.print("Total chunks size: " + cnkTotalSize, EMsgType.INFO);
-            logPrinter.print("Merged file size:  " + resultFileSize, EMsgType.INFO);
 
-            if (cnkTotalSize != resultFileSize){
-                logPrinter.print("Sizes are different! Do NOT use this file for installations!", EMsgType.FAIL);
-                return false;
-            }
-            logPrinter.print("Sizes are the same! Split file should be good!", EMsgType.PASS);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-            logPrinter.print("Error: "+e.getMessage(), EMsgType.FAIL);
-        }
+                chunk = new byte[4194240];
+                readBytesCnt = bis.read(chunk);
 
-        logPrinter.print("Merge task complete!", EMsgType.INFO);
-        logPrinter.close();
-        return true;
+                logPrinter.updateProgress(chunkPercent * totalSizeCnt);
+                totalSizeCnt++;
+
+                if (readBytesCnt < 4194240){
+                    if (readBytesCnt > 0)
+                        bos.write(chunk, 0, readBytesCnt);
+                    break;
+                }
+
+                bos.write(chunk);
+            }
+            bis.close();
+        }
+        bos.close();
+    }
+
+    private void validateFile() throws Exception{
+        long resultFileSize = resultFile.length();
+        logPrinter.print("Total chunks size: " + chunksTotalSize, EMsgType.INFO);
+        logPrinter.print("Merged file size:  " + resultFileSize, EMsgType.INFO);
+
+        if (chunksTotalSize != resultFileSize)
+            throw new Exception("Sizes are different! Do NOT use this file for installations!");
+
+        logPrinter.print("Sizes are the same! Resulting file should be good!", EMsgType.PASS);
     }
 }

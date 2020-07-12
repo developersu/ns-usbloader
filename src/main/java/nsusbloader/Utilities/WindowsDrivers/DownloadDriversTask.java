@@ -32,9 +32,7 @@ public class DownloadDriversTask extends Task<String> {
 
     @Override
     protected String call() {
-        if (isDriversDownloaded())
-            return driversInstallerFile.getAbsolutePath();
-        if (downloadDrivers())
+        if (isDriversDownloaded() || downloadDrivers())
             return driversInstallerFile.getAbsolutePath();
         return null;
     }
