@@ -19,10 +19,7 @@
 package nsusbloader.cli;
 
 import nsusbloader.NSLMain;
-import nsusbloader.Utilities.Rcm;
 import org.apache.commons.cli.*;
-
-import java.io.File;
 
 import java.util.prefs.Preferences;
 
@@ -49,7 +46,7 @@ public class CommandLineInterface {
             }
             if (cli.hasOption('r') || cli.hasOption("rcm")){
                 final String payloadArgument = cli.getOptionValue("rcm");
-                handleRcm(payloadArgument);
+                new RcmCli(payloadArgument);
                 return;
             }
             if (cli.hasOption("c") || cli.hasOption("clean")){
@@ -78,7 +75,6 @@ public class CommandLineInterface {
                 return;
             }
             */
-
             if (cli.hasOption("s") || cli.hasOption("split")){
                 final String[] arguments = cli.getOptionValues("split");
                 new Split(arguments);
@@ -207,23 +203,6 @@ public class CommandLineInterface {
         }
         else
             System.out.println("There are no settings in system to remove");
-    }
-    private void handleRcm(String payload) throws InterruptedException{
-        boolean isWindows = System.getProperty("os.name").toLowerCase().replace(" ", "").contains("windows");
-
-        if (isWindows) {
-            if (! payload.matches("^.:\\\\.*$"))
-                payload = System.getProperty("user.dir") + File.separator + payload;
-        }
-        else {
-            if (! payload.startsWith("/"))
-                payload = System.getProperty("user.dir") + File.separator + payload;
-        }
-
-        Rcm rcm = new Rcm(payload);
-        Thread rcmThread = new Thread(rcm);
-        rcmThread.start();
-        rcmThread.join();
     }
     private void handleHelp(Options cliOptions){
         new HelpFormatter().printHelp(

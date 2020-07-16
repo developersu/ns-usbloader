@@ -17,9 +17,9 @@ With GUI and cookies. Works on Windows, macOS and Linux.
 
 Sometimes I add new posts about this project [on my home page](https://developersu.blogspot.com/search/label/NS-USBloader).
 
-![Application screenshot](https://live.staticflickr.com/65535/49513701961_2b41747a9f_o.png)  
-<img src="https://live.staticflickr.com/65535/49513701841_e09c86b944_o.png" alt="screenshot" width="250"/>  <img src="https://live.staticflickr.com/65535/49513701896_c4d0a905c0_o.png" alt="screenshot" width="250"/>  
-<img src="https://live.staticflickr.com/65535/49513184138_688ee551f8_o.png" alt="screenshot" width="250"/>  <img src="https://live.staticflickr.com/65535/49513924407_212988e0e9_o.png" alt="screenshot" width="250"/>
+![Application screenshot](screenshots/1.png)  
+<img src="screenshots/2.png" alt="screenshot" width="250"/>  <img src="screenshots/3.png" alt="screenshot" width="250"/>  
+<img src="screenshots/4.png" alt="screenshot" width="250"/>  <img src="screenshots/5.png" alt="screenshot" width="250"/>
 
 #### License
 
@@ -49,7 +49,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 
 ### System requirements
 
-JRE/JDK 8u60 or higher.
+JRE/JDK 8u60 or higher
 
 ### Supported GoldLeaf versions
 | GoldLeaf version | NS-USBloader version |
@@ -114,7 +114,7 @@ Take a look on app, find where is the option to install from USB and/or Network.
 
 There are three tabs. First one is main.
 
-##### 'List' tab.
+##### 'Gamepad' tab.
 
 At the top of you selecting from drop-down application and protocol that you're going to use. For GoldLeaf only USB is available. Lamp icon stands for switching themes (light or dark).
 
@@ -151,29 +151,57 @@ Also here you can:
 That's where all logs dropped. Verbose information about transmissions comes here.
 
 
-
 ##### CLI (command line interface)
 
+To get help run ``$ java -jar ns-usbloader-4.0.jar --help``
+
 ```
--c, --clean   Remove/reset settings and exit
--v, --version Show application version
--h, --help    Shows this message
+ -c,--clean                      Remove/reset settings and exit
+ -g,--goldleaf <...>             Install via GoldLeaf mode. Check '-g help' for information.
+ -h,--help                       Show this help
+ -m,--merge <...>                Merge files. Check '-m help' for information.
+ -n,--tfn <...>                  Install via Tinfoil/Awoo Network mode. Check '-n help' for information.
+ -r,--rcm <[PATH/]payload.bin>   Send payload
+ -s,--split <...>                Split files. Check '-s help' for information.
+ -t,--tinfoil <FILE...>          Install via Tinfoil/Awoo USB mode.
+ -v,--version                    Show application version
 ```
 
-### Known bugs
-* 'NET' once started it never ends:
+For more complex commands help use help argument after the fists key. For example: 
 
-It happens because there is HTTP server inside of application. It can't determine the moment when all transmissions finishes (unless they failed). So you have to look on your NS screen and 'Interrupt' it once done.
+```
+$ java -jar ns-usbloader-4.0.jar -n help
 
-* Unable to interrupt transmission when network transmission started and nothing received from NS.
+Usage:
+        ns-usbloader -n nsip=<arg1> [hostip=<arg2>] FILE1 ...
+        ns-usbloader --tfn nsip=<arg1> [hostip=<arg2>] FILE1 ...
+
+Options:
+        nsip=<ip>               Define NS IP address (mandatory)
+        hostip=<ip[:port]>      Define this host IP address. Will be obtained automatically if not set.
+```
+
+Usage examples:
+
+```
+Send RCM payload:
+$ java -jar ns-usbloader-4.0.jar -r C:\Users\Superhero\hekate.bin
+Send files to Awoo Installer via Net-install: 
+$ java -jar ns-usbloader-4.0.jar -n nsip=192.168.0.1 ./file.nsz ./file.nsp ~/*.xci
+Send files to GoldLeaf v0.8:
+$ java -jar ns-usbloader-4.0.jar -g ver=v0.8 ./*
+Split files:
+$ java -jar ns-usbloader-4.0.jar -s /tmp/ ~/*.nsp
+Merge files:
+$ java -jar ns-usbloader-4.0.jar -m /tmp/ ~/*.nsp
+```
 
 ### Other notes
-Alternative build for Windows 10 is recommended for all Windows 10 users. It also works well on Linux and any other Windows PC and even on macOS Mojave, but doesn't work on all previous versions of macOS. 
 
 'Status' = 'Uploaded' that appears in the table does not mean that file has been installed. It means that it has been sent to NS without any issues! That's what this app about. 
 Handling successful/failed installation is a purpose of the other side application: TinFoil or GoldLeaf. And they don't provide any feedback interfaces so I can't detect success/failure.
 
-usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This should not impact anyone except users of macOS High Sierra (and Sierra, and El Capitan) where previous versions of NS-USBloader didn't work. 
+usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This should not impact anyone except users of macOS High Sierra (and Sierra, and El Capitan) where previous versions of NS-USBloader didn't work. Now builds with usb4java-1.2.0 marked as '-legacy' and builds with usb4java-1.3.0 doesn't have postfixes.
 
 ### Translators!
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
@@ -184,8 +212,6 @@ To convert files of any locale to readable format (and vise-versa) you can use t
 
 #### TODO (maybe):
 - [x] [Android support](https://github.com/developersu/ns-usbloader-mobile)
-- [ ] File order sort (non-critical)
-- [ ] More deep file analyze before uploading.
 
 ## Support this app
 

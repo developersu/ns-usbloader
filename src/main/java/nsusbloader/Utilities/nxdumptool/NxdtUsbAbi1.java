@@ -285,10 +285,8 @@ class NxdtUsbAbi1 {
 
         while (received < size){
             readBuffer = readUsbFile();
-
             bos.write(readBuffer);
             fd.sync(); // Fixes flushing under Windows (unharmful for other OS)
-
             bufferSize = readBuffer.length;
             received += bufferSize;
 
