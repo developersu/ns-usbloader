@@ -24,12 +24,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TinfoilUsb {
+public class TinfoilUsbCli {
 
     private final String[] arguments;
     private List<File> filesList;
 
-    public TinfoilUsb(String[] arguments) throws InterruptedException, IncorrectSetupException{
+    public TinfoilUsbCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
         this.arguments = arguments;
         checkArguments();
         parseFilesArguments();

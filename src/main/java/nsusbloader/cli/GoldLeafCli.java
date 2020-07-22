@@ -25,7 +25,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GoldLeaf {
+public class GoldLeafCli {
 
     private final String[] arguments;
     private List<File> filesList;
@@ -34,7 +34,7 @@ public class GoldLeaf {
 
     private int parseFileSince = 1;
 
-    public GoldLeaf(String[] arguments) throws InterruptedException, IncorrectSetupException{
+    public GoldLeafCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
         this.arguments = arguments;
 
         checkArguments();

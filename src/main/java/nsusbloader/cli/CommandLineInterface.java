@@ -55,34 +55,34 @@ public class CommandLineInterface {
             }
             if (cli.hasOption("n") || cli.hasOption("tfn")){
                 final String[] arguments = cli.getOptionValues("tfn");
-                new TinfoilNet(arguments);
+                new TinfoilNetCli(arguments);
                 return;
             }
             if (cli.hasOption("t") || cli.hasOption("tinfoil")){
                 final String[] arguments = cli.getOptionValues("tinfoil");
-                new TinfoilUsb(arguments);
+                new TinfoilUsbCli(arguments);
                 return;
             }
             if (cli.hasOption("g") || cli.hasOption("goldleaf")){
                 final String[] arguments = cli.getOptionValues("goldleaf");
-                new GoldLeaf(arguments);
+                new GoldLeafCli(arguments);
                 return;
             }
             /*
             if (cli.hasOption("x") || cli.hasOption("nxdt")){
                 final String[] arguments = cli.getOptionValues("nxdt");
-                new NXDT(arguments);
+                new NxdtCli(arguments);
                 return;
             }
             */
             if (cli.hasOption("s") || cli.hasOption("split")){
                 final String[] arguments = cli.getOptionValues("split");
-                new Split(arguments);
+                new SplitCli(arguments);
                 return;
             }
             if (cli.hasOption("m") || cli.hasOption("merge")){
                 final String[] arguments = cli.getOptionValues("merge");
-                new Merge(arguments);
+                new MergeCli(arguments);
                 return;
             }
         }

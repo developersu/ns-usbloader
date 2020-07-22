@@ -24,7 +24,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TinfoilNet {
+public class TinfoilNetCli {
 
     private final String[] arguments;
 
@@ -38,7 +38,7 @@ public class TinfoilNet {
 
     private List<File> filesList;
 
-    TinfoilNet(String[] arguments) throws InterruptedException, IncorrectSetupException{
+    TinfoilNetCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
         this.arguments = arguments;
         checkArguments();
         parseNsIP();

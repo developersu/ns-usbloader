@@ -22,12 +22,12 @@ import nsusbloader.Utilities.nxdumptool.NxdtTask;
 
 import java.io.File;
 
-public class NXDT {
+public class NxdtCli {
 
     private final String[] arguments;
     private String saveTo;
 
-    public NXDT(String[] arguments) throws InterruptedException, IncorrectSetupException{
+    public NxdtCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
         this.arguments = arguments;
         parseArgument();
         runBackend();

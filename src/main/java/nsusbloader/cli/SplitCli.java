@@ -18,31 +18,31 @@
 */
 package nsusbloader.cli;
 
-import nsusbloader.Utilities.splitmerge.MergeTask;
 import nsusbloader.Utilities.splitmerge.SplitTask;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Merge {
+public class SplitCli {
 
     private String[] arguments;
     private String saveTo;
-    private String[] splitFiles;
+    private String[] files;
 
-    Merge(String[] arguments) throws InterruptedException, IncorrectSetupException{
+    SplitCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
         this.arguments = arguments;
         checkArguments();
         parseArguments();
-        printFilesForMerge();
+        printFilesForSplit();
         runBackend();
     }
 
     private void checkArguments() throws IncorrectSetupException{
         if (arguments == null || arguments.length == 0) {
             throw new IncorrectSetupException("No arguments.\n" +
-                    "Try 'ns-usbloader -m help' for more information.");
+                    "Try 'ns-usbloader -s help' for more information.");
         }
 
         if (arguments.length == 1){
@@ -51,8 +51,8 @@ public class Merge {
                 return;
             }
 
-            throw new IncorrectSetupException("Not enough arguments.\n"
-                    + "Try 'ns-usbloader -m help' for more information.");
+            throw new IncorrectSetupException("Not enough arguments.\n" +
+                    "Try 'ns-usbloader -s help' for more information.");
         }
 
         this.saveTo = arguments[0];
@@ -61,45 +61,43 @@ public class Merge {
             throw new IncorrectSetupException("First argument must be existing directory.");
         }
     }
-
     private boolean isHelpDirective(String argument){
         return argument.equals("help");
     }
-
     private void showHelp() throws IncorrectSetupException{
         throw new IncorrectSetupException("Usage:\n"
-                + "\tns-usbloader -m <SAVE_TO_DIR> <SPLIT_FILE>...\n"
+                + "\tns-usbloader -s <SAVE_TO_DIR> <FILE>...\n"
                 + "\n\nOptions:"
                 + "\n\tSAVE_TO_DIR\tWhere results should be saved"
-                + "\n\tSPLIT_FILE\tOne or more split-files (folders) to merge");
+                + "\n\tFILE\t\tOne or more files to split");
     }
 
     private void parseArguments() throws IncorrectSetupException{
         List<String> files = new ArrayList<>();
         for (int i = 1; i < arguments.length; i++){
             File file = new File(arguments[i]);
-            if (file.isDirectory())
+            if (file.isFile())
                 files.add(file.getAbsolutePath());
         }
 
         if (files.isEmpty()){
             throw new IncorrectSetupException("No files specified.\n" +
-                    "Try 'ns-usbloader -m help' for more information.");
+                    "Try 'ns-usbloader -s help' for more information.");
         }
 
-        this.splitFiles = files.toArray(new String[0]);
+        this.files = files.toArray(new String[0]);
     }
 
-    private void printFilesForMerge(){
-        System.out.println("Next files will be merged:");
-        for (String f : this.splitFiles)
+    private void printFilesForSplit(){
+        System.out.println("Next files will be splitted:");
+        for (String f : this.files)
             System.out.println("  "+f);
     }
 
     private void runBackend() throws InterruptedException{
-        for (String filePath : splitFiles){
-            Runnable mergeTask = new MergeTask(filePath, saveTo);
-            Thread thread = new Thread(mergeTask);
+        for (String filePath : files){
+            Runnable splitTaks = new SplitTask(filePath, saveTo);
+            Thread thread = new Thread(splitTaks);
             thread.setDaemon(true);
             thread.start();
             thread.join();
