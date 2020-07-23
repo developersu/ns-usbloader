@@ -94,7 +94,7 @@ Please note: you may have to change 'plugdev' group from example above to the di
 
 1. Install JDK: `sudo apt install default-jdk`
 
-2. For UI install JavaFX:
+2. For UI install JavaFX: `sudo apt install openjfx`
 
 3. See steps 3 and 4 from 'Linux' section to  update 'udev'.
 
