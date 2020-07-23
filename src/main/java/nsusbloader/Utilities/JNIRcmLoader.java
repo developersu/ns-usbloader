@@ -43,6 +43,9 @@ public class JNIRcmLoader {
                 case "amd64":
                     osArch = "amd64";
                     break;
+                case "arm":
+                    osArch = "arm";
+                    break;
                 default:
                     return false;
             }

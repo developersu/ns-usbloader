@@ -1,0 +1,31 @@
+# Compiler
+CC=arm-linux-gnueabihf-gcc
+# Flags
+CFLAGS=-O2
+MKDIR_P = mkdir -p
+APP_NAME = smashlib.so
+
+ifeq ($(JAVA_HOME),)
+  JAVA_LIB_PATH := "/usr/lib/jvm/default-java/include"
+  JAVA_LIB_PATH_LINUX := "/usr/lib/jvm/default-java/include/linux"
+else
+  JAVA_LIB_PATH = ${JAVA_HOME}/include
+  JAVA_LIB_PATH_LINUX = ${JAVA_HOME}/include/linux
+endif
+
+all: arm
+
+arm:
+        test $(JAVA_LIB_PATH)
+        $(MKDIR_P) ./arm
+        $(CC) -c -fPIC -I$(JAVA_LIB_PATH) -I"$(JAVA_LIB_PATH_LINUX)" smashlib.c -o smashlib_arm.o
+        $(CC) ${CFLAGS} -shared -fPIC -o ./arm/${APP_NAME} smashlib_arm.o -lc
+
+clean:
+        rm -rf smashlib_arm.o ./arm
+
+install: arm
+        install ./arm/${APP_NAME} ../../src/main/resources/native/linux/arm/
+
+uninstall:
+        rm ../../src/main/resources/native/linux/arm/${APP_NAME}

@@ -7,7 +7,7 @@
 NS-USBloader is:
 * A PC-side installer for **[Adubbz/TinFoil (v0.2.1)](https://github.com/Adubbz/Tinfoil/)**, **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** (USB and Network supported) and **[XorTroll/GoldLeaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
 Replacement for default **usb_install_pc.py**, **remote_install_pc.py**, **GoldTree**/**Quark**. 
-* This application also could be used as RCM payload on Windows, MacOS and Linux (supported arch: x86, x86_64).
+* This application also could be used as RCM payload on Windows, MacOS and Linux (supported arch: x86, x86_64 and Raspberry Pi).
 * And of course it's a tool for split files! 
 * And also for merging split-files into one :) 
 
@@ -89,6 +89,14 @@ root # udevadm control --reload-rules && udevadm trigger
 ```
 
 Please note: you may have to change 'plugdev' group from example above to the different one. It's depends on you linux distro.
+
+##### Raspberry Pi
+
+1. Install JDK: `sudo apt install default-jdk`
+
+2. For UI install JavaFX:
+
+3. See steps 3 and 4 from 'Linux' section to  update 'udev'.
 
 ##### macOS
 

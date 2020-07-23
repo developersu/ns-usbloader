@@ -29,6 +29,13 @@ $ javac -h . RcmSmash.java
  $ cd 'NS-USBloader/JNI sources/linux'
  $ make install clean
 ```
+**Build for Raspberry Pi (Raspberry Pi host):**
+``` 
+ $ cd 'NS-USBloader/JNI sources/linux'
+ $ mv Makefile_rapsberry Makefile
+ $ make install clean
+```
+
 **Build for Windows (on x86_64 host):**
 
 [ This part should be updated ]
