@@ -16,7 +16,6 @@ endif
 all: arm
 
 arm:
-        test $(JAVA_LIB_PATH)
         $(MKDIR_P) ./arm
         $(CC) -c -fPIC -I$(JAVA_LIB_PATH) -I"$(JAVA_LIB_PATH_LINUX)" smashlib.c -o smashlib_arm.o
         $(CC) ${CFLAGS} -shared -fPIC -o ./arm/${APP_NAME} smashlib_arm.o -lc
