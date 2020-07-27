@@ -19,8 +19,6 @@
 package nsusbloader.Controllers;
 
 import javafx.application.HostServices;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -30,17 +28,12 @@ import javafx.scene.layout.VBox;
 import nsusbloader.AppPreferences;
 import nsusbloader.ServiceWindow;
 import nsusbloader.ModelControllers.UpdatesChecker;
-import nsusbloader.UI.LocaleUiStringHolder;
+import nsusbloader.UI.LocaleHolder;
+import nsusbloader.UI.SettingsLanguagesSetup;
 import nsusbloader.Utilities.WindowsDrivers.DriversInstall;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 public class SettingsController implements Initializable {
     @FXML
@@ -48,7 +41,10 @@ public class SettingsController implements Initializable {
             validateNSHostNameCb,
             expertModeCb,
             autoDetectIpCb,
-            randPortCb;
+            randPortCb,
+            dontServeCb,
+            autoCheckUpdCb,
+            tfXciSpprtCb;
 
     @FXML
     private TextField pcIpTextField,
@@ -56,61 +52,55 @@ public class SettingsController implements Initializable {
             pcExtraTextField;
 
     @FXML
-    private CheckBox dontServeCb;
-
-    @FXML
     private VBox expertSettingsVBox;
 
     @FXML
-    private CheckBox autoCheckUpdCb;
-    @FXML
     private Hyperlink newVersionLink;
-
-    @FXML
-    private CheckBox tfXciSpprtCb;
 
     @FXML
     private Button langBtn,
             checkForUpdBtn,
             drvInstBtn;
     @FXML
-    private ChoiceBox<LocaleUiStringHolder> langCB;
+    private ChoiceBox<LocaleHolder> langCB;
 
     @FXML
     private ChoiceBox<String> glVersionChoiceBox;
 
-    private HostServices hs;
+    private HostServices hostServices;
 
     public static final String[] glSupportedVersions = {"v0.5", "v0.7.x", "v0.8"};
 
+    private ResourceBundle resourceBundle;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        nspFilesFilterForGLCB.setSelected(AppPreferences.getInstance().getNspFileFilterGL());
+        this.resourceBundle = resourceBundle;
+        final AppPreferences preferences = AppPreferences.getInstance();
 
-        validateNSHostNameCb.setSelected(AppPreferences.getInstance().getNsIpValidationNeeded());
+        nspFilesFilterForGLCB.setSelected(preferences.getNspFileFilterGL());
+        validateNSHostNameCb.setSelected(preferences.getNsIpValidationNeeded());
+        expertSettingsVBox.setDisable(! preferences.getExpertMode());
+        expertModeCb.setSelected(preferences.getExpertMode());
+        expertModeCb.setOnAction(e-> expertSettingsVBox.setDisable(! expertModeCb.isSelected()));
 
-        expertSettingsVBox.setDisable(!AppPreferences.getInstance().getExpertMode());
-
-        expertModeCb.setSelected(AppPreferences.getInstance().getExpertMode());
-        expertModeCb.setOnAction(e-> expertSettingsVBox.setDisable(!expertModeCb.isSelected()));
-
-        autoDetectIpCb.setSelected(AppPreferences.getInstance().getAutoDetectIp());
-        pcIpTextField.setDisable(AppPreferences.getInstance().getAutoDetectIp());
+        autoDetectIpCb.setSelected(preferences.getAutoDetectIp());
+        pcIpTextField.setDisable(preferences.getAutoDetectIp());
         autoDetectIpCb.setOnAction(e->{
             pcIpTextField.setDisable(autoDetectIpCb.isSelected());
-            if (!autoDetectIpCb.isSelected())
+            if (! autoDetectIpCb.isSelected())
                 pcIpTextField.requestFocus();
         });
 
-        randPortCb.setSelected(AppPreferences.getInstance().getRandPort());
-        pcPortTextField.setDisable(AppPreferences.getInstance().getRandPort());
+        randPortCb.setSelected(preferences.getRandPort());
+        pcPortTextField.setDisable(preferences.getRandPort());
         randPortCb.setOnAction(e->{
             pcPortTextField.setDisable(randPortCb.isSelected());
-            if (!randPortCb.isSelected())
+            if (! randPortCb.isSelected())
                 pcPortTextField.requestFocus();
         });
 
-        if (AppPreferences.getInstance().getNotServeRequests()){
+        if (preferences.getNotServeRequests()){
             dontServeCb.setSelected(true);
 
             autoDetectIpCb.setSelected(false);
@@ -121,7 +111,7 @@ public class SettingsController implements Initializable {
             randPortCb.setDisable(true);
             pcPortTextField.setDisable(false);
         }
-        pcExtraTextField.setDisable(!AppPreferences.getInstance().getNotServeRequests());
+        pcExtraTextField.setDisable(! preferences.getNotServeRequests());
 
         dontServeCb.setOnAction(e->{
             if (dontServeCb.isSelected()){
@@ -149,9 +139,9 @@ public class SettingsController implements Initializable {
             }
         });
 
-        pcIpTextField.setText(AppPreferences.getInstance().getHostIp());
-        pcPortTextField.setText(AppPreferences.getInstance().getHostPort());
-        pcExtraTextField.setText(AppPreferences.getInstance().getHostExtra());
+        pcIpTextField.setText(preferences.getHostIp());
+        pcPortTextField.setText(preferences.getHostPort());
+        pcExtraTextField.setText(preferences.getHostExtra());
 
         pcIpTextField.setTextFormatter(new TextFormatter<>(change -> {
             if (change.getControlNewText().contains(" ") | change.getControlNewText().contains("\t"))
@@ -180,36 +170,59 @@ public class SettingsController implements Initializable {
         }));
 
         newVersionLink.setVisible(false);
-        newVersionLink.setOnAction(e-> hs.showDocument(newVersionLink.getText()));
+        newVersionLink.setOnAction(e-> hostServices.showDocument(newVersionLink.getText()));
 
-        autoCheckUpdCb.setSelected(AppPreferences.getInstance().getAutoCheckUpdates());
+        autoCheckUpdCb.setSelected(preferences.getAutoCheckUpdates());
 
         Region btnSwitchImage = new Region();
         btnSwitchImage.getStyleClass().add("regionUpdatesCheck");
         checkForUpdBtn.setGraphic(btnSwitchImage);
 
-        checkForUpdBtn.setOnAction(e->{
-            Task<List<String>> updTask = new UpdatesChecker();
-            updTask.setOnSucceeded(event->{
-                List<String> result = updTask.getValue();
-                if (result != null){
-                    if (result.get(0).isEmpty()){
-                        ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionNOTAval"), resourceBundle.getString("windowBodyNewVersionNOTAval"));
-                    }
-                    else {
-                        setNewVersionLink(result.get(0));
-                        ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionAval"), resourceBundle.getString("windowTitleNewVersionAval")+": "+result.get(0) + "\n\n" + result.get(1));
-                    }
-                }
-                else {
-                    ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionUnknown"), resourceBundle.getString("windowBodyNewVersionUnknown"));
-                }
-            });
-            Thread updates = new Thread(updTask);
-            updates.setDaemon(true);
-            updates.start();
-        });
+        checkForUpdBtn.setOnAction(e->checkForUpdatesAction());
 
+        setDriversInstallFeature();
+
+        tfXciSpprtCb.setSelected(preferences.getTfXCI());
+
+        SettingsLanguagesSetup settingsLanguagesSetup = new SettingsLanguagesSetup();
+        langCB.setItems(settingsLanguagesSetup.getLanguages());
+        langCB.getSelectionModel().select(settingsLanguagesSetup.getRecentLanguage());
+
+        configureLanguageButton();
+
+        // Set supported old versions
+        glVersionChoiceBox.getItems().addAll(glSupportedVersions);
+        String oldVer = preferences.getGlVersion();  // Overhead; Too much validation of consistency
+        glVersionChoiceBox.getSelectionModel().select(oldVer);
+    }
+
+    private void checkForUpdatesAction(){
+        Task<List<String>> updTask = new UpdatesChecker();
+        updTask.setOnSucceeded(event->{
+            List<String> result = updTask.getValue();
+
+            if (result == null){
+                ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionUnknown"),
+                        resourceBundle.getString("windowBodyNewVersionUnknown"));
+                return;
+            }
+
+            if (result.get(0).isEmpty()){
+                ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionNOTAval"),
+                        resourceBundle.getString("windowBodyNewVersionNOTAval"));
+                return;
+            }
+
+            setNewVersionLink(result.get(0));
+            ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionAval"),
+                    resourceBundle.getString("windowTitleNewVersionAval")+": "+result.get(0) + "\n\n" + result.get(1));
+        });
+        Thread updates = new Thread(updTask);
+        updates.setDaemon(true);
+        updates.start();
+    }
+
+    private void setDriversInstallFeature(){
         if (isWindows()){
             Region btnDrvImage = new Region();
             btnDrvImage.getStyleClass().add("regionWindows");
@@ -217,89 +230,20 @@ public class SettingsController implements Initializable {
             drvInstBtn.setVisible(true);
             drvInstBtn.setOnAction(actionEvent -> new DriversInstall(resourceBundle));
         }
-
-        tfXciSpprtCb.setSelected(AppPreferences.getInstance().getTfXCI());
-
-        // Language settings area
-        ObservableList<LocaleUiStringHolder> langCBObsList = FXCollections.observableArrayList();
-        //langCBObsList.add(new LocaleUiStringHolder(new Locale("en", "US")));
-
-        File jarFile;
-        try{
-            String encodedJarLocation = getClass().getProtectionDomain().getCodeSource().getLocation().getPath().replace("+", "%2B");
-            jarFile = new File(URLDecoder.decode(encodedJarLocation, "UTF-8"));
-        }
-        catch (UnsupportedEncodingException uee){
-            uee.printStackTrace();
-            jarFile = null;
-        }
-
-        if(jarFile != null && jarFile.isFile()) {  // Run with JAR file
-            try {
-                JarFile jar = new JarFile(jarFile);
-                Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
-                while (entries.hasMoreElements()) {
-                    String name = entries.nextElement().getName();
-                    if (name.startsWith("locale_")){
-                        try{
-                            langCBObsList.add(new LocaleUiStringHolder(name));
-                        }
-                        catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                jar.close();
-            }
-            catch (IOException ioe){
-                ioe.printStackTrace();  // TODO: think about better solution?
-            }
-        }
-        else {                                      // Run within IDE
-            URL resourceURL = this.getClass().getResource("/");
-            String[] filesList = new File(resourceURL.getFile()).list(); // Screw it. This WON'T produce NullPointerException
-
-            for (String jarFileName : filesList)
-                if (jarFileName.startsWith("locale_")){
-                    try{
-                        langCBObsList.add(new LocaleUiStringHolder(jarFileName));
-                    }
-                    catch (Exception e){
-                        e.printStackTrace();
-                    }
-                }
-        }
-        langCBObsList.sort(Comparator.comparing(LocaleUiStringHolder::toString));
-
-        langCB.setItems(langCBObsList);
-        // TODO: REFACTOR THIS SHIT; INCAPSULATE AND MOVE OUT FROM HERE
-        Locale localeFromPrefs = AppPreferences.getInstance().getLocale();
-        boolean notExists = true;
-        for (LocaleUiStringHolder holderItem: langCBObsList){
-            if (holderItem.getLocale().equals(localeFromPrefs)){
-                langCB.getSelectionModel().select(holderItem);
-                notExists = false;
-                break;
-            }
-        }
-        if (notExists)
-            langCB.getSelectionModel().select(0);
-
-        langBtn.setOnAction(e->{
-            LocaleUiStringHolder localeHolder = langCB.getSelectionModel().getSelectedItem();
-            AppPreferences.getInstance().setLocale(localeHolder.getLocaleCode());
-            Locale newLocale = localeHolder.getLocale();
-            ServiceWindow.getInfoNotification("",
-                    ResourceBundle.getBundle("locale", newLocale).getString("windowBodyRestartToApplyLang"));
-        });
-        // Set supported old versions
-        glVersionChoiceBox.getItems().addAll(glSupportedVersions);
-        String oldVer = AppPreferences.getInstance().getGlVersion();  // Overhead; Too much validation of consistency
-        glVersionChoiceBox.getSelectionModel().select(oldVer);
     }
-
     private boolean isWindows(){
         return System.getProperty("os.name").toLowerCase().replace(" ", "").contains("windows");
+    }
+
+    private void configureLanguageButton(){
+        langBtn.setOnAction(e->languageButtonAction());
+    }
+    private void languageButtonAction(){
+        LocaleHolder localeHolder = langCB.getSelectionModel().getSelectedItem();
+        AppPreferences.getInstance().setLocale(localeHolder.getLocaleCode());
+        Locale newLocale = localeHolder.getLocale();
+        ServiceWindow.getInfoNotification("",
+                ResourceBundle.getBundle("locale", newLocale).getString("windowBodyRestartToApplyLang"));
     }
 
     public boolean getNSPFileFilterForGL(){return nspFilesFilterForGLCB.isSelected(); }
@@ -316,7 +260,7 @@ public class SettingsController implements Initializable {
     public boolean getAutoCheckForUpdates(){ return autoCheckUpdCb.isSelected(); }
     public boolean getTfXciNszXczSupport(){ return tfXciSpprtCb.isSelected(); }           // Used also for NSZ/XCZ
 
-    public void registerHostServices(HostServices hostServices){this.hs = hostServices;}
+    public void registerHostServices(HostServices hostServices){this.hostServices = hostServices;}
 
     public void setNewVersionLink(String newVer){
         newVersionLink.setVisible(true);

@@ -18,25 +18,21 @@
 */
 package nsusbloader.UI;
 
-import nsusbloader.cli.IncorrectSetupException;
-
 import java.util.Locale;
 
-public class LocaleUiStringHolder {
+public class LocaleHolder {
 
     private final Locale locale;
     private final String localeCode;
     private final String languageName;
 
-    public LocaleUiStringHolder(Locale locale){
+    public LocaleHolder(Locale locale){
         this.locale = locale;
         this.localeCode = locale.toString();
         this.languageName = locale.getDisplayLanguage(locale) + " (" + locale + ")";
     }
 
-    public LocaleUiStringHolder(String localeFileName) throws Exception{
-        if (localeFileName.length() < 12)
-            throw new IncorrectSetupException("Locale filename is incorrect: "+localeFileName);
+    public LocaleHolder(String localeFileName) {
         String country = localeFileName.substring(7, 9);
         String language = localeFileName.substring(10, 12);
         this.locale = new Locale(country, language);
