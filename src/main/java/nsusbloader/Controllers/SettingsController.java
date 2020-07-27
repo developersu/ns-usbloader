@@ -30,6 +30,7 @@ import javafx.scene.layout.VBox;
 import nsusbloader.AppPreferences;
 import nsusbloader.ServiceWindow;
 import nsusbloader.ModelControllers.UpdatesChecker;
+import nsusbloader.UI.LocaleUiStringHolder;
 import nsusbloader.Utilities.WindowsDrivers.DriversInstall;
 
 import java.io.File;
@@ -73,7 +74,7 @@ public class SettingsController implements Initializable {
             checkForUpdBtn,
             drvInstBtn;
     @FXML
-    private ChoiceBox<String> langCB;
+    private ChoiceBox<LocaleUiStringHolder> langCB;
 
     @FXML
     private ChoiceBox<String> glVersionChoiceBox;
@@ -220,8 +221,8 @@ public class SettingsController implements Initializable {
         tfXciSpprtCb.setSelected(AppPreferences.getInstance().getTfXCI());
 
         // Language settings area
-        ObservableList<String> langCBObsList = FXCollections.observableArrayList();
-        langCBObsList.add("eng");
+        ObservableList<LocaleUiStringHolder> langCBObsList = FXCollections.observableArrayList();
+        //langCBObsList.add(new LocaleUiStringHolder(new Locale("en", "US")));
 
         File jarFile;
         try{
@@ -239,8 +240,14 @@ public class SettingsController implements Initializable {
                 Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
                 while (entries.hasMoreElements()) {
                     String name = entries.nextElement().getName();
-                    if (name.startsWith("locale_"))
-                        langCBObsList.add(name.substring(7, 10));
+                    if (name.startsWith("locale_")){
+                        try{
+                            langCBObsList.add(new LocaleUiStringHolder(name));
+                        }
+                        catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
                 }
                 jar.close();
             }
@@ -253,21 +260,37 @@ public class SettingsController implements Initializable {
             String[] filesList = new File(resourceURL.getFile()).list(); // Screw it. This WON'T produce NullPointerException
 
             for (String jarFileName : filesList)
-                if (jarFileName.startsWith("locale_"))
-                    langCBObsList.add(jarFileName.substring(7, 10));
+                if (jarFileName.startsWith("locale_")){
+                    try{
+                        langCBObsList.add(new LocaleUiStringHolder(jarFileName));
+                    }
+                    catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
         }
+        langCBObsList.sort(Comparator.comparing(LocaleUiStringHolder::toString));
 
         langCB.setItems(langCBObsList);
-        if (langCBObsList.contains(AppPreferences.getInstance().getLanguage()))
-            langCB.getSelectionModel().select(AppPreferences.getInstance().getLanguage());
-        else
-            langCB.getSelectionModel().select("eng");
+        // TODO: REFACTOR THIS SHIT; INCAPSULATE AND MOVE OUT FROM HERE
+        Locale localeFromPrefs = AppPreferences.getInstance().getLocale();
+        boolean notExists = true;
+        for (LocaleUiStringHolder holderItem: langCBObsList){
+            if (holderItem.getLocale().equals(localeFromPrefs)){
+                langCB.getSelectionModel().select(holderItem);
+                notExists = false;
+                break;
+            }
+        }
+        if (notExists)
+            langCB.getSelectionModel().select(0);
 
         langBtn.setOnAction(e->{
-            AppPreferences.getInstance().setLanguage(langCB.getSelectionModel().getSelectedItem());
+            LocaleUiStringHolder localeHolder = langCB.getSelectionModel().getSelectedItem();
+            AppPreferences.getInstance().setLocale(localeHolder.getLocaleCode());
+            Locale newLocale = localeHolder.getLocale();
             ServiceWindow.getInfoNotification("",
-                    ResourceBundle.getBundle("locale", new Locale(langCB.getSelectionModel().getSelectedItem()))
-                            .getString("windowBodyRestartToApplyLang"));
+                    ResourceBundle.getBundle("locale", newLocale).getString("windowBodyRestartToApplyLang"));
         });
         // Set supported old versions
         glVersionChoiceBox.getItems().addAll(glSupportedVersions);

@@ -27,9 +27,14 @@ public class AppPreferences {
     private static final AppPreferences INSTANCE = new AppPreferences();
     public static AppPreferences getInstance() { return INSTANCE; }
 
-    private Preferences preferences;
+    private final Preferences preferences;
+    private final Locale locale;
 
-    private AppPreferences(){ preferences = Preferences.userRoot().node("NS-USBloader"); }
+    private AppPreferences(){
+        this.preferences = Preferences.userRoot().node("NS-USBloader");
+        String localeCode = preferences.get("locale", Locale.getDefault().toString());
+        this.locale = new Locale(localeCode.substring(0, 2), localeCode.substring(3, 5));
+    }
 
     public String getTheme(){
         String theme = preferences.get("THEME", "/res/app_dark.css");           // Don't let user to change settings manually
@@ -59,6 +64,10 @@ public class AppPreferences {
     public String getRecent(){ return preferences.get("RECENT", System.getProperty("user.home")); }
     public void setRecent(String path){ preferences.put("RECENT", path); }
     //------------ SETTINGS ------------------//
+
+    public Locale getLocale(){ return this.locale; }
+    public void setLocale(String langStr){ preferences.put("locale", langStr); }
+
     public boolean getNsIpValidationNeeded() {return preferences.getBoolean("NSIPVALIDATION", true);}
     public void setNsIpValidationNeeded(boolean need){preferences.putBoolean("NSIPVALIDATION", need);}
 
@@ -95,9 +104,6 @@ public class AppPreferences {
 
     public boolean getTfXCI(){return preferences.getBoolean("TF_XCI", true);}
     public void setTfXCI(boolean prop){ preferences.putBoolean("TF_XCI", prop); }
-
-    public String getLanguage(){return preferences.get("USR_LANG", Locale.getDefault().getISO3Language());}
-    public void setLanguage(String langStr){preferences.put("USR_LANG", langStr);}
 
     public boolean getNspFileFilterGL(){return preferences.getBoolean("GL_NSP_FILTER", false); }
     public void setNspFileFilterGL(boolean prop){preferences.putBoolean("GL_NSP_FILTER", prop);}

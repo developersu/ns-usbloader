@@ -32,14 +32,14 @@ import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
 
-    public static final String appVersion = "v4.1";
+    public static final String appVersion = "v4.2";
     public static boolean isCli;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/NSLMain.fxml"));
 
-        Locale userLocale = new Locale(AppPreferences.getInstance().getLanguage());      // NOTE: user locale based on ISO3 Language codes
+        Locale userLocale = AppPreferences.getInstance().getLocale();
         ResourceBundle rb = ResourceBundle.getBundle("locale", userLocale);
 
         loader.setResources(rb);
