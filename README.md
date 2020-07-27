@@ -46,6 +46,8 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * Chinese by [Huang YunKun (htynkn)](https://github.com/htynkn)
 * German by [Swarsele](https://github.com/Swarsele)
 * Vietnamese by [Hai Phan Nguyen (pnghai)](https://github.com/pnghai)
+* Czech by [Spenaat](https://github.com/spenaat)
+* Chinese (Traditional) by [qazrfv1234](https://github.com/qazrfv1234)
 
 ### System requirements
 
