@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="5.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsBlockTinfoilController">
+   <children>
+   <Label text="Tinfoil" />
+            <CheckBox mnemonicParsing="false" text="%tab2_Cb_AllowXciNszXcz" fx:id="xciNszXczSupportCB">
+      <VBox.margin>
+         <Insets left="5.0" />
+      </VBox.margin></CheckBox>
+            <Label disable="true" text="%tab2_Lbl_AllowXciNszXczDesc" wrapText="true">
+      <VBox.margin>
+         <Insets left="5.0" />
+      </VBox.margin></Label>
+            <CheckBox fx:id="validateNSHostNameCB" mnemonicParsing="false" text="%tab2_Cb_ValidateNSHostName">
+               <VBox.margin>
+                  <Insets left="5.0" />
+               </VBox.margin>
+            </CheckBox>
+            <CheckBox fx:id="networkExpertModeCB" mnemonicParsing="false" text="%tab2_Cb_ExpertMode">
+      <VBox.margin>
+         <Insets left="5.0" />
+      </VBox.margin></CheckBox>
+            <VBox fx:id="networkExpertSettingsVBox" spacing="5.0">
+               <children>
+                  <CheckBox fx:id="autoDetectIpCB" mnemonicParsing="false" text="%tab2_Cb_AutoDetectIp">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                  </CheckBox>
+                  <CheckBox fx:id="randomlySelectPortCB" mnemonicParsing="false" text="%tab2_Cb_RandSelectPort">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                  </CheckBox>
+                  <HBox>
+                     <children>
+                        <Label text="%tab2_Lbl_HostIP" />
+                        <Label text=":" />
+                        <Label text="%tab2_Lbl_HostPort" />
+                        <Label text="/" />
+                        <Label text="%tab2_Lbl_HostExtra" />
+                     </children>
+                  </HBox>
+                  <HBox>
+                     <children>
+                        <TextField fx:id="pcIpTF" promptText="XXX.XXX.XXX.XXX" />
+                        <Label text=":" />
+                        <TextField fx:id="pcPortTF" promptText="0-65535" />
+                        <Label text="/" />
+                        <TextField fx:id="pcExtraTF" HBox.hgrow="ALWAYS">
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                        </TextField>
+                     </children>
+                  </HBox>
+                  <CheckBox fx:id="noRequestsServeCB" mnemonicParsing="false" text="%tab2_Cb_DontServeRequests">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                  </CheckBox>
+                  <Label disable="true" text="%tab2_Lbl_DontServeRequestsDesc" wrapText="true">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                  </Label>
+               </children>
+               <padding>
+                  <Insets left="15.0" />
+               </padding>
+            </VBox>
+      </children>
+</VBox>

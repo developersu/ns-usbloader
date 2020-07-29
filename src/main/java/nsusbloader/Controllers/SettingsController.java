@@ -38,21 +38,7 @@ import java.util.*;
 public class SettingsController implements Initializable {
     @FXML
     private CheckBox nspFilesFilterForGLCB,
-            validateNSHostNameCb,
-            expertModeCb,
-            autoDetectIpCb,
-            randPortCb,
-            dontServeCb,
-            autoCheckUpdCb,
-            tfXciSpprtCb;
-
-    @FXML
-    private TextField pcIpTextField,
-            pcPortTextField,
-            pcExtraTextField;
-
-    @FXML
-    private VBox expertSettingsVBox;
+            autoCheckUpdCb;
 
     @FXML
     private Hyperlink newVersionLink;
@@ -67,6 +53,9 @@ public class SettingsController implements Initializable {
     @FXML
     private ChoiceBox<String> glVersionChoiceBox;
 
+    @FXML
+    private SettingsBlockTinfoilController settingsBlockTinfoilController;
+
     private HostServices hostServices;
 
     public static final String[] glSupportedVersions = {"v0.5", "v0.7.x", "v0.8"};
@@ -79,95 +68,8 @@ public class SettingsController implements Initializable {
         final AppPreferences preferences = AppPreferences.getInstance();
 
         nspFilesFilterForGLCB.setSelected(preferences.getNspFileFilterGL());
-        validateNSHostNameCb.setSelected(preferences.getNsIpValidationNeeded());
-        expertSettingsVBox.setDisable(! preferences.getExpertMode());
-        expertModeCb.setSelected(preferences.getExpertMode());
-        expertModeCb.setOnAction(e-> expertSettingsVBox.setDisable(! expertModeCb.isSelected()));
 
-        autoDetectIpCb.setSelected(preferences.getAutoDetectIp());
-        pcIpTextField.setDisable(preferences.getAutoDetectIp());
-        autoDetectIpCb.setOnAction(e->{
-            pcIpTextField.setDisable(autoDetectIpCb.isSelected());
-            if (! autoDetectIpCb.isSelected())
-                pcIpTextField.requestFocus();
-        });
 
-        randPortCb.setSelected(preferences.getRandPort());
-        pcPortTextField.setDisable(preferences.getRandPort());
-        randPortCb.setOnAction(e->{
-            pcPortTextField.setDisable(randPortCb.isSelected());
-            if (! randPortCb.isSelected())
-                pcPortTextField.requestFocus();
-        });
-
-        if (preferences.getNotServeRequests()){
-            dontServeCb.setSelected(true);
-
-            autoDetectIpCb.setSelected(false);
-            autoDetectIpCb.setDisable(true);
-            pcIpTextField.setDisable(false);
-
-            randPortCb.setSelected(false);
-            randPortCb.setDisable(true);
-            pcPortTextField.setDisable(false);
-        }
-        pcExtraTextField.setDisable(! preferences.getNotServeRequests());
-
-        dontServeCb.setOnAction(e->{
-            if (dontServeCb.isSelected()){
-                autoDetectIpCb.setSelected(false);
-                autoDetectIpCb.setDisable(true);
-                pcIpTextField.setDisable(false);
-
-                randPortCb.setSelected(false);
-                randPortCb.setDisable(true);
-                pcPortTextField.setDisable(false);
-
-                pcExtraTextField.setDisable(false);
-                pcIpTextField.requestFocus();
-            }
-            else {
-                autoDetectIpCb.setDisable(false);
-                autoDetectIpCb.setSelected(true);
-                pcIpTextField.setDisable(true);
-
-                randPortCb.setDisable(false);
-                randPortCb.setSelected(true);
-                pcPortTextField.setDisable(true);
-
-                pcExtraTextField.setDisable(true);
-            }
-        });
-
-        pcIpTextField.setText(preferences.getHostIp());
-        pcPortTextField.setText(preferences.getHostPort());
-        pcExtraTextField.setText(preferences.getHostExtra());
-
-        pcIpTextField.setTextFormatter(new TextFormatter<>(change -> {
-            if (change.getControlNewText().contains(" ") | change.getControlNewText().contains("\t"))
-                return null;
-            else
-                return change;
-        }));
-        pcPortTextField.setTextFormatter(new TextFormatter<>(change -> {
-            if (change.getControlNewText().matches("^[0-9]{0,5}$")) {
-                if (!change.getControlNewText().isEmpty()
-                        && ((Integer.parseInt(change.getControlNewText()) > 65535) || (Integer.parseInt(change.getControlNewText()) == 0))
-                ) {
-                    ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleErrorPort"), resourceBundle.getString("windowBodyErrorPort"));
-                    return null;
-                }
-                return change;
-            }
-            else
-                return null;
-        }));
-        pcExtraTextField.setTextFormatter(new TextFormatter<>(change -> {
-            if (change.getControlNewText().contains(" ") | change.getControlNewText().contains("\t"))
-                return null;
-            else
-                return change;
-        }));
 
         newVersionLink.setVisible(false);
         newVersionLink.setOnAction(e-> hostServices.showDocument(newVersionLink.getText()));
@@ -181,8 +83,6 @@ public class SettingsController implements Initializable {
         checkForUpdBtn.setOnAction(e->checkForUpdatesAction());
 
         setDriversInstallFeature();
-
-        tfXciSpprtCb.setSelected(preferences.getTfXCI());
 
         SettingsLanguagesSetup settingsLanguagesSetup = new SettingsLanguagesSetup();
         langCB.setItems(settingsLanguagesSetup.getLanguages());
@@ -247,18 +147,8 @@ public class SettingsController implements Initializable {
     }
 
     public boolean getNSPFileFilterForGL(){return nspFilesFilterForGLCB.isSelected(); }
-    public boolean getExpertModeSelected(){ return expertModeCb.isSelected(); }
-    public boolean getAutoIpSelected(){ return autoDetectIpCb.isSelected(); }
-    public boolean getRandPortSelected(){ return randPortCb.isSelected(); }
-    public boolean getNotServeSelected(){ return dontServeCb.isSelected(); }
 
-    public boolean isNsIpValidate(){ return validateNSHostNameCb.isSelected(); }
-
-    public String getHostIp(){ return pcIpTextField.getText(); }
-    public String getHostPort(){ return pcPortTextField.getText(); }
-    public String getHostExtra(){ return pcExtraTextField.getText(); }
     public boolean getAutoCheckForUpdates(){ return autoCheckUpdCb.isSelected(); }
-    public boolean getTfXciNszXczSupport(){ return tfXciSpprtCb.isSelected(); }           // Used also for NSZ/XCZ
 
     public void registerHostServices(HostServices hostServices){this.hostServices = hostServices;}
 
@@ -270,21 +160,16 @@ public class SettingsController implements Initializable {
     public String getGlVer() {
         return glVersionChoiceBox.getValue();
     }
-    
+
+    public SettingsBlockTinfoilController getTinfoilSettings(){ return settingsBlockTinfoilController; }
+
     public void updatePreferencesOnExit(){
         AppPreferences preferences = AppPreferences.getInstance();
 
-        preferences.setNsIpValidationNeeded(isNsIpValidate());
-        preferences.setExpertMode(getExpertModeSelected());
-        preferences.setAutoDetectIp(getAutoIpSelected());
-        preferences.setRandPort(getRandPortSelected());
-        preferences.setNotServeRequests(getNotServeSelected());
-        preferences.setHostIp(getHostIp());
-        preferences.setHostPort(getHostPort());
-        preferences.setHostExtra(getHostExtra());
         preferences.setAutoCheckUpdates(getAutoCheckForUpdates());
-        preferences.setTfXCI(getTfXciNszXczSupport());
         preferences.setNspFileFilterGL(getNSPFileFilterForGL());
         preferences.setGlVersion(getGlVer());
+
+        settingsBlockTinfoilController.updatePreferencesOnExit();
     }
 }

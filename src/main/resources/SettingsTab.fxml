@@ -63,73 +63,7 @@
             </VBox.margin>
          </HBox>
          <Separator prefWidth="200.0" />
-         <Label text="Tinfoil" />
-                  <CheckBox fx:id="tfXciSpprtCb" mnemonicParsing="false" text="%tab2_Cb_AllowXciNszXcz">
-            <VBox.margin>
-               <Insets left="5.0" />
-            </VBox.margin></CheckBox>
-                  <Label disable="true" text="%tab2_Lbl_AllowXciNszXczDesc" wrapText="true">
-            <VBox.margin>
-               <Insets left="5.0" />
-            </VBox.margin></Label>
-                  <CheckBox fx:id="validateNSHostNameCb" mnemonicParsing="false" text="%tab2_Cb_ValidateNSHostName">
-                     <VBox.margin>
-                        <Insets left="5.0" />
-                     </VBox.margin>
-                  </CheckBox>
-                  <CheckBox fx:id="expertModeCb" mnemonicParsing="false" text="%tab2_Cb_ExpertMode">
-            <VBox.margin>
-               <Insets left="5.0" />
-            </VBox.margin></CheckBox>
-                  <VBox fx:id="expertSettingsVBox" spacing="5.0">
-                     <children>
-                        <CheckBox fx:id="autoDetectIpCb" mnemonicParsing="false" text="%tab2_Cb_AutoDetectIp">
-                           <VBox.margin>
-                              <Insets />
-                           </VBox.margin>
-                        </CheckBox>
-                        <CheckBox fx:id="randPortCb" mnemonicParsing="false" text="%tab2_Cb_RandSelectPort">
-                           <VBox.margin>
-                              <Insets />
-                           </VBox.margin>
-                        </CheckBox>
-                        <HBox>
-                           <children>
-                              <Label text="%tab2_Lbl_HostIP" />
-                              <Label text=":" />
-                              <Label text="%tab2_Lbl_HostPort" />
-                              <Label text="/" />
-                              <Label text="%tab2_Lbl_HostExtra" />
-                           </children>
-                        </HBox>
-                        <HBox>
-                           <children>
-                              <TextField fx:id="pcIpTextField" promptText="XXX.XXX.XXX.XXX" />
-                              <Label text=":" />
-                              <TextField fx:id="pcPortTextField" promptText="0-65535" />
-                              <Label text="/" />
-                              <TextField fx:id="pcExtraTextField" HBox.hgrow="ALWAYS">
-                                 <HBox.margin>
-                                    <Insets />
-                                 </HBox.margin>
-                              </TextField>
-                           </children>
-                        </HBox>
-                        <CheckBox fx:id="dontServeCb" mnemonicParsing="false" text="%tab2_Cb_DontServeRequests">
-                           <VBox.margin>
-                              <Insets />
-                           </VBox.margin>
-                        </CheckBox>
-                        <Label disable="true" text="%tab2_Lbl_DontServeRequestsDesc" wrapText="true">
-                           <VBox.margin>
-                              <Insets />
-                           </VBox.margin>
-                        </Label>
-                     </children>
-                     <padding>
-                        <Insets left="15.0" />
-                     </padding>
-                  </VBox>
+           <fx:include fx:id="settingsBlockTinfoil" source="SettingsBlockTinfoil.fxml"/>
                </children>
                <padding>
                   <Insets bottom="5.0" left="15.0" right="15.0" top="5.0" />

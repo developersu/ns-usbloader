@@ -199,7 +199,7 @@ public class FrontController implements Initializable {
         else
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
-        if (getSelectedProtocol().equals("TinFoil") && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTfXciNszXczSupport())
+        if (getSelectedProtocol().equals("TinFoil") && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport())
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
         else if (getSelectedProtocol().equals("GoldLeaf") && (! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getNSPFileFilterForGL()))
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Any file", "*.*"),
@@ -273,24 +273,25 @@ public class FrontController implements Initializable {
         }
         else {      // NET INSTALL OVER TINFOIL
             final String ipValidationPattern = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+            final SettingsBlockTinfoilController tinfoilSettings = settings.getTinfoilSettings();
 
-            if (settings.isNsIpValidate() && ! getNsIp().matches(ipValidationPattern)) {
+            if (tinfoilSettings.isValidateNSHostName() && ! getNsIp().matches(ipValidationPattern)) {
                 if (!ServiceWindow.getConfirmationWindow(resourceBundle.getString("windowTitleBadIp"), resourceBundle.getString("windowBodyBadIp")))
                     return;
             }
 
             String nsIP = getNsIp();
 
-            if (! settings.getExpertModeSelected())
+            if (! tinfoilSettings.isExpertModeSelected())
                 usbNetCommunications = new NETCommunications(nspToUpload, nsIP, false, "", "", "");
             else {
                 usbNetCommunications = new NETCommunications(
                         nspToUpload,
                         nsIP,
-                        settings.getNotServeSelected(),
-                        settings.getAutoIpSelected()?"":settings.getHostIp(),
-                        settings.getRandPortSelected()?"":settings.getHostPort(),
-                        settings.getNotServeSelected()?settings.getHostExtra():""
+                        tinfoilSettings.isNoRequestsServe(),
+                        tinfoilSettings.isAutoDetectIp()?"":tinfoilSettings.getHostIp(),
+                        tinfoilSettings.isRandomlySelectPort()?"":tinfoilSettings.getHostPort(),
+                        tinfoilSettings.isNoRequestsServe()?tinfoilSettings.getHostExtra():""
                 );
             }
         }
@@ -330,8 +331,9 @@ public class FrontController implements Initializable {
     private void handleDrop(DragEvent event){
         List<File> filesDropped = event.getDragboard().getFiles();
         SettingsController settingsController = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
+        SettingsBlockTinfoilController tinfoilSettings = settingsController.getTinfoilSettings();
 
-        if (getSelectedProtocol().equals("TinFoil") && settingsController.getTfXciNszXczSupport())
+        if (getSelectedProtocol().equals("TinFoil") && tinfoilSettings.isXciNszXczSupport())
             filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches("(.*\\.nsp$)|(.*\\.xci$)|(.*\\.nsz$)|(.*\\.xcz$)"));
         else if (getSelectedProtocol().equals("GoldLeaf") && (! settingsController.getNSPFileFilterForGL()))
             filesDropped.removeIf(file -> (file.isDirectory() && ! file.getName().toLowerCase().matches(".*\\.nsp$")));
