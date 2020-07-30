@@ -73,6 +73,8 @@ public class RcmController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         this.rb = resourceBundle;
+        final AppPreferences preferences = AppPreferences.getInstance();
+
         rcmToggleGrp.selectToggle(pldrRadio1);
         pldrRadio1.setOnAction(e -> statusLbl.setText(""));
         pldrRadio2.setOnAction(e -> statusLbl.setText(""));
@@ -80,11 +82,11 @@ public class RcmController implements Initializable {
         pldrRadio4.setOnAction(e -> statusLbl.setText(""));
         pldrRadio5.setOnAction(e -> statusLbl.setText(""));
 
-        String recentRcm1 = AppPreferences.getInstance().getRecentRcm(1);
-        String recentRcm2 = AppPreferences.getInstance().getRecentRcm(2);
-        String recentRcm3 = AppPreferences.getInstance().getRecentRcm(3);
-        String recentRcm4 = AppPreferences.getInstance().getRecentRcm(4);
-        String recentRcm5 = AppPreferences.getInstance().getRecentRcm(5);
+        String recentRcm1 = preferences.getRecentRcm(1);
+        String recentRcm2 = preferences.getRecentRcm(2);
+        String recentRcm3 = preferences.getRecentRcm(3);
+        String recentRcm4 = preferences.getRecentRcm(4);
+        String recentRcm5 = preferences.getRecentRcm(5);
         
         if (File.separator.equals("/"))
             this.myRegexp = "^.+/";
@@ -112,7 +114,6 @@ public class RcmController implements Initializable {
             payloadFPathLbl5.setText(recentRcm5);
         }
 
-       // TODO: write logic ?? Like in case PAYLOADER exist, button active. If not: not active?
         injectPldBtn.setOnAction(actionEvent -> smash());
     }
 

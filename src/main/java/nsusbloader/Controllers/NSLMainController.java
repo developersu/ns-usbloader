@@ -69,7 +69,7 @@ public class NSLMainController implements Initializable {
                 List<String> result = updTask.getValue();
                 if (result != null){
                     if (!result.get(0).isEmpty()) {
-                        SettingsTabController.setNewVersionLink(result.get(0));
+                        SettingsTabController.getGenericSettings().setNewVersionLink(result.get(0));
                         ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionAval"), resourceBundle.getString("windowTitleNewVersionAval") + ": " + result.get(0) + "\n\n" + result.get(1));
                     }
                 }
@@ -93,7 +93,7 @@ public class NSLMainController implements Initializable {
     /**
      * Provide hostServices to Settings tab
      * */
-    public void setHostServices(HostServices hs ){ SettingsTabController.registerHostServices(hs);}
+    public void setHostServices(HostServices hs ){ SettingsTabController.getGenericSettings().registerHostServices(hs);}
 
     /**
      * Get 'Settings' controller

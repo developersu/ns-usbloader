@@ -145,7 +145,7 @@ public class SettingsBlockTinfoilController implements Initializable {
     public boolean isNoRequestsServe(){ return noRequestsServeCB.isSelected(); }
     public boolean isValidateNSHostName(){ return validateNSHostNameCB.isSelected(); }
 
-    public void updatePreferencesOnExit(){
+    void updatePreferencesOnExit(){
         AppPreferences preferences = AppPreferences.getInstance();
 
         preferences.setNsIpValidationNeeded(isValidateNSHostName());

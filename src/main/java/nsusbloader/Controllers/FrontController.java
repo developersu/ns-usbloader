@@ -201,7 +201,7 @@ public class FrontController implements Initializable {
 
         if (getSelectedProtocol().equals("TinFoil") && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport())
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
-        else if (getSelectedProtocol().equals("GoldLeaf") && (! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getNSPFileFilterForGL()))
+        else if (getSelectedProtocol().equals("GoldLeaf") && (! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL()))
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Any file", "*.*"),
                     new FileChooser.ExtensionFilter("NSP ROM", "*.nsp")
             );
@@ -266,10 +266,11 @@ public class FrontController implements Initializable {
         SettingsController settings = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
         // If USB selected
         if (getSelectedProtocol().equals("GoldLeaf") ){
-            usbNetCommunications = new UsbCommunications(nspToUpload, "GoldLeaf" + settings.getGlVer(), settings.getNSPFileFilterForGL());
+            final SettingsBlockGoldleafController goldleafSettings = settings.getGoldleafSettings();
+            usbNetCommunications = new UsbCommunications(nspToUpload, "GoldLeaf" + goldleafSettings.getGlVer(), goldleafSettings.getNSPFileFilterForGL());
         }
         else if (( getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("USB") )){
-            usbNetCommunications = new UsbCommunications(nspToUpload, "TinFoil", settings.getNSPFileFilterForGL());
+            usbNetCommunications = new UsbCommunications(nspToUpload, "TinFoil", false);
         }
         else {      // NET INSTALL OVER TINFOIL
             final String ipValidationPattern = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
@@ -332,10 +333,11 @@ public class FrontController implements Initializable {
         List<File> filesDropped = event.getDragboard().getFiles();
         SettingsController settingsController = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
         SettingsBlockTinfoilController tinfoilSettings = settingsController.getTinfoilSettings();
+        SettingsBlockGoldleafController goldleafController = settingsController.getGoldleafSettings();
 
         if (getSelectedProtocol().equals("TinFoil") && tinfoilSettings.isXciNszXczSupport())
             filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches("(.*\\.nsp$)|(.*\\.xci$)|(.*\\.nsz$)|(.*\\.xcz$)"));
-        else if (getSelectedProtocol().equals("GoldLeaf") && (! settingsController.getNSPFileFilterForGL()))
+        else if (getSelectedProtocol().equals("GoldLeaf") && (! goldleafController.getNSPFileFilterForGL()))
             filesDropped.removeIf(file -> (file.isDirectory() && ! file.getName().toLowerCase().matches(".*\\.nsp$")));
         else
             filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches(".*\\.nsp$"));

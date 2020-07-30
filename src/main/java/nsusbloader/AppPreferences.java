@@ -18,8 +18,6 @@
 */
 package nsusbloader;
 
-import nsusbloader.Controllers.SettingsController;
-
 import java.util.Locale;
 import java.util.prefs.Preferences;
 
@@ -29,6 +27,7 @@ public class AppPreferences {
 
     private final Preferences preferences;
     private final Locale locale;
+    public static final String[] goldleafSupportedVersions = {"v0.5", "v0.7.x", "v0.8"};
 
     private AppPreferences(){
         this.preferences = Preferences.userRoot().node("NS-USBloader");
@@ -54,6 +53,7 @@ public class AppPreferences {
             netUsb = "USB";
         return netUsb;
     }
+
     public void setTheme(String theme){ preferences.put("THEME", theme); }
     public void setProtocol(String protocol){ preferences.put("PROTOCOL", protocol); }
     public void setNetUsb(String netUsb){ preferences.put("NETUSB", netUsb); }
@@ -109,8 +109,8 @@ public class AppPreferences {
     public void setNspFileFilterGL(boolean prop){preferences.putBoolean("GL_NSP_FILTER", prop);}
 
     public String getGlVersion(){
-        int recentGlVersionIndex = SettingsController.glSupportedVersions.length - 1;
-        String recentGlVersion = SettingsController.glSupportedVersions[recentGlVersionIndex];
+        int recentGlVersionIndex = goldleafSupportedVersions.length - 1;
+        String recentGlVersion = goldleafSupportedVersions[recentGlVersionIndex];
         return preferences.get("gl_version", recentGlVersion);
     }
     public void setGlVersion(String version){ preferences.put("gl_version", version);}

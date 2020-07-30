@@ -18,6 +18,7 @@
 */
 package nsusbloader.cli;
 
+import nsusbloader.AppPreferences;
 import nsusbloader.COM.USB.UsbCommunications;
 import nsusbloader.Controllers.SettingsController;
 
@@ -75,7 +76,7 @@ public class GoldLeafCli {
     private String getGlSupportedVersions(){
         StringBuilder builder = new StringBuilder("Supported versions: \n");
 
-        for (String a : SettingsController.glSupportedVersions){
+        for (String a : AppPreferences.goldleafSupportedVersions){
             builder.append("\t");
             builder.append(a);
             builder.append("\n");
@@ -98,7 +99,7 @@ public class GoldLeafCli {
                     "Try 'ns-usbloader -g help' for more information.");
         }
 
-        for (String version : SettingsController.glSupportedVersions){
+        for (String version : AppPreferences.goldleafSupportedVersions){
             if (version.equals(goldLeafVersion))
                 return;
         }
