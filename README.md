@@ -227,16 +227,15 @@ To convert files of any locale to readable format (and vise-versa) you can use t
 
 If you like this app, just give a star. 
 
-Want to support development? Make a donation* (see below):
+If you want to make a donation*, please see below:
+
+<a href="https://liberapay.com/developersu/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
+
+<a href="https://paypal.me/developersu" title="PayPal"><img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" border="0" alt="PayPal Logo" /></a>
 
 [Yandex.Money](https://money.yandex.ru/to/410014301951665)
 
-[PayPal](https://paypal.me/developersu)
-
-*Legal information:
-
-* [EN] Please note! This is non-commercial application. Any received money considered as a gift.
-* [RU] Пожалуйста обратите внимание! Это некоммерческое приложение. Перечисляя средства вы совершаете дарение.
+* Please note: this is non-commercial application.
 
 Thanks
 
