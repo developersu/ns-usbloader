@@ -37,7 +37,7 @@ class NxdtUsbAbi1 {
     private final String saveToPath;
     private final NxdtTask parent;
 
-    private boolean isWindows;
+    private final boolean isWindows;
     private boolean isWindows10;
 
     private static final int NXDT_MAX_DIRECTIVE_SIZE = 0x1000;
@@ -76,6 +76,8 @@ class NxdtUsbAbi1 {
                                                     0x08, 0x00, 0x00, 0x00,
                                                     0x00, 0x00, 0x00, 0x00,
                                                     0x00, 0x00, 0x00, 0x00 };
+
+    private static final long W_MAX_PACKET_SIZE = 0x200;
 
     public NxdtUsbAbi1(DeviceHandle handler,
                        ILogPrinter logPrinter,
@@ -136,7 +138,7 @@ class NxdtUsbAbi1 {
             logPrinter.print(e.getMessage(), EMsgType.INFO);
             logPrinter.print("Terminating now", EMsgType.FAIL);
         }
-    };
+    }
 
     private boolean isInvalidDirective(byte[] message) throws Exception{
         if (message.length < 0x10){
@@ -256,52 +258,66 @@ class NxdtUsbAbi1 {
     }
 
     private void dumpFile(File file, long size) throws Exception{
-        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file, false));
+        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file, false))) {
+            byte[] readBuffer;
+            long received = 0;
+            int bufferSize;
 
-        byte[] readBuffer;
-        long received = 0;
-        int bufferSize;
+            boolean zlt_expected = isAligned(size);
 
-        while (received < size){
-            readBuffer = readUsbFile();
-            bos.write(readBuffer);
-            bufferSize = readBuffer.length;
-            received += bufferSize;
-            logPrinter.updateProgress((received + bufferSize) / (size / 100.0) / 100.0);
+            while (received < size) {
+                readBuffer = readUsbFile();
+                bos.write(readBuffer);
+                bufferSize = readBuffer.length;
+                received += bufferSize;
+                logPrinter.updateProgress((received + bufferSize) / (size / 100.0) / 100.0);
+            }
+
+            if (zlt_expected) {
+                logPrinter.print("Finishing with ZLT packet request", EMsgType.INFO);
+                readUsbFile();
+            }
+        } finally {
+            logPrinter.updateProgress(1.0);
         }
-        logPrinter.updateProgress(1.0);
-        bos.close();
     }
 
     // @see https://bugs.openjdk.java.net/browse/JDK-8146538
     private void dumpFileOnWindowsTen(File file, long size) throws Exception{
         FileOutputStream fos = new FileOutputStream(file, true);
-        BufferedOutputStream bos = new BufferedOutputStream(fos);
-        FileDescriptor fd = fos.getFD();
 
-        byte[] readBuffer;
-        long received = 0;
-        int bufferSize;
+        try (BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+            FileDescriptor fd = fos.getFD();
+            byte[] readBuffer;
+            long received = 0;
+            int bufferSize;
 
-        while (received < size){
-            readBuffer = readUsbFile();
-            bos.write(readBuffer);
-            fd.sync(); // Fixes flushing under Windows (unharmful for other OS)
-            bufferSize = readBuffer.length;
-            received += bufferSize;
+            boolean zlt_expected = isAligned(size);
 
-            logPrinter.updateProgress((received + bufferSize) / (size / 100.0) / 100.0);
+            while (received < size) {
+                readBuffer = readUsbFile();
+                bos.write(readBuffer);
+                fd.sync(); // Fixes flushing under Windows (unharmful for other OS)
+                bufferSize = readBuffer.length;
+                received += bufferSize;
+
+                logPrinter.updateProgress((received + bufferSize) / (size / 100.0) / 100.0);
+            }
+
+            if (zlt_expected) {
+                logPrinter.print("Finishing with ZLT packet request", EMsgType.INFO);
+                readUsbFile();
+            }
+        } finally {
+            logPrinter.updateProgress(1.0);
         }
-
-        logPrinter.updateProgress(1.0);
-        bos.close();
+    }
+    /** Handle Zero-length terminator **/
+    private boolean isAligned(long size){
+        return ((size & (W_MAX_PACKET_SIZE - 1)) == 0);
     }
 
-    /**
-     * Sending any byte array to USB device
-     * @return 'false' if no issues
-     *          'true' if errors happened
-     * */
+    /** Sending any byte array to USB device **/
     private void writeUsb(byte[] message) throws Exception{
         ByteBuffer writeBuffer = ByteBuffer.allocateDirect(message.length);
         writeBuffer.put(message);
@@ -312,18 +328,16 @@ class NxdtUsbAbi1 {
 
         int result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 5050);
 
-        switch (result){
-            case LibUsb.SUCCESS:
-                if (writeBufTransferred.get() == message.length)
-                    return;
-                throw new Exception("Data transfer issue [write]" +
-                        "\n         Requested: "+message.length+
-                        "\n         Transferred: "+writeBufTransferred.get());
-            default:
-                throw new Exception("Data transfer issue [write]" +
-                        "\n         Returned: "+ UsbErrorCodes.getErrCode(result) +
-                        "\n         (execution stopped)");
+        if (result == LibUsb.SUCCESS) {
+            if (writeBufTransferred.get() == message.length)
+                return;
+            throw new Exception("Data transfer issue [write]" +
+                    "\n         Requested: " + message.length +
+                    "\n         Transferred: " + writeBufTransferred.get());
         }
+        throw new Exception("Data transfer issue [write]" +
+                "\n         Returned: " + UsbErrorCodes.getErrCode(result) +
+                "\n         (execution stopped)");
 
     }
     /**
