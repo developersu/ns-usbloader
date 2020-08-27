@@ -18,6 +18,7 @@
 */
 package nsusbloader.COM.USB;
 
+import nsusbloader.COM.USB.common.DeviceInformation;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.*;
@@ -88,6 +89,7 @@ public class UsbConnect {
             usbConnect.connected = true;
         }
         catch (Exception e){
+            e.printStackTrace();
             logPrinter.print(e.getMessage(), EMsgType.FAIL);
             usbConnect.close();
         }
@@ -193,12 +195,10 @@ public class UsbConnect {
             throw new Exception("Unable to set active configuration on device: "+UsbErrorCodes.getErrCode(returningValue));
     }
     private void claimInterface() throws Exception{
-        // Claim interface
         returningValue = LibUsb.claimInterface(handlerNS, DEFAULT_INTERFACE);
         if (returningValue != LibUsb.SUCCESS)
             throw new Exception("Claim interface failure: "+UsbErrorCodes.getErrCode(returningValue));
     }
-
     /**
      * Get USB status
      * @return status of connection

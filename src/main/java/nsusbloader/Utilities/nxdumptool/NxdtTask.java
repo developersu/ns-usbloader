@@ -50,7 +50,12 @@ public class NxdtTask extends CancellableRunnable {
 
         DeviceHandle handler = usbConnect.getNsHandler();
 
-        new NxdtUsbAbi1(handler, logPrinter, saveToLocation, this);
+        try {
+            new NxdtUsbAbi1(handler, logPrinter, saveToLocation, this);
+        }
+        catch (Exception e){
+            logPrinter.print(e.getMessage(), EMsgType.FAIL);
+        }
 
         logPrinter.print(".:: Complete ::.", EMsgType.PASS);
 
