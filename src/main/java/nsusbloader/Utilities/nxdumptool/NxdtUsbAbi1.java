@@ -287,11 +287,9 @@ class NxdtUsbAbi1 {
             long received = 0;
             int bufferSize;
 
-            boolean zlt_expected = isAligned(size);
-
-            while (received < size) {
+            while (received+NXDT_FILE_CHUNK_SIZE < size) {
                 //readBuffer = readUsbFile();
-                readBuffer = readUsbFileDebug();
+                readBuffer = readUsbFileDebug(NXDT_FILE_CHUNK_SIZE);
                 bos.write(readBuffer);
                 if (isWindows10)
                     fd.sync();
@@ -300,20 +298,20 @@ class NxdtUsbAbi1 {
 
                 logPrinter.updateProgress((double)received / (double)size);
             }
-
-            if (zlt_expected) {
-                logPrinter.print("Finishing with ZLT packet request", EMsgType.INFO);
-                //readUsbFile();
-                readUsbFileDebug();
-            }
+            int lastChunkSize = (int)(size - received) + 1;
+            readBuffer = readUsbFileDebug(lastChunkSize);
+            bos.write(readBuffer);
+            if (isWindows10)
+                fd.sync();
         } finally {
             logPrinter.updateProgress(1.0);
         }
     }
-    /** Handle Zero-length terminator **/
+    /* Handle Zero-length terminator
     private boolean isAligned(long size){
         return ((size & (endpointMaxPacketSize - 1)) == 0);
     }
+    */
 
     /** Sending any byte array to USB device **/
     private void writeUsb(byte[] message) throws Exception{
@@ -397,8 +395,8 @@ class NxdtUsbAbi1 {
         throw new InterruptedException();
     }
     
-    private byte[] readUsbFileDebug() throws Exception {
-        ByteBuffer readBuffer = ByteBuffer.allocateDirect(NXDT_FILE_CHUNK_SIZE);
+    private byte[] readUsbFileDebug(int chunkSize) throws Exception {
+        ByteBuffer readBuffer = ByteBuffer.allocateDirect(chunkSize);
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
         if (parent.isCancelled())
             throw new InterruptedException();

@@ -32,11 +32,11 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * Information, ideas and data from ['fusee-launcher'](https://github.com/reswitched/fusee-launcher) application
 * [Apache Commons CLI](https://commons.apache.org/proper/commons-cli/)
 
-#### List of awesome contributors!
+### List of awesome code contributors, translators and other great people!
 
+* [Pablo Curiel (DarkMatterCore)](https://github.com/DarkMatterCore)
 * [wolfposd](https://github.com/wolfposd)
 
-#### Thanks for the great work done by our translators!
 
 * French by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 
 * Italian by [unbranched](https://github.com/unbranched)
