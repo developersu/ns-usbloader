@@ -90,7 +90,7 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="0955", ATTRS{idProduct}=="7321", GROUP="plug
 root # udevadm control --reload-rules && udevadm trigger
 ```
 
-Please note: you may have to change 'plugdev' group from example above to the different one. It's depends on you linux distro.
+Please note: you may have to change 'plugdev' group from example above to the different one. It depends on you linux distro.
 
 ##### Raspberry Pi
 
@@ -224,6 +224,7 @@ To convert files of any locale to readable format (and vise-versa) you can use t
 - [x] [Android support](https://github.com/developersu/ns-usbloader-mobile)
 
 ## Support this app
+
 
 If you like this app, just give a star. 
 

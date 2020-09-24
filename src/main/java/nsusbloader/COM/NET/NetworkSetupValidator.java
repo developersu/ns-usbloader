@@ -189,6 +189,10 @@ public class NetworkSetupValidator {
     private void parsePort(String hostPortNum) throws Exception{
         try {
             this.hostPort = Integer.parseInt(hostPortNum);
+
+            if (doNotServe)
+                return;
+
             serverSocket = new ServerSocket(hostPort);
             logPrinter.print("NET: Using defined port number: " + hostPort, EMsgType.PASS);
         }
