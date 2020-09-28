@@ -25,6 +25,7 @@ import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.COM.Helpers.NSSplitReader;
+import nsusbloader.RainbowHexDump;
 
 import java.io.*;
 import java.net.*;
@@ -160,9 +161,7 @@ public class NETCommunications extends CancellableRunnable {
 
                 String line;
                 LinkedList<String> tcpPacket = new LinkedList<>();
-
                 while ((line = br.readLine()) != null) {
-                    //System.out.println(line);           // Debug
                     if (line.trim().isEmpty()) {          // If TCP packet is ended
                         handleRequest(tcpPacket);     // Proceed required things
                         tcpPacket.clear();                // Clear data and wait for next TCP packet
@@ -170,8 +169,6 @@ public class NETCommunications extends CancellableRunnable {
                     else
                         tcpPacket.add(line);              // Otherwise collect data
                 }
-                //System.out.println("<Socket Closed>");
-                // and reopen client sock
                 clientSocket.close();
             }
         }
@@ -188,6 +185,10 @@ public class NETCommunications extends CancellableRunnable {
      * @return true if failed
      * */
     private void handleRequest(LinkedList<String> packet) throws Exception{
+        if (packet.get(0).startsWith("DROP")){
+            throw new Exception("All transfers finished");
+        }
+
         File requestedFile;
         String reqFileName = packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", "");
 
