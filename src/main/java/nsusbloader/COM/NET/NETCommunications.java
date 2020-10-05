@@ -25,7 +25,6 @@ import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.COM.Helpers.NSSplitReader;
-import nsusbloader.RainbowHexDump;
 
 import java.io.*;
 import java.net.*;
@@ -53,6 +52,8 @@ public class NETCommunications extends CancellableRunnable {
 
     private OutputStream currSockOS;
     private PrintWriter currSockPW;
+
+    private boolean jobInProgress = true;
     /**
      * Simple constructor that everybody uses
      * */
@@ -150,7 +151,7 @@ public class NETCommunications extends CancellableRunnable {
     }
     private void serveRequestsLoop(){
         try {
-            while (true){
+            while (jobInProgress){
                 clientSocket = serverSocket.accept();
                 BufferedReader br = new BufferedReader(
                         new InputStreamReader(clientSocket.getInputStream())
@@ -178,7 +179,10 @@ public class NETCommunications extends CancellableRunnable {
             else
                 logPrinter.print(e.getMessage(), EMsgType.INFO);
             close(EFileStatus.UNKNOWN);
+            return;
         }
+        logPrinter.print("All transfers complete", EMsgType.PASS);
+        close(EFileStatus.UPLOADED);
     }
     /**
      * Handle requests
@@ -186,7 +190,8 @@ public class NETCommunications extends CancellableRunnable {
      * */
     private void handleRequest(LinkedList<String> packet) throws Exception{
         if (packet.get(0).startsWith("DROP")){
-            throw new Exception("All transfers finished");
+            jobInProgress = false;
+            return;
         }
 
         File requestedFile;
@@ -214,11 +219,10 @@ public class NETCommunications extends CancellableRunnable {
         }
         if (packet.get(0).startsWith("GET")) {
             for (String line: packet) {
-                if (! line.toLowerCase().startsWith("range"))                //todo: fix
-                    continue;
-
-                parseGETrange(requestedFile, reqFileName, reqFileSize, line);
-                return;
+                if (line.toLowerCase().startsWith("range")){
+                    parseGETrange(requestedFile, reqFileName, reqFileSize, line);
+                    return;
+                }
             }
         }
     }

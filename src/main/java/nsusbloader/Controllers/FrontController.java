@@ -304,16 +304,17 @@ public class FrontController implements Initializable {
      * It's button listener when transmission in progress
      * */
     private void stopBtnAction(){
-        if (workThread != null && workThread.isAlive()){
-            usbNetCommunications.cancel();
+        if (workThread == null || ! workThread.isAlive())
+            return;
 
-            if (usbNetCommunications instanceof NETCommunications){
-                try{
-                    ((NETCommunications) usbNetCommunications).getServerSocket().close();
-                    ((NETCommunications) usbNetCommunications).getClientSocket().close();
-                }
-                catch (Exception ignore){ }
+        usbNetCommunications.cancel();
+
+        if (usbNetCommunications instanceof NETCommunications){
+            try{
+                ((NETCommunications) usbNetCommunications).getServerSocket().close();
+                ((NETCommunications) usbNetCommunications).getClientSocket().close();
             }
+            catch (Exception ignore){ }
         }
     }
     /**
@@ -358,26 +359,24 @@ public class FrontController implements Initializable {
             usbNetPane.setDisable(isActive);
             return;
         }
+        selectNspBtn.setDisable(isActive);
+        selectSplitNspBtn.setDisable(isActive);
+        btnUpStopImage.getStyleClass().clear();
+
         if (isActive) {
-            selectNspBtn.setDisable(true);
-            selectSplitNspBtn.setDisable(true);
-            btnUpStopImage.getStyleClass().clear();
             btnUpStopImage.getStyleClass().add("regionStop");
 
             uploadStopBtn.setOnAction(e-> stopBtnAction());
             uploadStopBtn.setText(resourceBundle.getString("btn_Stop"));
-            uploadStopBtn.getStyleClass().remove("buttonUp");
+            uploadStopBtn.getStyleClass().clear();
             uploadStopBtn.getStyleClass().add("buttonStop");
             return;
         }
-        selectNspBtn.setDisable(false);
-        selectSplitNspBtn.setDisable(false);
-        btnUpStopImage.getStyleClass().clear();
         btnUpStopImage.getStyleClass().add("regionUpload");
 
         uploadStopBtn.setOnAction(e-> uploadBtnAction());
         uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
-        uploadStopBtn.getStyleClass().remove("buttonStop");
+        uploadStopBtn.getStyleClass().clear();
         uploadStopBtn.getStyleClass().add("buttonUp");
     }
     /**
