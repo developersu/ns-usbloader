@@ -51,7 +51,9 @@ Sometimes I add new posts about this project [on my home page](https://developer
 
 ### System requirements
 
-JRE/JDK 8u60 or higher
+JRE/JDK 8u60 or higher for Windows
+
+JDK 11 for MacOS and Linux
 
 ### Supported GoldLeaf versions
 | GoldLeaf version | NS-USBloader version |
@@ -105,6 +107,8 @@ Please note: you may have to change 'plugdev' group from example above to the di
 Double-click on downloaded .jar file. Follow instructions. Or see 'Linux' section.
 
 Set 'Security & Privacy' settings if needed.
+
+*Please note: JDK 11 is recommended for using on MacOS. There are few really weird issues already reported from JDK 14 users on Mac.*
 
 ##### Windows: 
 
