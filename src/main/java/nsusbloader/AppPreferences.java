@@ -61,7 +61,7 @@ public class AppPreferences {
     public void setNsIp(String ip){preferences.put("NSIP", ip);}
     public String getNsIp(){return preferences.get("NSIP", "192.168.1.42");}
 
-    public String getRecent(){ return preferences.get("RECENT", System.getProperty("user.home")); }
+    public String getRecent(){ return FilesHelper.getRealFolder(preferences.get("RECENT", System.getProperty("user.home"))); }
     public void setRecent(String path){ preferences.put("RECENT", path); }
     //------------ SETTINGS ------------------//
 
@@ -124,12 +124,12 @@ public class AppPreferences {
     public int getSplitMergeType(){ return preferences.getInt("SM_TYPE", 0); }
     public void setSplitMergeType(int value){ preferences.putInt("SM_TYPE", value); }
 
-    public String getSplitMergeRecent(){ return preferences.get("SM_RECENT", System.getProperty("user.home")); }
+    public String getSplitMergeRecent(){ return FilesHelper.getRealFolder(preferences.get("SM_RECENT", System.getProperty("user.home"))); }
     public void setSplitMergeRecent(String value){ preferences.put("SM_RECENT", value); }
     // RCM //
     public String getRecentRcm(int num){ return preferences.get(String.format("RCM_%02d", num), ""); }
     public void setRecentRcm(int num, String value){ preferences.put(String.format("RCM_%02d", num), value); }
     // NXDT //
-    public String getNXDTSaveToLocation(){ return preferences.get("nxdt_saveto", System.getProperty("user.home")); }
+    public String getNXDTSaveToLocation(){ return FilesHelper.getRealFolder(preferences.get("nxdt_saveto", System.getProperty("user.home"))); }
     public void setNXDTSaveToLocation(String value){ preferences.put("nxdt_saveto", value); }
 }

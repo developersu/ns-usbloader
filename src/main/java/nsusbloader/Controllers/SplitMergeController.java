@@ -20,7 +20,6 @@ package nsusbloader.Controllers;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.TransferMode;
@@ -29,6 +28,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
+import nsusbloader.FilesHelper;
 import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.NSLDataTypes.EModule;
@@ -97,10 +97,13 @@ public class SplitMergeController implements Initializable {
         saveToPathLbl.setText(AppPreferences.getInstance().getSplitMergeRecent());
 
         changeSaveToBtn.setOnAction((actionEvent -> {
-            DirectoryChooser dc = new DirectoryChooser();
-            dc.setTitle(resourceBundle.getString("tabSplMrg_Btn_SelectFolder"));
-            dc.setInitialDirectory(new File(saveToPathLbl.getText()));
-            File saveToDir = dc.showDialog(changeSaveToBtn.getScene().getWindow());
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle(resourceBundle.getString("tabSplMrg_Btn_SelectFolder"));
+
+            String saveToLocation = FilesHelper.getRealFolder(saveToPathLbl.getText());
+            directoryChooser.setInitialDirectory(new File(saveToLocation));
+
+            File saveToDir = directoryChooser.showDialog(changeSaveToBtn.getScene().getWindow());
             if (saveToDir != null)
                 saveToPathLbl.setText(saveToDir.getAbsolutePath());
         }));
@@ -227,7 +230,6 @@ public class SplitMergeController implements Initializable {
      * */
     @FXML
     private void handleDrop(DragEvent event) {
-        Node sourceNode = (Node) event.getSource();
         File fileDrpd = event.getDragboard().getFiles().get(0);
 
         if (fileDrpd.isDirectory())

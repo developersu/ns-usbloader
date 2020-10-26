@@ -25,6 +25,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import nsusbloader.AppPreferences;
+import nsusbloader.FilesHelper;
 import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.NSLDataTypes.EModule;
@@ -52,11 +53,8 @@ public class NxdtController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         this.rb = resourceBundle;
 
-        File saveToValidator = new File(AppPreferences.getInstance().getNXDTSaveToLocation());
-        if (saveToValidator.exists())
-            saveToLocationLbl.setText(saveToValidator.getAbsolutePath());
-        else
-            saveToLocationLbl.setText(System.getProperty("user.home"));
+        String saveToLocation = AppPreferences.getInstance().getNXDTSaveToLocation();
+        saveToLocationLbl.setText(saveToLocation);
 
         btnDumpStopImage = new Region();
         btnDumpStopImage.getStyleClass().add("regionDump");

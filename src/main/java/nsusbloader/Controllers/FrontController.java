@@ -32,6 +32,7 @@ import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.COM.NET.NETCommunications;
 import nsusbloader.COM.USB.UsbCommunications;
+import nsusbloader.FilesHelper;
 import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.NSLDataTypes.EModule;
@@ -193,11 +194,7 @@ public class FrontController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(resourceBundle.getString("btn_OpenFile"));
 
-        File validator = new File(previouslyOpenedPath);
-        if (validator.exists() && validator.isDirectory())
-            fileChooser.setInitialDirectory(validator);
-        else
-            fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        fileChooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
 
         if (getSelectedProtocol().equals("TinFoil") && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport())
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
@@ -223,11 +220,8 @@ public class FrontController implements Initializable {
         DirectoryChooser dirChooser = new DirectoryChooser();
         dirChooser.setTitle(resourceBundle.getString("btn_OpenFile"));
 
-        File validator = new File(previouslyOpenedPath);
-        if (validator.exists() && validator.isDirectory())
-            dirChooser.setInitialDirectory(validator);
-        else
-            dirChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        String saveToLocation = FilesHelper.getRealFolder(previouslyOpenedPath);
+        dirChooser.setInitialDirectory(new File(saveToLocation));
 
         splitFile = dirChooser.showDialog(usbNetPane.getScene().getWindow());
 
