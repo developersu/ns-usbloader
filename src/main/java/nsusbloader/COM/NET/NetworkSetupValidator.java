@@ -77,11 +77,20 @@ public class NetworkSetupValidator {
             Arrays.sort(subFiles, Comparator.comparingInt(file -> Integer.parseInt(file.getName())));
 
             for (int i = subFiles.length - 2; i > 0 ; i--){
-                if (subFiles[i].length() < subFiles[i-1].length()) {
+                if (subFiles[i].length() != subFiles[i-1].length()) {
                     logPrinter.print("NET: Exclude split file: "+f.getName()+
                             "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
                     return true;
                 }
+            }
+
+            long firstFileLength = subFiles[0].length();
+            long lastFileLength = subFiles[subFiles.length-1].length();
+
+            if (lastFileLength > firstFileLength){
+                logPrinter.print("NET: Exclude split file: "+f.getName()+
+                        "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
+                return true;
             }
             return false;
         });

@@ -23,10 +23,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FilesHelper {
-    public static String getRealFolder(String path){
-        Path splitMergePath = Paths.get(path);
-        if (Files.notExists(splitMergePath) || Files.isRegularFile(splitMergePath))
+    public static String getRealFolder(String location){
+        Path locationAsPath = Paths.get(location);
+        if (Files.notExists(locationAsPath) || Files.isRegularFile(locationAsPath))
             return System.getProperty("user.home");
-        return path;
+        return location;
     }
 }

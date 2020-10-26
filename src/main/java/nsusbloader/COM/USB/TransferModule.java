@@ -41,32 +41,40 @@ public abstract class TransferModule {
         this.task = task;
         this.logPrinter = printer;
 
-        // Validate split files to be sure that there is no crap
-        //logPrinter.print("TransferModule: Validating split files ...", EMsgType.INFO); // NOTE: Used for debug
-        Iterator<Map.Entry<String, File>> iterator = nspMap.entrySet().iterator();
-        while (iterator.hasNext()){
-            File f = iterator.next().getValue();
-            if (f.isDirectory()){
-                File[] subFiles = f.listFiles((file, name) -> name.matches("[0-9]{2}"));
-                if (subFiles == null || subFiles.length == 0) {
-                    logPrinter.print("TransferModule: Removing empty folder: " + f.getName(), EMsgType.WARNING);
-                    iterator.remove();
-                }
-                else {
-                    Arrays.sort(subFiles, Comparator.comparingInt(file -> Integer.parseInt(file.getName())));
-
-                    for (int i = subFiles.length - 2; i > 0 ; i--){
-                        if (subFiles[i].length() < subFiles[i-1].length()) {
-                            logPrinter.print("TransferModule: Removing strange split file: "+f.getName()+
-                                    "\n      (Chunk sizes of the split file are not the same, but has to be.)", EMsgType.WARNING);
-                            iterator.remove();
-                        } // what
-                    } // a
-                } // nice
-            } // stairway
-        } // here =)
-        //logPrinter.print("TransferModule: Validation complete.", EMsgType.INFO);  // NOTE: Used for debug
+        filterFiles();
     }
+    void filterFiles(){
+        nspMap.values().removeIf(f -> {
+            if (f.isFile())
+                return false;
 
+            File[] subFiles = f.listFiles((file, name) -> name.matches("[0-9]{2}"));
+
+            if (subFiles == null || subFiles.length == 0) {
+                logPrinter.print("TransferModule: Exclude folder: " + f.getName(), EMsgType.WARNING);
+                return true;
+            }
+
+            Arrays.sort(subFiles, Comparator.comparingInt(file -> Integer.parseInt(file.getName())));
+
+            for (int i = subFiles.length - 2; i > 0 ; i--){
+                if (subFiles[i].length() != subFiles[i-1].length()) {
+                    logPrinter.print("TransferModule: Exclude split file: "+f.getName()+
+                            "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
+                    return true;
+                }
+            }
+
+            long firstFileLength = subFiles[0].length();
+            long lastFileLength = subFiles[subFiles.length-1].length();
+
+            if (lastFileLength > firstFileLength){
+                logPrinter.print("TransferModule: Exclude split file: "+f.getName()+
+                        "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
+                return true;
+            }
+            return false;
+        });
+    }
     public EFileStatus getStatus(){ return status; }
 }
