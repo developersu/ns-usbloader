@@ -2,7 +2,6 @@ package nsusbloader.com.usb;
 
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
-import nsusbloader.ModelControllers.LogPrinterCli;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -81,7 +80,7 @@ class TransferModuleTest{
         filesMap.put(splitFileName10, splitFile10);
         filesMap.put(splitFileName11, splitFile11);
 
-        ILogPrinter printer = new LogPrinterCli();
+        ILogPrinter printer = new NoLogPrinter();
         this.transferModule = new TransferModuleImplementation((DeviceHandle)null, filesMap, (CancellableRunnable)null, printer);
     }
 

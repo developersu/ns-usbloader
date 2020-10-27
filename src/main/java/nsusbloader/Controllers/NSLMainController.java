@@ -41,7 +41,7 @@ public class NSLMainController implements Initializable {
     public ProgressBar progressBar;            // Accessible from Mediator
 
     @FXML
-    public FrontController FrontTabController;             // Accessible from Mediator | todo: incapsulate
+    public GamesController GamesTabController;             // Accessible from Mediator | todo: incapsulate
     @FXML
     private SettingsController SettingsTabController;
     @FXML
@@ -103,8 +103,8 @@ public class NSLMainController implements Initializable {
         return SettingsTabController;
     }
 
-    public FrontController getFrontCtrlr(){
-        return FrontTabController;
+    public GamesController getGamesCtrlr(){
+        return GamesTabController;
     }
 
     public SplitMergeController getSmCtrlr(){
@@ -118,7 +118,7 @@ public class NSLMainController implements Initializable {
      * Save preferences before exit
      * */
     public void exit(){
-        FrontTabController.updatePreferencesOnExit();
+        GamesTabController.updatePreferencesOnExit();
         SettingsTabController.updatePreferencesOnExit();
         SplitMergeTabController.updatePreferencesOnExit(); // NOTE: This shit above should be re-written to similar pattern
         RcmTabController.updatePreferencesOnExit();

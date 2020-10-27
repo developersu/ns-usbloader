@@ -44,7 +44,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class FrontController implements Initializable {
+public class GamesController implements Initializable {
     @FXML
     private AnchorPane usbNetPane;
 
@@ -353,6 +353,7 @@ public class FrontController implements Initializable {
             usbNetPane.setDisable(isActive);
             return;
         }
+
         selectNspBtn.setDisable(isActive);
         selectSplitNspBtn.setDisable(isActive);
         btnUpStopImage.getStyleClass().clear();
@@ -362,16 +363,17 @@ public class FrontController implements Initializable {
 
             uploadStopBtn.setOnAction(e-> stopBtnAction());
             uploadStopBtn.setText(resourceBundle.getString("btn_Stop"));
-            uploadStopBtn.getStyleClass().clear();
+            uploadStopBtn.getStyleClass().remove("buttonUp");
             uploadStopBtn.getStyleClass().add("buttonStop");
-            return;
         }
-        btnUpStopImage.getStyleClass().add("regionUpload");
+        else {
+            btnUpStopImage.getStyleClass().add("regionUpload");
 
-        uploadStopBtn.setOnAction(e-> uploadBtnAction());
-        uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
-        uploadStopBtn.getStyleClass().clear();
-        uploadStopBtn.getStyleClass().add("buttonUp");
+            uploadStopBtn.setOnAction(e-> uploadBtnAction());
+            uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
+            uploadStopBtn.getStyleClass().remove("buttonStop");
+            uploadStopBtn.getStyleClass().add("buttonUp");
+        }
     }
     /**
      * Crunch. This function called from NSTableViewController

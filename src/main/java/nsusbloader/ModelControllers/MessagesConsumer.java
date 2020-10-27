@@ -26,7 +26,6 @@ import nsusbloader.Controllers.NSTableViewController;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EModule;
-import nsusbloader.NSLDataTypes.EMsgType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,7 +61,7 @@ public class MessagesConsumer extends AnimationTimer {
         this.progressBar = MediatorControl.getInstance().getContoller().progressBar;
 
         this.statusMap = statusMap;
-        this.tableViewController = MediatorControl.getInstance().getContoller().FrontTabController.tableFilesListController;
+        this.tableViewController = MediatorControl.getInstance().getContoller().GamesTabController.tableFilesListController;
 
         this.oneLinerStatus = oneLinerStatus;
 

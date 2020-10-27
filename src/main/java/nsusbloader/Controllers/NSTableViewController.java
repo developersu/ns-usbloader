@@ -24,12 +24,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.*;
-import javafx.scene.paint.Paint;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
 
@@ -59,7 +57,7 @@ public class NSTableViewController implements Initializable {
                     if (keyEvent.getCode() == KeyCode.DELETE && !MediatorControl.getInstance().getTransferActive()) {
                         rowsObsLst.removeAll(table.getSelectionModel().getSelectedItems());
                         if (rowsObsLst.isEmpty())
-                            MediatorControl.getInstance().getContoller().getFrontCtrlr().disableUploadStopBtn(true);    // TODO: change to something better
+                            MediatorControl.getInstance().getContoller().getGamesCtrlr().disableUploadStopBtn(true);    // TODO: change to something better
                         table.refresh();
                     } else if (keyEvent.getCode() == KeyCode.SPACE) {
                         for (NSLRowModel item : table.getSelectionModel().getSelectedItems()) {
@@ -177,13 +175,13 @@ public class NSTableViewController implements Initializable {
                     deleteMenuItem.setOnAction(actionEvent -> {
                         rowsObsLst.remove(row.getItem());
                         if (rowsObsLst.isEmpty())
-                            MediatorControl.getInstance().getContoller().getFrontCtrlr().disableUploadStopBtn(true);    // TODO: change to something better
+                            MediatorControl.getInstance().getContoller().getGamesCtrlr().disableUploadStopBtn(true);    // TODO: change to something better
                         table.refresh();
                     });
                     MenuItem deleteAllMenuItem = new MenuItem(resourceBundle.getString("tab1_table_contextMenu_Btn_DeleteAll"));
                     deleteAllMenuItem.setOnAction(actionEvent -> {
                         rowsObsLst.clear();
-                        MediatorControl.getInstance().getContoller().getFrontCtrlr().disableUploadStopBtn(true);    // TODO: change to something better
+                        MediatorControl.getInstance().getContoller().getGamesCtrlr().disableUploadStopBtn(true);    // TODO: change to something better
                         table.refresh();
                     });
                     contextMenu.getItems().addAll(deleteMenuItem, deleteAllMenuItem);
@@ -228,7 +226,7 @@ public class NSTableViewController implements Initializable {
         }
         else {
             rowsObsLst.add(new NSLRowModel(file, true));
-            MediatorControl.getInstance().getContoller().getFrontCtrlr().disableUploadStopBtn(false);    // TODO: change to something better
+            MediatorControl.getInstance().getContoller().getGamesCtrlr().disableUploadStopBtn(false);    // TODO: change to something better
         }
         table.refresh();
     }
@@ -248,7 +246,7 @@ public class NSTableViewController implements Initializable {
         else {
             for (File file: newFiles)
                 rowsObsLst.add(new NSLRowModel(file, true));
-            MediatorControl.getInstance().getContoller().getFrontCtrlr().disableUploadStopBtn(false);    // TODO: change to something better
+            MediatorControl.getInstance().getContoller().getGamesCtrlr().disableUploadStopBtn(false);    // TODO: change to something better
         }
         //rowsObsLst.get(0).setMarkForUpload(true);
         table.refresh();
