@@ -18,7 +18,7 @@
 */
 package nsusbloader.cli;
 
-import nsusbloader.COM.NET.NETCommunications;
+import nsusbloader.com.net.NETCommunications;
 
 import java.io.File;
 import java.util.ArrayList;

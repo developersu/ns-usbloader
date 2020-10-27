@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
 */
-package nsusbloader.COM.Helpers;
+package nsusbloader.com.helpers;
 
 import java.io.*;
 

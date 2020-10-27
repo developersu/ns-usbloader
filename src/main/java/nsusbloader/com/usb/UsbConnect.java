@@ -16,9 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
 */
-package nsusbloader.COM.USB;
+package nsusbloader.com.usb;
 
-import nsusbloader.COM.USB.common.DeviceInformation;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.*;

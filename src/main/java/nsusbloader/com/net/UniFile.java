@@ -16,17 +16,29 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
 */
-package nsusbloader.COM.USB.common;
+package nsusbloader.com.net;
 
-import org.usb4java.EndpointDescriptor;
+import java.io.File;
 
-public class NsUsbEndpointDescriptorUtils {
-    static NsUsbEndpointDescriptor[] convertFromNatives(EndpointDescriptor[] nativeEpDescriptors){
-        int descriptorsCount = nativeEpDescriptors.length;
-        NsUsbEndpointDescriptor[] nsUsbEpDescriptors = new NsUsbEndpointDescriptor[descriptorsCount];
-        for (int i = 0; i < descriptorsCount; i++) {
-            nsUsbEpDescriptors[i] = new NsUsbEndpointDescriptor(nativeEpDescriptors[i]);
+class UniFile {
+    private final long size;
+    private final File file;
+
+    UniFile(File file) {
+        this.file = file;
+
+        if (file.isFile()) {
+            size = file.length();
         }
-        return nsUsbEpDescriptors;
+        else {
+            long fSize = 0;
+            File[] subFiles = file.listFiles((myFile, name) -> name.matches("[0-9]{2}"));
+            for (File subFile : subFiles)
+                fSize += subFile.length();
+            size = fSize;
+        }
     }
+
+    public long getSize() { return size; }
+    public File getFile() { return file; }
 }

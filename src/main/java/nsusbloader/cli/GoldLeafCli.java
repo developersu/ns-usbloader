@@ -19,8 +19,7 @@
 package nsusbloader.cli;
 
 import nsusbloader.AppPreferences;
-import nsusbloader.COM.USB.UsbCommunications;
-import nsusbloader.Controllers.SettingsController;
+import nsusbloader.com.usb.UsbCommunications;
 
 import java.io.File;
 import java.util.ArrayList;

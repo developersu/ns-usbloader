@@ -16,11 +16,11 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
 */
-package nsusbloader.COM.USB;
+package nsusbloader.com.usb;
 
 import javafx.application.Platform;
 import javafx.stage.FileChooser;
-import nsusbloader.COM.Helpers.NSSplitReader;
+import nsusbloader.com.helpers.NSSplitReader;
 import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;

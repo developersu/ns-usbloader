@@ -16,12 +16,9 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
 */
-package nsusbloader.COM.USB.common;
+package nsusbloader.com.usb.common;
 
-import org.usb4java.EndpointDescriptor;
 import org.usb4java.InterfaceDescriptor;
-
-import java.nio.ByteBuffer;
 
 public class NsUsbInterfaceDescriptor {
     private final byte bLength;

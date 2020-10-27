@@ -16,9 +16,9 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
 */
-package nsusbloader.COM.USB.common;
+package nsusbloader.com.usb.common;
 
-import nsusbloader.COM.USB.UsbErrorCodes;
+import nsusbloader.com.usb.UsbErrorCodes;
 import org.usb4java.*;
 
 import java.util.ArrayList;

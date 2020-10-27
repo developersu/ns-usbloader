@@ -1,4 +1,4 @@
-package nsusbloader.COM.USB;
+package nsusbloader.com.usb;
 
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;

@@ -18,7 +18,7 @@
 */
 package nsusbloader.cli;
 
-import nsusbloader.COM.USB.UsbCommunications;
+import nsusbloader.com.usb.UsbCommunications;
 
 import java.io.File;
 import java.util.ArrayList;

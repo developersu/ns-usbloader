@@ -24,8 +24,8 @@
 */
 package nsusbloader.Utilities;
 
-import nsusbloader.COM.USB.UsbConnect;
-import nsusbloader.COM.USB.UsbErrorCodes;
+import nsusbloader.com.usb.UsbConnect;
+import nsusbloader.com.usb.UsbErrorCodes;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
@@ -39,14 +39,12 @@ import java.util.Arrays;
 
 public class Rcm implements Runnable{
 
-    private boolean status = false;
-
     private enum ECurrentOS {
         win, lin, mac, unsupported
     }
 
-    private ILogPrinter logPrinter;
-    private String filePath;
+    private final ILogPrinter logPrinter;
+    private final String filePath;
 
     private DeviceHandle handler;
 

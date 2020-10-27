@@ -18,7 +18,7 @@
 */
 package nsusbloader.Utilities.nxdumptool;
 
-import nsusbloader.COM.USB.UsbConnect;
+import nsusbloader.com.usb.UsbConnect;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;

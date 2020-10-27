@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
 */
-package nsusbloader.COM.NET;
+package nsusbloader.com.net;
 
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
@@ -24,7 +24,7 @@ import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
-import nsusbloader.COM.Helpers.NSSplitReader;
+import nsusbloader.com.helpers.NSSplitReader;
 
 import java.io.*;
 import java.net.*;
