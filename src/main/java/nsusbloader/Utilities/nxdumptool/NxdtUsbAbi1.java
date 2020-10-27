@@ -35,7 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
 
 class NxdtUsbAbi1 {
     private final ILogPrinter logPrinter;
@@ -86,7 +85,7 @@ class NxdtUsbAbi1 {
 
     private static final int NXDT_USB_TIMEOUT = 5000;
 
-    private HashMap<String, NxdtNspFile> nspFiles;
+    private NxdtNspFile nspFile;
 
     public NxdtUsbAbi1(DeviceHandle handler,
                        ILogPrinter logPrinter,
@@ -96,7 +95,6 @@ class NxdtUsbAbi1 {
         this.handlerNS = handler;
         this.logPrinter = logPrinter;
         this.parent = parent;
-        this.nspFiles = new HashMap<>();
         this.isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
 
         if (isWindows)
@@ -213,7 +211,7 @@ class NxdtUsbAbi1 {
         String filename = new String(message, 0x20, fileNameLen, StandardCharsets.UTF_8);
         String absoluteFilePath = getAbsoluteFilePath(filename);
         File fileToDump = new File(absoluteFilePath);
-        NxdtNspFile nspFile = nspFiles.get(filename); // it could be null, but it's not a problem.
+
         boolean nspTransferMode = false;
 
         if (checkSizes(fullSize, headerSize))
@@ -228,7 +226,7 @@ class NxdtUsbAbi1 {
 
         if (headerSize > 0){ // if NSP
             logPrinter.print("Receiving NSP file entry: '"+filename+"' ("+fullSize+" b)", EMsgType.INFO);
-            if (nspFiles.containsKey(filename)){
+            if (filename.equals(nspFile.getName())){
                 nspTransferMode = true;
             }
             else {
@@ -265,11 +263,13 @@ class NxdtUsbAbi1 {
     private boolean checkSizes(long fileSize, int headerSize) throws Exception{
         if (fileSize >= headerSize){
             logPrinter.print("File size should not be equal to header size for NSP files!", EMsgType.FAIL);
+            resetNsp();
             writeUsb(USBSTATUS_MALFORMED_REQUEST);
             return true;
         }
         if (fileSize < 0){   // It's possible to have files of zero-length, so only less is the problem
             logPrinter.print("File size should not be less then zero!", EMsgType.FAIL);
+            resetNsp();
             writeUsb(USBSTATUS_MALFORMED_REQUEST);
             return true;
         }
@@ -294,8 +294,7 @@ class NxdtUsbAbi1 {
     }
     private void createNewNsp(String filename, int headerSize, long fileSize, File fileToDump) throws Exception{
         try {
-            NxdtNspFile nsp = new NxdtNspFile(filename, headerSize, fileSize, fileToDump);
-            nspFiles.putIfAbsent(filename, nsp);
+            nspFile = new NxdtNspFile(filename, headerSize, fileSize, fileToDump);
         }
         catch (Exception e){
             logPrinter.print(e.getMessage(), EMsgType.FAIL);
@@ -333,8 +332,6 @@ class NxdtUsbAbi1 {
             return true;
         }
     }
-
-
 
     // @see https://bugs.openjdk.java.net/browse/JDK-8146538
     private void dumpFile(File file, long size) throws Exception{
@@ -404,7 +401,8 @@ class NxdtUsbAbi1 {
 
     private void handleSendNspHeader(byte[] message) throws Exception{
         final int headerSize = getLEint(message, 0x8);
-        NxdtNspFile nsp = nspFiles.remove( null ); // <---------------------- //TODO: PLEASE PUT FILENAME HERE
+        NxdtNspFile nsp = nspFile;
+        resetNsp();
 
         if (nsp == null) {
             writeUsb(USBSTATUS_MALFORMED_REQUEST);
@@ -420,7 +418,7 @@ class NxdtUsbAbi1 {
 
         if (headerSize != nsp.getHeaderSize()) {
             writeUsb(USBSTATUS_MALFORMED_REQUEST);
-            logPrinter.print("Received NSP header size mismatch! "+headerSize+" != "+nsp.getHeaderSize(), EMsgType.FAIL);
+            logPrinter.print("Received NSP header size mismatch! "+headerSize+" != "+ nsp.getHeaderSize(), EMsgType.FAIL);
             return;
         }
 
@@ -431,6 +429,9 @@ class NxdtUsbAbi1 {
         }
 
         writeUsb(USBSTATUS_SUCCESS);
+    }
+    private void resetNsp(){
+        this.nspFile = null;
     }
 
     /** Sending any byte array to USB device **/
