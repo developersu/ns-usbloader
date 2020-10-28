@@ -45,7 +45,7 @@ class NxdtUsbAbi1 {
     private final boolean isWindows;
     private boolean isWindows10;
 
-    private static final int NXDT_MAX_DIRECTIVE_SIZE = 0x1000;
+    private static final int NXDT_MAX_DIRECTIVE_SIZE = 0x800000;//0x1000;
     private static final int NXDT_FILE_CHUNK_SIZE = 0x800000;
     private static final int NXDT_FILE_PROPERTIES_MAX_NAME_LENGTH = 0x300;
 
@@ -212,8 +212,6 @@ class NxdtUsbAbi1 {
         String absoluteFilePath = getAbsoluteFilePath(filename);
         File fileToDump = new File(absoluteFilePath);
 
-        boolean nspTransferMode = false;
-
         if (checkSizes(fullSize, headerSize))
             return;
 
@@ -225,14 +223,9 @@ class NxdtUsbAbi1 {
             return;
 
         if (headerSize > 0){ // if NSP
-            logPrinter.print("Receiving NSP file entry: '"+filename+"' ("+fullSize+" b)", EMsgType.INFO);
-            if (filename.equals(nspFile.getName())){
-                nspTransferMode = true;
-            }
-            else {
-                createNewNsp(filename, headerSize, fullSize, fileToDump);
-                return;
-            }
+            logPrinter.print("Receiving NSP file: '"+filename+"' ("+formatByteSize(fullSize)+")", EMsgType.PASS);
+            createNewNsp(filename, headerSize, fullSize, fileToDump);
+            return;
         }
         else {
             // TODO: Note, in case of a big amount of small files performance decreases dramatically. It's better to handle this only in case of 1-big-file-transfer
@@ -244,7 +237,7 @@ class NxdtUsbAbi1 {
         if (fullSize == 0)
             return;
 
-        if (nspTransferMode)
+        if (isNspTransfer())
             dumpNspFile(nspFile, fullSize);
         else
             dumpFile(fileToDump, fullSize);
@@ -261,8 +254,8 @@ class NxdtUsbAbi1 {
         return false;
     }
     private boolean checkSizes(long fileSize, int headerSize) throws Exception{
-        if (fileSize >= headerSize){
-            logPrinter.print("File size should not be equal to header size for NSP files!", EMsgType.FAIL);
+        if (headerSize >= fileSize){
+            logPrinter.print(String.format("File size (%d) should not be less or equal to header size (%d)!", fileSize, headerSize), EMsgType.FAIL);
             resetNsp();
             writeUsb(USBSTATUS_MALFORMED_REQUEST);
             return true;
@@ -275,7 +268,6 @@ class NxdtUsbAbi1 {
         }
         return false;
     }
-
     private boolean checkFileSystem(File fileToDump, long fileSize) throws Exception{
         // Check if enough space
         if (fileToDump.getParentFile().getFreeSpace() <= fileSize){
@@ -297,7 +289,8 @@ class NxdtUsbAbi1 {
             nspFile = new NxdtNspFile(filename, headerSize, fileSize, fileToDump);
         }
         catch (Exception e){
-            logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            logPrinter.print("Unable to create new file for: "+filename+" :"+e.getMessage(), EMsgType.FAIL);
+            e.printStackTrace();
             writeUsb(USBSTATUS_HOSTIOERROR);
             return;
         }
@@ -309,6 +302,9 @@ class NxdtUsbAbi1 {
 
     private long getLElong(byte[] bytes, int fromOffset){
         return ByteBuffer.wrap(bytes, fromOffset, 0x8).order(ByteOrder.LITTLE_ENDIAN).getLong();
+    }
+    private boolean isNspTransfer(){
+        return nspFile != null;
     }
 
     private String getAbsoluteFilePath(String filename) throws Exception{
@@ -367,9 +363,10 @@ class NxdtUsbAbi1 {
     private void dumpNspFile(NxdtNspFile nsp, long size) throws Exception{
         FileOutputStream fos = new FileOutputStream(nsp.getFile(), true);
         long nspSize = nsp.getFullSize();
-        long nspRemainingSize = nsp.getNspRemainingSize();
 
         try (BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+            long nspRemainingSize = nsp.getNspRemainingSize();
+
             FileDescriptor fd = fos.getFD();
             byte[] readBuffer;
             long received = 0;
@@ -393,8 +390,6 @@ class NxdtUsbAbi1 {
             if (isWindows10)
                 fd.sync();
             nspRemainingSize -= (lastChunkSize - 1);
-        }
-        finally {
             nsp.setNspRemainingSize(nspRemainingSize);
         }
     }
@@ -427,7 +422,8 @@ class NxdtUsbAbi1 {
             raf.seek(0);
             raf.write(headerData);
         }
-
+        logPrinter.print("NSP file: '"+nsp.getName()+"' successfully received!", EMsgType.PASS);
+        logPrinter.updateProgress(1.0);
         writeUsb(USBSTATUS_SUCCESS);
     }
     private void resetNsp(){
@@ -533,5 +529,14 @@ class NxdtUsbAbi1 {
         throw new Exception("Data transfer issue [read file]" +
                 "\n         Returned: " + UsbErrorCodes.getErrCode(result) +
                 "\n         (execution stopped)");
+    }
+
+    private String formatByteSize(double length) {
+        final String[] unitNames = { "bytes", "KiB", "MiB", "GiB", "TiB"};
+        int i;
+        for (i = 0; length > 1024 && i < unitNames.length - 1; i++) {
+            length = length / 1024;
+        }
+        return String.format("%,.2f %s", length, unitNames[i]);
     }
 }

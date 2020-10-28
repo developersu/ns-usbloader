@@ -64,14 +64,19 @@ class GoldLeaf_08 extends TransferModule {
     private long virtDriveSize;
     private HashMap<String, Long> splitFileSize;
 
-    private boolean isWindows;
-    private String homePath;
+    private final boolean isWindows;
+    private final String homePath;
     // For using in CMD_SelectFile with SPEC:/ prefix
     private File selectedFile;
 
-    private CancellableRunnable task;
+    private final CancellableRunnable task;
 
-    GoldLeaf_08(DeviceHandle handler, LinkedHashMap<String, File> nspMap, CancellableRunnable task, ILogPrinter logPrinter, boolean nspFilter){
+    GoldLeaf_08(DeviceHandle handler,
+                LinkedHashMap<String, File> nspMap,
+                CancellableRunnable task,
+                ILogPrinter logPrinter,
+                boolean nspFilter)
+    {
         super(handler, nspMap, task, logPrinter);
 
         this.task = task;
@@ -890,43 +895,42 @@ class GoldLeaf_08 extends TransferModule {
         if (fileName.startsWith("VIRT:/")){
             return writeGL_FAIL("GL Handle 'WriteFile' command [not supported for virtual drive]");
         }
-        else {
-            fileName = updateHomePath(fileName);
-            // Check if we didn't see this (or any) file during this session
-            if (writeFilesMap.size() == 0 || (! writeFilesMap.containsKey(fileName))){
-                // Open what we have to open
-                File writeFile = new File(fileName);
-                // If this file exists GL will take care
-                // Otherwise, let's add it
-                try{
-                    BufferedOutputStream writeFileBufOutStream = new BufferedOutputStream(new FileOutputStream(writeFile, true));
-                    writeFilesMap.put(fileName, writeFileBufOutStream);
-                } catch (IOException ioe){
-                    return writeGL_FAIL("GL Handle 'WriteFile' command [IOException]\n\t"+ioe.getMessage());
-                }
-            }
-            // Now we have stream
-            BufferedOutputStream myStream = writeFilesMap.get(fileName);
 
-            byte[] transferredData;
-
-            if ((transferredData = readGL_file()) == null){
-                logPrinter.print("GL Handle 'WriteFile' command [1/1]", EMsgType.FAIL);
-                return true;
-            }
+        fileName = updateHomePath(fileName);
+        // Check if we didn't see this (or any) file during this session
+        if (writeFilesMap.size() == 0 || (! writeFilesMap.containsKey(fileName))){
+            // Open what we have to open
+            File writeFile = new File(fileName);
+            // If this file exists GL will take care
+            // Otherwise, let's add it
             try{
-                myStream.write(transferredData, 0, transferredData.length);
+                BufferedOutputStream writeFileBufOutStream = new BufferedOutputStream(new FileOutputStream(writeFile, true));
+                writeFilesMap.put(fileName, writeFileBufOutStream);
+            } catch (IOException ioe){
+                return writeGL_FAIL("GL Handle 'WriteFile' command [IOException]\n\t"+ioe.getMessage());
             }
-            catch (IOException ioe){
-                return writeGL_FAIL("GL Handle 'WriteFile' command [1/1]\n\t"+ioe.getMessage());
-            }
-            // Report we're good
-            if (writeGL_PASS()) {
-                logPrinter.print("GL Handle 'WriteFile' command", EMsgType.FAIL);
-                return true;
-            }
-            return false;
         }
+        // Now we have stream
+        BufferedOutputStream myStream = writeFilesMap.get(fileName);
+
+        byte[] transferredData;
+
+        if ((transferredData = readGL_file()) == null){
+            logPrinter.print("GL Handle 'WriteFile' command [1/1]", EMsgType.FAIL);
+            return true;
+        }
+        try{
+            myStream.write(transferredData, 0, transferredData.length);
+        }
+        catch (IOException ioe){
+            return writeGL_FAIL("GL Handle 'WriteFile' command [1/1]\n\t"+ioe.getMessage());
+        }
+        // Report we're good
+        if (writeGL_PASS()) {
+            logPrinter.print("GL Handle 'WriteFile' command", EMsgType.FAIL);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -938,27 +942,27 @@ class GoldLeaf_08 extends TransferModule {
         File selectedFile = CompletableFuture.supplyAsync(() -> {
             FileChooser fChooser = new FileChooser();
             fChooser.setTitle(MediatorControl.getInstance().getContoller().getResourceBundle().getString("btn_OpenFile")); // TODO: FIX BAD IMPLEMENTATION
-            fChooser.setInitialDirectory(new File(System.getProperty("user.home")));                                            // TODO: Consider fixing; not a prio.
+            fChooser.setInitialDirectory(new File(System.getProperty("user.home")));// TODO: Consider fixing; not a prio.
             fChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("*", "*"));
             return fChooser.showOpenDialog(null);    // Leave as is for now.
         }, Platform::runLater).join();
 
-        if (selectedFile != null){
-            List<byte[]> command = new LinkedList<>();
-            byte[] selectedFileNameBytes = ("SPEC:/"+selectedFile.getName()).getBytes(StandardCharsets.UTF_16LE);
-            command.add(intToArrLE(selectedFileNameBytes.length / 2)); // since GL 0.7
-            command.add(selectedFileNameBytes);
-            if (writeGL_PASS(command)) {
-                logPrinter.print("GL Handle 'SelectFile' command", EMsgType.FAIL);
-                this.selectedFile = null;
-                return true;
-            }
-            this.selectedFile = selectedFile;
-            return false;
+        if (selectedFile == null){    // Nothing selected
+            this.selectedFile = null;
+            return writeGL_FAIL("GL Handle 'SelectFile' command: Nothing selected");
         }
-        // Nothing selected; Report failure.
-        this.selectedFile = null;
-        return writeGL_FAIL("GL Handle 'SelectFile' command: Nothing selected");
+
+        List<byte[]> command = new LinkedList<>();
+        byte[] selectedFileNameBytes = ("SPEC:/"+selectedFile.getName()).getBytes(StandardCharsets.UTF_16LE);
+        command.add(intToArrLE(selectedFileNameBytes.length / 2)); // since GL 0.7
+        command.add(selectedFileNameBytes);
+        if (writeGL_PASS(command)) {
+            logPrinter.print("GL Handle 'SelectFile' command", EMsgType.FAIL);
+            this.selectedFile = null;
+            return true;
+        }
+        this.selectedFile = selectedFile;
+        return false;
     }
 
     /*----------------------------------------------------*/
@@ -1039,9 +1043,7 @@ class GoldLeaf_08 extends TransferModule {
         return null;
     }
     private byte[] readGL_file(){
-        ByteBuffer readBuffer;
-        readBuffer = ByteBuffer.allocateDirect(8388608); // Just don't ask..
-
+        ByteBuffer readBuffer = ByteBuffer.allocateDirect(8388608); // Just don't ask..
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
 
         int result;
