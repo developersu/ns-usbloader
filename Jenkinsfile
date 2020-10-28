@@ -7,20 +7,25 @@ pipeline {
     }
 
     stages {
+        stage('Build') {
+            steps {
+                sh 'mvn -B -DskipTests clean package'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'target/*.jar, target/*.exe'
+                }
+            }
+        }
         stage('Test') {
             steps {
                 sh 'mvn test'
             }
-        }
-        stage('Build') {
-            steps {
-                sh 'mvn clean package'
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
             }
         }
-    }
-    post {
-            always {
-                archiveArtifacts artifacts: 'target/*.jar, target/*.exe', onlyIfSuccessful: true
-            }
     }
 }
