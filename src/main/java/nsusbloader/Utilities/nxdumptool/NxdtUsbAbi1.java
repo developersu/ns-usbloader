@@ -201,100 +201,85 @@ class NxdtUsbAbi1 {
     }
 
     private void handleSendFileProperties(byte[] message) throws Exception{
-        final long fullSize = getLElong(message, 0x10);
-        final int fileNameLen = getLEint(message, 0x18);
-        final int headerSize = getLEint(message, 0x1C);
+        try {
+            final long fullSize = getLElong(message, 0x10);
+            final int fileNameLen = getLEint(message, 0x18);
+            final int headerSize = getLEint(message, 0x1C);
+            checkFileNameLen(fileNameLen);   // In case of negative value we should better handle it before String constructor throws error
+            String filename = new String(message, 0x20, fileNameLen, StandardCharsets.UTF_8);
+            String absoluteFilePath = getAbsoluteFilePath(filename);
+            File fileToDump = new File(absoluteFilePath);
 
-        if (checkFileNameLen(fileNameLen))   // In case of negative value we should better handle it before String constructor throws error
-            return;
+            checkSizes(fullSize, headerSize);
+            createPath(absoluteFilePath);
+            checkFileSystem(fileToDump, fullSize);
 
-        String filename = new String(message, 0x20, fileNameLen, StandardCharsets.UTF_8);
-        String absoluteFilePath = getAbsoluteFilePath(filename);
-        File fileToDump = new File(absoluteFilePath);
+            if (headerSize > 0){ // if NSP
+                logPrinter.print("Receiving NSP file: '"+filename+"' ("+formatByteSize(fullSize)+")", EMsgType.PASS);
+                createNewNsp(filename, headerSize, fullSize, fileToDump);
+                return;
+            }
+            else {
+                // TODO: Note, in case of a big amount of small files performance decreases dramatically. It's better to handle this only in case of 1-big-file-transfer
+                logPrinter.print("Receiving: '"+filename+"' ("+fullSize+" b)", EMsgType.INFO);
+            }
 
-        if (checkSizes(fullSize, headerSize))
-            return;
+            writeUsb(USBSTATUS_SUCCESS);
 
-        if (createPath(absoluteFilePath))
-            return;
+            if (fullSize == 0)
+                return;
 
+            if (isNspTransfer())
+                dumpNspFile(fullSize);
+            else
+                dumpFile(fileToDump, fullSize);
 
-        if (checkFileSystem(fileToDump, fullSize))
-            return;
-
-        if (headerSize > 0){ // if NSP
-            logPrinter.print("Receiving NSP file: '"+filename+"' ("+formatByteSize(fullSize)+")", EMsgType.PASS);
-            createNewNsp(filename, headerSize, fullSize, fileToDump);
-            return;
+            writeUsb(USBSTATUS_SUCCESS);
         }
-        else {
-            // TODO: Note, in case of a big amount of small files performance decreases dramatically. It's better to handle this only in case of 1-big-file-transfer
-            logPrinter.print("Receiving: '"+filename+"' ("+fullSize+" b)", EMsgType.INFO);
+        catch (NxdtMalformedException malformed){
+            logPrinter.print(malformed.getMessage(), EMsgType.FAIL);
+            writeUsb(USBSTATUS_MALFORMED_REQUEST);
         }
-
-        writeUsb(USBSTATUS_SUCCESS);
-
-        if (fullSize == 0)
-            return;
-
-        if (isNspTransfer())
-            dumpNspFile(nspFile, fullSize);
-        else
-            dumpFile(fileToDump, fullSize);
-
-        writeUsb(USBSTATUS_SUCCESS);
-
+        catch (NxdtHostIOException ioException){
+            logPrinter.print(ioException.getMessage(), EMsgType.FAIL);
+            writeUsb(USBSTATUS_HOSTIOERROR);
+        }
     }
-    private boolean checkFileNameLen(int fileNameLen) throws Exception{
+    private void checkFileNameLen(int fileNameLen) throws NxdtMalformedException{
         if (fileNameLen <= 0 || fileNameLen > NXDT_FILE_PROPERTIES_MAX_NAME_LENGTH){
-            logPrinter.print("Invalid filename length!", EMsgType.FAIL);
-            writeUsb(USBSTATUS_MALFORMED_REQUEST);
-            return true;
+            throw new NxdtMalformedException("Invalid filename length!");
         }
-        return false;
     }
-    private boolean checkSizes(long fileSize, int headerSize) throws Exception{
+    private void checkSizes(long fileSize, int headerSize) throws Exception{
         if (headerSize >= fileSize){
-            logPrinter.print(String.format("File size (%d) should not be less or equal to header size (%d)!", fileSize, headerSize), EMsgType.FAIL);
             resetNsp();
-            writeUsb(USBSTATUS_MALFORMED_REQUEST);
-            return true;
+            throw new NxdtMalformedException(String.format("File size (%d) should not be less or equal to header size (%d)!", fileSize, headerSize));
         }
         if (fileSize < 0){   // It's possible to have files of zero-length, so only less is the problem
-            logPrinter.print("File size should not be less then zero!", EMsgType.FAIL);
             resetNsp();
-            writeUsb(USBSTATUS_MALFORMED_REQUEST);
-            return true;
+            throw new NxdtMalformedException("File size should not be less then zero!");
         }
-        return false;
     }
-    private boolean checkFileSystem(File fileToDump, long fileSize) throws Exception{
+    private void checkFileSystem(File fileToDump, long fileSize) throws Exception{
         // Check if enough space
         if (fileToDump.getParentFile().getFreeSpace() <= fileSize){
-            writeUsb(USBSTATUS_HOSTIOERROR);
-            logPrinter.print("Not enough space on selected volume. Need: "+fileSize+
-                    " while available: "+fileToDump.getParentFile().getFreeSpace(), EMsgType.FAIL);
-            return true;
+            throw new NxdtHostIOException("Not enough space on selected volume. Need: "+fileSize+
+                    " while available: "+fileToDump.getParentFile().getFreeSpace());
         }
         // Check if FS is NOT read-only
         if (! (fileToDump.canWrite() || fileToDump.createNewFile()) ){
-            writeUsb(USBSTATUS_HOSTIOERROR);
-            logPrinter.print("Unable to write into selected volume: "+fileToDump.getAbsolutePath(), EMsgType.FAIL);
-            return true;
+            throw new NxdtHostIOException("Unable to write into selected volume: "+fileToDump.getAbsolutePath());
         }
-        return false;
     }
-    private void createNewNsp(String filename, int headerSize, long fileSize, File fileToDump) throws Exception{
+    private void createNewNsp(String filename, int headerSize, long fileSize, File fileToDump) throws NxdtHostIOException{
         try {
             nspFile = new NxdtNspFile(filename, headerSize, fileSize, fileToDump);
+            writeUsb(USBSTATUS_SUCCESS);
         }
         catch (Exception e){
-            logPrinter.print("Unable to create new file for: "+filename+" :"+e.getMessage(), EMsgType.FAIL);
             e.printStackTrace();
-            writeUsb(USBSTATUS_HOSTIOERROR);
-            return;
+            throw new NxdtHostIOException("Unable to create new file for: "+filename+" :"+e.getMessage());
         }
-        writeUsb(USBSTATUS_SUCCESS);
     }
     private int getLEint(byte[] bytes, int fromOffset){
         return ByteBuffer.wrap(bytes, fromOffset, 0x4).order(ByteOrder.LITTLE_ENDIAN).getInt();
@@ -316,16 +301,13 @@ class NxdtUsbAbi1 {
         return filename.startsWith("/");
     }
 
-    private boolean createPath(String path) throws Exception{
+    private void createPath(String path) throws Exception{
         try {
             Path folderForTheFile = Paths.get(path).getParent();
             Files.createDirectories(folderForTheFile);
-            return false;
         }
         catch (Exception e){
-            logPrinter.print("Unable to create dir(s) for file "+path, EMsgType.FAIL);
-            writeUsb(USBSTATUS_HOSTIOERROR);
-            return true;
+            throw new NxdtHostIOException("Unable to create dir(s) for file '"+path+"':"+e.getMessage());
         }
     }
 
@@ -333,7 +315,7 @@ class NxdtUsbAbi1 {
     private void dumpFile(File file, long size) throws Exception{
         FileOutputStream fos = new FileOutputStream(file, true);
 
-        try (BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+        try (BufferedOutputStream bos = new BufferedOutputStream(fos)){
             FileDescriptor fd = fos.getFD();
             byte[] readBuffer;
             long received = 0;
@@ -360,12 +342,12 @@ class NxdtUsbAbi1 {
         }
     }
 
-    private void dumpNspFile(NxdtNspFile nsp, long size) throws Exception{
-        FileOutputStream fos = new FileOutputStream(nsp.getFile(), true);
-        long nspSize = nsp.getFullSize();
+    private void dumpNspFile(long size) throws Exception{
+        FileOutputStream fos = new FileOutputStream(nspFile.getFile(), true);
+        long nspSize = nspFile.getFullSize();
 
         try (BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-            long nspRemainingSize = nsp.getNspRemainingSize();
+            long nspRemainingSize = nspFile.getNspRemainingSize();
 
             FileDescriptor fd = fos.getFD();
             byte[] readBuffer;
@@ -390,7 +372,7 @@ class NxdtUsbAbi1 {
             if (isWindows10)
                 fd.sync();
             nspRemainingSize -= (lastChunkSize - 1);
-            nsp.setNspRemainingSize(nspRemainingSize);
+            nspFile.setNspRemainingSize(nspRemainingSize);
         }
     }
 
@@ -398,6 +380,7 @@ class NxdtUsbAbi1 {
         final int headerSize = getLEint(message, 0x8);
         NxdtNspFile nsp = nspFile;
         resetNsp();
+        logPrinter.updateProgress(1.0);
 
         if (nsp == null) {
             writeUsb(USBSTATUS_MALFORMED_REQUEST);
@@ -423,7 +406,6 @@ class NxdtUsbAbi1 {
             raf.write(headerData);
         }
         logPrinter.print("NSP file: '"+nsp.getName()+"' successfully received!", EMsgType.PASS);
-        logPrinter.updateProgress(1.0);
         writeUsb(USBSTATUS_SUCCESS);
     }
     private void resetNsp(){
