@@ -24,9 +24,12 @@ import java.nio.file.Paths;
 
 public class FilesHelper {
     public static String getRealFolder(String location){
-        Path locationAsPath = Paths.get(location);
-        if (Files.notExists(locationAsPath) || Files.isRegularFile(locationAsPath))
-            return System.getProperty("user.home");
+        try{
+            Path locationAsPath = Paths.get(location);
+            if (Files.notExists(locationAsPath) || Files.isRegularFile(locationAsPath))
+                return System.getProperty("user.home");
+        }
+        catch (Exception ignored){}
         return location;
     }
 }
