@@ -28,8 +28,10 @@ public class FilesHelper {
             Path locationAsPath = Paths.get(location);
             if (Files.notExists(locationAsPath) || Files.isRegularFile(locationAsPath))
                 return System.getProperty("user.home");
+            return location;
         }
-        catch (Exception ignored){}
-        return location;
+        catch (Exception ignored){
+            return System.getProperty("user.home");
+        }
     }
 }
