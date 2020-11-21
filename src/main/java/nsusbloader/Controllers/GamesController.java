@@ -28,7 +28,6 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.com.net.NETCommunications;
 import nsusbloader.com.usb.UsbCommunications;
@@ -40,11 +39,22 @@ import nsusbloader.ServiceWindow;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import javax.swing.JFileChooser;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.filechooser.FileFilter;
+
 public class GamesController implements Initializable {
+    
+    private static final String REGEX_ONLY_NSP = ".*\\.nsp$";
+    private static final String REGEX_ALLFILES_TINFOIL = ".*\\.(nsp$|xci$|nsz$|xcz$)";
+
     @FXML
     private AnchorPane usbNetPane;
 
@@ -186,32 +196,88 @@ public class GamesController implements Initializable {
         return nsIpTextField.getText();
     }
     
+    
+    private boolean isGoldLeaf() {
+        return getSelectedProtocol().equals("GoldLeaf")
+                && (!MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL());
+    }
+
+    private boolean isTinfoil() {
+        return getSelectedProtocol().equals("TinFoil")
+                && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport();
+    }
+    
+    private String getRegexForFiles() {
+        if (isTinfoil())
+            return REGEX_ALLFILES_TINFOIL;
+        else if (isGoldLeaf())
+            return REGEX_ONLY_NSP;
+        else
+            return REGEX_ONLY_NSP;
+    }
+    
     /**
      * Functionality for selecting NSP button.
      * */
     private void selectFilesBtnAction(){
-        List<File> filesList;
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle(resourceBundle.getString("btn_OpenFile"));
+        final String regex = getRegexForFiles();
+        if(!UIManager.getLookAndFeel().isNativeLookAndFeel()) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+                // :shrug emoji:
+                // defaults to Metal Look and Feel
+            }
+        }
 
-        fileChooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
+        JFileChooser fileChooser = new JFileChooser(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fileChooser.setMultiSelectionEnabled(true);
+        fileChooser.setFileFilter(new FileFilter() {
+            public String getDescription() {
+                return "Switch Files";
+            }
+            public boolean accept(File f) {
+                return f.isDirectory() || f.getName().toLowerCase().matches(regex);
+            }
+        });
+        
+        if(fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            List<File> files = Arrays.asList(fileChooser.getSelectedFiles());
+            List<File> allFiles = new ArrayList<>();
 
-        if (getSelectedProtocol().equals("TinFoil") && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport())
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
-        else if (getSelectedProtocol().equals("GoldLeaf") && (! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL()))
-            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Any file", "*.*"),
-                    new FileChooser.ExtensionFilter("NSP ROM", "*.nsp")
-            );
-        else
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
+            if (files.size() != 0) {
+                files.stream().filter(File::isDirectory).forEach(f -> collectFiles(allFiles, f, regex));
+                files.stream().filter(f -> f.getName().toLowerCase().matches(regex)).forEach(allFiles::add);
+            }
 
-        filesList = fileChooser.showOpenMultipleDialog(usbNetPane.getScene().getWindow());
-        if (filesList != null && !filesList.isEmpty()) {
-            tableFilesListController.setFiles(filesList);
-            uploadStopBtn.setDisable(false);
-            previouslyOpenedPath = filesList.get(0).getParent();
+            if (allFiles.size() > 0) {
+                tableFilesListController.setFiles(allFiles);
+                uploadStopBtn.setDisable(false);
+                previouslyOpenedPath = allFiles.get(0).getParent();
+            }
         }
     }
+    
+    /**
+     * used to recursively walk all directories, every file will be added to the storage list
+     * @param storage used to hold files
+     * @param startFolder where to start
+     * @param regex for filenames
+     */
+    private void collectFiles(List<File> storage, File startFolder, final String regex) {
+        if (startFolder.isDirectory()) {
+            File[] files = startFolder.listFiles();
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    collectFiles(storage, f, regex);
+                } else if (f.getName().toLowerCase().matches(regex)) {
+                    storage.add(f);
+                }
+            }
+        }
+    }
+    
     /**
      * Functionality for selecting Split NSP button.
      * */
@@ -325,20 +391,18 @@ public class GamesController implements Initializable {
      * */
     @FXML
     private void handleDrop(DragEvent event){
-        List<File> filesDropped = event.getDragboard().getFiles();
-        SettingsController settingsController = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
-        SettingsBlockTinfoilController tinfoilSettings = settingsController.getTinfoilSettings();
-        SettingsBlockGoldleafController goldleafController = settingsController.getGoldleafSettings();
+        final String regex = getRegexForFiles();
+        
+        List<File> files = event.getDragboard().getFiles();
+        List<File> allFiles = new ArrayList<>();
 
-        if (getSelectedProtocol().equals("TinFoil") && tinfoilSettings.isXciNszXczSupport())
-            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches("(.*\\.nsp$)|(.*\\.xci$)|(.*\\.nsz$)|(.*\\.xcz$)"));
-        else if (getSelectedProtocol().equals("GoldLeaf") && (! goldleafController.getNSPFileFilterForGL()))
-            filesDropped.removeIf(file -> (file.isDirectory() && ! file.getName().toLowerCase().matches(".*\\.nsp$")));
-        else
-            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches(".*\\.nsp$"));
-
-        if ( ! filesDropped.isEmpty() )
-            tableFilesListController.setFiles(filesDropped);
+        if (files.size() != 0) {
+            files.stream().filter(File::isDirectory).forEach(f -> collectFiles(allFiles, f, regex));
+            files.stream().filter(f -> f.getName().toLowerCase().matches(regex)).forEach(allFiles::add);
+        }
+        
+        if ( ! allFiles.isEmpty() )
+            tableFilesListController.setFiles(allFiles);
 
         event.setDropCompleted(true);
         event.consume();
