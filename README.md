@@ -48,6 +48,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * Vietnamese by [Hai Phan Nguyen (pnghai)](https://github.com/pnghai)
 * Czech by [Spenaat](https://github.com/spenaat)
 * Chinese (Traditional) by [qazrfv1234](https://github.com/qazrfv1234)
+* Arabic by [eslamabdel](https://github.com/eslamabdel)
 
 ### System requirements
 

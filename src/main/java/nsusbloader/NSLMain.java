@@ -32,7 +32,7 @@ import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
 
-    public static final String appVersion = "v4.5";
+    public static final String appVersion = "v5.0";
     public static boolean isCli;
 
     @Override
