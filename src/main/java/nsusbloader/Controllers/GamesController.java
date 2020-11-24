@@ -18,6 +18,7 @@
 */
 package nsusbloader.Controllers;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -44,6 +45,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class GamesController implements Initializable {
     
@@ -140,6 +143,7 @@ public class GamesController implements Initializable {
 
         selectFolderBtn.setOnAction(e-> selectFoldersBtnAction());
         selectFolderBtn.getStyleClass().add("buttonSelect");
+        selectFolderBtn.setTooltip(new Tooltip("this is my tooltip"));
 
         selectSplitNspBtn.setOnAction(e-> selectSplitBtnAction());
         selectSplitNspBtn.getStyleClass().add("buttonSelect");
@@ -263,18 +267,20 @@ public class GamesController implements Initializable {
         chooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
 
         File startFolder = chooser.showDialog(usbNetPane.getScene().getWindow());
-        if (startFolder != null) {
-            List<File> allFiles = new ArrayList<>();
+        
+        performInBackgroundAndUpdate(() -> {
+            final List<File> allFiles = new ArrayList<>();
             collectFiles(allFiles, startFolder, getRegexForFiles());
-
-            if (!allFiles.isEmpty()) {
-                tableFilesListController.setFiles(allFiles);
+            return allFiles;
+        }, (files) -> {
+            if (!files.isEmpty()) {
+                tableFilesListController.setFiles(files);
                 uploadStopBtn.setDisable(false);
                 previouslyOpenedPath = startFolder.getParent();
             }
-        }
+        });
     }
-
+    
     /**
      * used to recursively walk all directories, every file will be added to the storage list
      * @param storage used to hold files
@@ -284,13 +290,14 @@ public class GamesController implements Initializable {
     private void collectFiles(List<File> storage, File startFolder, final String regex) {
         if (startFolder.isDirectory()) {
             File[] files = startFolder.listFiles();
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    collectFiles(storage, f, regex);
-                } else if (f.getName().toLowerCase().matches(regex)) {
-                    storage.add(f);
+            if(files != null)
+                for (File f : files) {
+                    if (f.isDirectory()) {
+                        collectFiles(storage, f, regex);
+                    } else if (f.getName().toLowerCase().matches(regex)) {
+                        storage.add(f);
+                    }
                 }
-            }
         }
     }
     
@@ -406,23 +413,27 @@ public class GamesController implements Initializable {
      * Drag-n-drop support (drop consumer)
      * */
     @FXML
-    private void handleDrop(DragEvent event){
+    private void handleDrop(DragEvent event) {
         final String regex = getRegexForFiles();
-        
+
         List<File> files = event.getDragboard().getFiles();
-        List<File> allFiles = new ArrayList<>();
 
-        if (files.size() != 0) {
-            files.stream().filter(File::isDirectory).forEach(f -> collectFiles(allFiles, f, regex));
-            files.stream().filter(f -> f.getName().toLowerCase().matches(regex)).forEach(allFiles::add);
-        }
-        
-        if ( ! allFiles.isEmpty() )
-            tableFilesListController.setFiles(allFiles);
+        performInBackgroundAndUpdate(() -> {
+            List<File> allFiles = new ArrayList<>();
+            if (files != null && files.size() != 0) {
+                files.stream().filter(File::isDirectory).forEach(f -> collectFiles(allFiles, f, regex));
+                files.stream().filter(f -> f.getName().toLowerCase().matches(regex)).forEach(allFiles::add);
+            }
+            return allFiles;
+        }, allFiles -> {
+            if (!allFiles.isEmpty())
+                tableFilesListController.setFiles(allFiles);
 
-        event.setDropCompleted(true);
-        event.consume();
+            event.setDropCompleted(true);
+            event.consume();
+        });
     }
+    
     /**
      * This thing modify UI for reusing 'Upload to NS' button and make functionality set for "Stop transmission"
      * Called from mediator
@@ -464,6 +475,21 @@ public class GamesController implements Initializable {
         else
             uploadStopBtn.setDisable(false);
     }
+    
+    /**
+     * Utility function to perform a task in the background and pass the results to a task on the javafx-ui-thread
+     * @param background performed in background
+     * @param update performed with results on ui-thread
+     */
+    private <T> void performInBackgroundAndUpdate(Supplier<T> background, Consumer<T> update) {
+        new Thread(() -> {
+            final T result = background.get();
+            Platform.runLater(() -> {
+                update.accept(result);
+            });
+        }).start();
+    }
+    
     /**
      * Get 'Recent' path
      */
