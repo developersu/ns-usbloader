@@ -143,7 +143,7 @@ public class GamesController implements Initializable {
 
         selectFolderBtn.setOnAction(e-> selectFoldersBtnAction());
         selectFolderBtn.getStyleClass().add("buttonSelect");
-        selectFolderBtn.setTooltip(new Tooltip("this is my tooltip"));
+        selectFolderBtn.setTooltip(new Tooltip(resourceBundle.getString("btn_OpenFolders_tooltip")));
 
         selectSplitNspBtn.setOnAction(e-> selectSplitBtnAction());
         selectSplitNspBtn.getStyleClass().add("buttonSelect");
