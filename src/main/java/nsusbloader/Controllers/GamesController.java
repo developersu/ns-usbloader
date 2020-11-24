@@ -28,6 +28,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.com.net.NETCommunications;
 import nsusbloader.com.usb.UsbCommunications;
@@ -40,15 +41,9 @@ import nsusbloader.ServiceWindow;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
-
-import javax.swing.JFileChooser;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.filechooser.FileFilter;
 
 public class GamesController implements Initializable {
     
@@ -70,7 +65,7 @@ public class GamesController implements Initializable {
     public NSTableViewController tableFilesListController;            // Accessible from Mediator (for drag-n-drop support)
 
     @FXML
-    private Button selectNspBtn, selectSplitNspBtn, uploadStopBtn;
+    private Button selectNspBtn, selectSplitNspBtn, selectFolderBtn, uploadStopBtn;
     private String previouslyOpenedPath;
     private Region btnUpStopImage;
     private ResourceBundle resourceBundle;
@@ -140,16 +135,17 @@ public class GamesController implements Initializable {
         switchThemeBtn.setGraphic(btnSwitchImage);
         this.switchThemeBtn.setOnAction(e->switchTheme());
 
-
-        uploadStopBtn.setDisable(getSelectedProtocol().equals("TinFoil"));
         selectNspBtn.setOnAction(e-> selectFilesBtnAction());
+        selectNspBtn.getStyleClass().add("buttonSelect");
+
+        selectFolderBtn.setOnAction(e-> selectFoldersBtnAction());
+        selectFolderBtn.getStyleClass().add("buttonSelect");
 
         selectSplitNspBtn.setOnAction(e-> selectSplitBtnAction());
         selectSplitNspBtn.getStyleClass().add("buttonSelect");
 
         uploadStopBtn.setOnAction(e-> uploadBtnAction());
-
-        selectNspBtn.getStyleClass().add("buttonSelect");
+        uploadStopBtn.setDisable(getSelectedProtocol().equals("TinFoil"));
 
         this.btnUpStopImage = new Region();
         btnUpStopImage.getStyleClass().add("regionUpload");
@@ -196,69 +192,89 @@ public class GamesController implements Initializable {
         return nsIpTextField.getText();
     }
     
-    
     private boolean isGoldLeaf() {
-        return getSelectedProtocol().equals("GoldLeaf")
-                && (!MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL());
+        return getSelectedProtocol().equals("GoldLeaf");
     }
 
     private boolean isTinfoil() {
-        return getSelectedProtocol().equals("TinFoil")
-                && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport();
+        return getSelectedProtocol().equals("TinFoil");
     }
     
+    private boolean isNSPFileFilterForGL() {
+        return MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL();
+    }
+    
+    private boolean isXciNszXczSupport() {
+        return MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport();
+    }
+    
+    /**
+     * regex for selected program and selected file filter </br>
+     * tinfoil + xcinszxcz </br>
+     * tinfoil + nsponly </br>
+     * goldleaf </br>
+     * etc..
+     */
     private String getRegexForFiles() {
-        if (isTinfoil())
+        if (isTinfoil() && isXciNszXczSupport())
             return REGEX_ALLFILES_TINFOIL;
-        else if (isGoldLeaf())
-            return REGEX_ONLY_NSP;
         else
             return REGEX_ONLY_NSP;
+        // currently only tinfoil supports all filetypes
+        // everything else only supports nsp
+        // else if (isGoldLeaf())
+        // return REGEX_ONLY_NSP;
+        // else
     }
     
     /**
      * Functionality for selecting NSP button.
-     * */
-    private void selectFilesBtnAction(){
-        final String regex = getRegexForFiles();
-        if(!UIManager.getLookAndFeel().isNativeLookAndFeel()) {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-                // :shrug emoji:
-                // defaults to Metal Look and Feel
-            }
+     */
+    private void selectFilesBtnAction() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(resourceBundle.getString("btn_OpenFile"));
+
+        fileChooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
+
+        if (isTinfoil() && isXciNszXczSupport()) {
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
+        } else if (isGoldLeaf() && !isNSPFileFilterForGL()) {
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Any file", "*.*"),
+                    new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
+        } else {
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
         }
 
-        JFileChooser fileChooser = new JFileChooser(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-        fileChooser.setMultiSelectionEnabled(true);
-        fileChooser.setFileFilter(new FileFilter() {
-            public String getDescription() {
-                return "Switch Files";
-            }
-            public boolean accept(File f) {
-                return f.isDirectory() || f.getName().toLowerCase().matches(regex);
-            }
-        });
-        
-        if(fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-            List<File> files = Arrays.asList(fileChooser.getSelectedFiles());
-            List<File> allFiles = new ArrayList<>();
-
-            if (files.size() != 0) {
-                files.stream().filter(File::isDirectory).forEach(f -> collectFiles(allFiles, f, regex));
-                files.stream().filter(f -> f.getName().toLowerCase().matches(regex)).forEach(allFiles::add);
-            }
-
-            if (allFiles.size() > 0) {
-                tableFilesListController.setFiles(allFiles);
-                uploadStopBtn.setDisable(false);
-                previouslyOpenedPath = allFiles.get(0).getParent();
-            }
+        List<File> filesList = fileChooser.showOpenMultipleDialog(usbNetPane.getScene().getWindow());
+        if (filesList != null && !filesList.isEmpty()) {
+            tableFilesListController.setFiles(filesList);
+            uploadStopBtn.setDisable(false);
+            previouslyOpenedPath = filesList.get(0).getParent();
         }
     }
     
+    /**
+     * Functionality for selecting folders button.
+     * will scan all folders recursively for nsp-files
+     */
+    private void selectFoldersBtnAction() {
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setTitle(resourceBundle.getString("btn_OpenFolders"));
+        chooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
+
+        File startFolder = chooser.showDialog(usbNetPane.getScene().getWindow());
+        if (startFolder != null) {
+            List<File> allFiles = new ArrayList<>();
+            collectFiles(allFiles, startFolder, getRegexForFiles());
+
+            if (!allFiles.isEmpty()) {
+                tableFilesListController.setFiles(allFiles);
+                uploadStopBtn.setDisable(false);
+                previouslyOpenedPath = startFolder.getParent();
+            }
+        }
+    }
+
     /**
      * used to recursively walk all directories, every file will be added to the storage list
      * @param storage used to hold files
