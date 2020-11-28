@@ -18,6 +18,7 @@
 */
 package nsusbloader.Controllers;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -40,11 +41,18 @@ import nsusbloader.ServiceWindow;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class GamesController implements Initializable {
+    
+    private static final String REGEX_ONLY_NSP = ".*\\.nsp$";
+    private static final String REGEX_ALLFILES_TINFOIL = ".*\\.(nsp$|xci$|nsz$|xcz$)";
+
     @FXML
     private AnchorPane usbNetPane;
 
@@ -60,7 +68,7 @@ public class GamesController implements Initializable {
     public NSTableViewController tableFilesListController;            // Accessible from Mediator (for drag-n-drop support)
 
     @FXML
-    private Button selectNspBtn, selectSplitNspBtn, uploadStopBtn;
+    private Button selectNspBtn, selectSplitNspBtn, selectFolderBtn, uploadStopBtn;
     private String previouslyOpenedPath;
     private Region btnUpStopImage;
     private ResourceBundle resourceBundle;
@@ -130,16 +138,18 @@ public class GamesController implements Initializable {
         switchThemeBtn.setGraphic(btnSwitchImage);
         this.switchThemeBtn.setOnAction(e->switchTheme());
 
-
-        uploadStopBtn.setDisable(getSelectedProtocol().equals("TinFoil"));
         selectNspBtn.setOnAction(e-> selectFilesBtnAction());
+        selectNspBtn.getStyleClass().add("buttonSelect");
+
+        selectFolderBtn.setOnAction(e-> selectFoldersBtnAction());
+        selectFolderBtn.getStyleClass().add("buttonSelect");
+        selectFolderBtn.setTooltip(new Tooltip(resourceBundle.getString("btn_OpenFolders_tooltip")));
 
         selectSplitNspBtn.setOnAction(e-> selectSplitBtnAction());
         selectSplitNspBtn.getStyleClass().add("buttonSelect");
 
         uploadStopBtn.setOnAction(e-> uploadBtnAction());
-
-        selectNspBtn.getStyleClass().add("buttonSelect");
+        uploadStopBtn.setDisable(getSelectedProtocol().equals("TinFoil"));
 
         this.btnUpStopImage = new Region();
         btnUpStopImage.getStyleClass().add("regionUpload");
@@ -186,32 +196,111 @@ public class GamesController implements Initializable {
         return nsIpTextField.getText();
     }
     
+    private boolean isGoldLeaf() {
+        return getSelectedProtocol().equals("GoldLeaf");
+    }
+
+    private boolean isTinfoil() {
+        return getSelectedProtocol().equals("TinFoil");
+    }
+    
+    private boolean isNSPFileFilterForGL() {
+        return MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL();
+    }
+    
+    private boolean isXciNszXczSupport() {
+        return MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport();
+    }
+    
+    /**
+     * regex for selected program and selected file filter </br>
+     * tinfoil + xcinszxcz </br>
+     * tinfoil + nsponly </br>
+     * goldleaf </br>
+     * etc..
+     */
+    private String getRegexForFiles() {
+        if (isTinfoil() && isXciNszXczSupport())
+            return REGEX_ALLFILES_TINFOIL;
+        else
+            return REGEX_ONLY_NSP;
+        // currently only tinfoil supports all filetypes
+        // everything else only supports nsp
+        // else if (isGoldLeaf())
+        // return REGEX_ONLY_NSP;
+        // else
+    }
+    
     /**
      * Functionality for selecting NSP button.
-     * */
-    private void selectFilesBtnAction(){
-        List<File> filesList;
+     */
+    private void selectFilesBtnAction() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(resourceBundle.getString("btn_OpenFile"));
 
         fileChooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
 
-        if (getSelectedProtocol().equals("TinFoil") && MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport())
+        if (isTinfoil() && isXciNszXczSupport()) {
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
-        else if (getSelectedProtocol().equals("GoldLeaf") && (! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL()))
+        } else if (isGoldLeaf() && !isNSPFileFilterForGL()) {
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Any file", "*.*"),
-                    new FileChooser.ExtensionFilter("NSP ROM", "*.nsp")
-            );
-        else
+                    new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
+        } else {
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
+        }
 
-        filesList = fileChooser.showOpenMultipleDialog(usbNetPane.getScene().getWindow());
+        List<File> filesList = fileChooser.showOpenMultipleDialog(usbNetPane.getScene().getWindow());
         if (filesList != null && !filesList.isEmpty()) {
             tableFilesListController.setFiles(filesList);
             uploadStopBtn.setDisable(false);
             previouslyOpenedPath = filesList.get(0).getParent();
         }
     }
+    
+    /**
+     * Functionality for selecting folders button.
+     * will scan all folders recursively for nsp-files
+     */
+    private void selectFoldersBtnAction() {
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setTitle(resourceBundle.getString("btn_OpenFolders"));
+        chooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
+
+        File startFolder = chooser.showDialog(usbNetPane.getScene().getWindow());
+        
+        performInBackgroundAndUpdate(() -> {
+            final List<File> allFiles = new ArrayList<>();
+            collectFiles(allFiles, startFolder, getRegexForFiles());
+            return allFiles;
+        }, (files) -> {
+            if (!files.isEmpty()) {
+                tableFilesListController.setFiles(files);
+                uploadStopBtn.setDisable(false);
+                previouslyOpenedPath = startFolder.getParent();
+            }
+        });
+    }
+    
+    /**
+     * used to recursively walk all directories, every file will be added to the storage list
+     * @param storage used to hold files
+     * @param startFolder where to start
+     * @param regex for filenames
+     */
+    private void collectFiles(List<File> storage, File startFolder, final String regex) {
+        if (startFolder.isDirectory()) {
+            File[] files = startFolder.listFiles();
+            if(files != null)
+                for (File f : files) {
+                    if (f.isDirectory()) {
+                        collectFiles(storage, f, regex);
+                    } else if (f.getName().toLowerCase().matches(regex)) {
+                        storage.add(f);
+                    }
+                }
+        }
+    }
+    
     /**
      * Functionality for selecting Split NSP button.
      * */
@@ -324,25 +413,27 @@ public class GamesController implements Initializable {
      * Drag-n-drop support (drop consumer)
      * */
     @FXML
-    private void handleDrop(DragEvent event){
-        List<File> filesDropped = event.getDragboard().getFiles();
-        SettingsController settingsController = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
-        SettingsBlockTinfoilController tinfoilSettings = settingsController.getTinfoilSettings();
-        SettingsBlockGoldleafController goldleafController = settingsController.getGoldleafSettings();
+    private void handleDrop(DragEvent event) {
+        final String regex = getRegexForFiles();
 
-        if (getSelectedProtocol().equals("TinFoil") && tinfoilSettings.isXciNszXczSupport())
-            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches("(.*\\.nsp$)|(.*\\.xci$)|(.*\\.nsz$)|(.*\\.xcz$)"));
-        else if (getSelectedProtocol().equals("GoldLeaf") && (! goldleafController.getNSPFileFilterForGL()))
-            filesDropped.removeIf(file -> (file.isDirectory() && ! file.getName().toLowerCase().matches(".*\\.nsp$")));
-        else
-            filesDropped.removeIf(file -> ! file.getName().toLowerCase().matches(".*\\.nsp$"));
+        List<File> files = event.getDragboard().getFiles();
 
-        if ( ! filesDropped.isEmpty() )
-            tableFilesListController.setFiles(filesDropped);
+        performInBackgroundAndUpdate(() -> {
+            List<File> allFiles = new ArrayList<>();
+            if (files != null && files.size() != 0) {
+                files.stream().filter(File::isDirectory).forEach(f -> collectFiles(allFiles, f, regex));
+                files.stream().filter(f -> f.getName().toLowerCase().matches(regex)).forEach(allFiles::add);
+            }
+            return allFiles;
+        }, allFiles -> {
+            if (!allFiles.isEmpty())
+                tableFilesListController.setFiles(allFiles);
 
-        event.setDropCompleted(true);
-        event.consume();
+            event.setDropCompleted(true);
+            event.consume();
+        });
     }
+    
     /**
      * This thing modify UI for reusing 'Upload to NS' button and make functionality set for "Stop transmission"
      * Called from mediator
@@ -384,6 +475,21 @@ public class GamesController implements Initializable {
         else
             uploadStopBtn.setDisable(false);
     }
+    
+    /**
+     * Utility function to perform a task in the background and pass the results to a task on the javafx-ui-thread
+     * @param background performed in background
+     * @param update performed with results on ui-thread
+     */
+    private <T> void performInBackgroundAndUpdate(Supplier<T> background, Consumer<T> update) {
+        new Thread(() -> {
+            final T result = background.get();
+            Platform.runLater(() -> {
+                update.accept(result);
+            });
+        }).start();
+    }
+    
     /**
      * Get 'Recent' path
      */
