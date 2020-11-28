@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2020 Dmitry Isaenko, wolfposd
 
     This file is part of NS-USBloader.
 
@@ -52,6 +52,7 @@ public class GamesController implements Initializable {
     
     private static final String REGEX_ONLY_NSP = ".*\\.nsp$";
     private static final String REGEX_ALLFILES_TINFOIL = ".*\\.(nsp$|xci$|nsz$|xcz$)";
+    private static final String REGEX_ALLFILES = ".*";
 
     @FXML
     private AnchorPane usbNetPane;
@@ -204,8 +205,8 @@ public class GamesController implements Initializable {
         return getSelectedProtocol().equals("TinFoil");
     }
     
-    private boolean isNSPFileFilterForGL() {
-        return MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL();
+    private boolean isAllFiletypesAllowedForGL() {
+        return ! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL();
     }
     
     private boolean isXciNszXczSupport() {
@@ -222,13 +223,18 @@ public class GamesController implements Initializable {
     private String getRegexForFiles() {
         if (isTinfoil() && isXciNszXczSupport())
             return REGEX_ALLFILES_TINFOIL;
+        else if (isGoldLeaf() && isAllFiletypesAllowedForGL())
+            return REGEX_ALLFILES;
         else
             return REGEX_ONLY_NSP;
-        // currently only tinfoil supports all filetypes
-        // everything else only supports nsp
-        // else if (isGoldLeaf())
-        // return REGEX_ONLY_NSP;
-        // else
+    }
+    private String getRegexForFolders() {
+        final String regexForFiles = getRegexForFiles();
+
+        if (regexForFiles.equals(REGEX_ALLFILES))
+            return REGEX_ALLFILES_TINFOIL;
+        else
+            return regexForFiles;
     }
     
     /**
@@ -242,10 +248,12 @@ public class GamesController implements Initializable {
 
         if (isTinfoil() && isXciNszXczSupport()) {
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
-        } else if (isGoldLeaf() && !isNSPFileFilterForGL()) {
+        }
+        else if (isGoldLeaf() && isAllFiletypesAllowedForGL()) {
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Any file", "*.*"),
                     new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
-        } else {
+        }
+        else {
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP ROM", "*.nsp"));
         }
 
@@ -270,7 +278,7 @@ public class GamesController implements Initializable {
         
         performInBackgroundAndUpdate(() -> {
             final List<File> allFiles = new ArrayList<>();
-            collectFiles(allFiles, startFolder, getRegexForFiles());
+            collectFiles(allFiles, startFolder, getRegexForFiles(), getRegexForFolders());
             return allFiles;
         }, (files) -> {
             if (!files.isEmpty()) {
@@ -285,20 +293,34 @@ public class GamesController implements Initializable {
      * used to recursively walk all directories, every file will be added to the storage list
      * @param storage used to hold files
      * @param startFolder where to start
-     * @param regex for filenames
+     * @param filesRegex for filenames
      */
-    private void collectFiles(List<File> storage, File startFolder, final String regex) {
-        if (startFolder.isDirectory()) {
-            File[] files = startFolder.listFiles();
-            if(files != null)
-                for (File f : files) {
-                    if (f.isDirectory()) {
-                        collectFiles(storage, f, regex);
-                    } else if (f.getName().toLowerCase().matches(regex)) {
-                        storage.add(f);
-                    }
-                }
+    // TODO: Too sophisticated. Should be moved to simple class to keep things simplier
+    private void collectFiles(List<File> storage,
+                              File startFolder,
+                              final String filesRegex,
+                              final String foldersRegex)
+    {
+        final String startFolderNameInLowercase = startFolder.getName().toLowerCase();
+
+        if (startFolder.isFile()) {
+            if (startFolderNameInLowercase.matches(filesRegex)) {
+                storage.add(startFolder);
+            }
+            return;
         }
+
+        if (startFolderNameInLowercase.matches(foldersRegex)) {
+            storage.add(startFolder);
+            return;
+        }
+
+        File[] files = startFolder.listFiles();
+        if (files == null)
+            return;
+
+        for (File file : files)
+            collectFiles(storage, file, filesRegex, foldersRegex);
     }
     
     /**
@@ -414,15 +436,15 @@ public class GamesController implements Initializable {
      * */
     @FXML
     private void handleDrop(DragEvent event) {
-        final String regex = getRegexForFiles();
+        final String regexForFiles = getRegexForFiles();
+        final String regexForFolders = getRegexForFolders();
 
         List<File> files = event.getDragboard().getFiles();
 
         performInBackgroundAndUpdate(() -> {
             List<File> allFiles = new ArrayList<>();
             if (files != null && files.size() != 0) {
-                files.stream().filter(File::isDirectory).forEach(f -> collectFiles(allFiles, f, regex));
-                files.stream().filter(f -> f.getName().toLowerCase().matches(regex)).forEach(allFiles::add);
+                files.forEach(f -> collectFiles(allFiles, f, regexForFiles, regexForFolders));
             }
             return allFiles;
         }, allFiles -> {
@@ -484,9 +506,7 @@ public class GamesController implements Initializable {
     private <T> void performInBackgroundAndUpdate(Supplier<T> background, Consumer<T> update) {
         new Thread(() -> {
             final T result = background.get();
-            Platform.runLater(() -> {
-                update.accept(result);
-            });
+            Platform.runLater(() -> update.accept(result));
         }).start();
     }
     
