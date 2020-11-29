@@ -151,7 +151,7 @@ public class SplitMergeController implements Initializable {
         convertBtn.setOnAction(actionEvent -> setConvertBtnAction());
     }
 
-    public void notifySmThreadStarted(boolean isStart, EModule type){ // todo: refactor: remove everything, place to separate container and just disable.
+    public void notifyThreadStarted(boolean isStart, EModule type){ // todo: refactor: remove everything, place to separate container and just disable.
         if (! type.equals(EModule.SPLIT_MERGE_TOOL)){
             smToolPane.setDisable(isStart);
             return;

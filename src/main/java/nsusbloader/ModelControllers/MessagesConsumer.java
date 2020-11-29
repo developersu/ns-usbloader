@@ -61,7 +61,7 @@ public class MessagesConsumer extends AnimationTimer {
         this.progressBar = MediatorControl.getInstance().getContoller().progressBar;
 
         this.statusMap = statusMap;
-        this.tableViewController = MediatorControl.getInstance().getContoller().GamesTabController.tableFilesListController;
+        this.tableViewController = MediatorControl.getInstance().getGamesController().tableFilesListController;
 
         this.oneLinerStatus = oneLinerStatus;
 
@@ -100,13 +100,13 @@ public class MessagesConsumer extends AnimationTimer {
 
             switch (appModuleType){
                 case RCM:
-                    MediatorControl.getInstance().getContoller().getRcmCtrlr().setOneLineStatus(oneLinerStatus.get());
+                    MediatorControl.getInstance().getRcmController().setOneLineStatus(oneLinerStatus.get());
                     break;
                 case NXDT:
-                    MediatorControl.getInstance().getContoller().getNXDTabController().setOneLineStatus(oneLinerStatus.get());
+                    MediatorControl.getInstance().getNxdtController().setOneLineStatus(oneLinerStatus.get());
                     break;
                 case SPLIT_MERGE_TOOL:
-                    MediatorControl.getInstance().getContoller().getSmCtrlr().setOneLineStatus(oneLinerStatus.get());
+                    MediatorControl.getInstance().getSplitMergeController().setOneLineStatus(oneLinerStatus.get());
                     break;
             }
 

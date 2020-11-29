@@ -69,9 +69,9 @@ public class GamesController implements Initializable {
     public NSTableViewController tableFilesListController;            // Accessible from Mediator (for drag-n-drop support)
 
     @FXML
-    private Button selectNspBtn, selectSplitNspBtn, selectFolderBtn, uploadStopBtn;
+    private Button selectNspBtn, selectSplitNspBtn, uploadStopBtn;
     private String previouslyOpenedPath;
-    private Region btnUpStopImage;
+    private Region btnUpStopImage, btnSelectImage;
     private ResourceBundle resourceBundle;
     private CancellableRunnable usbNetCommunications;
     private Thread workThread;
@@ -79,11 +79,12 @@ public class GamesController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
+        AppPreferences preferences = AppPreferences.getInstance();
 
         ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "GoldLeaf");
 
         choiceProtocol.setItems(choiceProtocolList);
-        choiceProtocol.getSelectionModel().select(AppPreferences.getInstance().getProtocol());
+        choiceProtocol.getSelectionModel().select(preferences.getProtocol());
         choiceProtocol.setOnAction(e-> {
             tableFilesListController.setNewProtocol(getSelectedProtocol());
             if (getSelectedProtocol().equals("GoldLeaf")) {
@@ -106,7 +107,7 @@ public class GamesController implements Initializable {
 
         ObservableList<String> choiceNetUsbList = FXCollections.observableArrayList("USB", "NET");
         choiceNetUsb.setItems(choiceNetUsbList);
-        choiceNetUsb.getSelectionModel().select(AppPreferences.getInstance().getNetUsb());
+        choiceNetUsb.getSelectionModel().select(preferences.getNetUsb());
         if (getSelectedProtocol().equals("GoldLeaf")) {
             choiceNetUsb.setDisable(true);
             choiceNetUsb.getSelectionModel().select("USB");
@@ -122,7 +123,7 @@ public class GamesController implements Initializable {
             }
         });
         // Set and configure NS IP field behavior
-        nsIpTextField.setText(AppPreferences.getInstance().getNsIp());
+        nsIpTextField.setText(preferences.getNsIp());
         if (getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("NET")){
             nsIpLbl.setVisible(true);
             nsIpTextField.setVisible(true);
@@ -139,12 +140,9 @@ public class GamesController implements Initializable {
         switchThemeBtn.setGraphic(btnSwitchImage);
         this.switchThemeBtn.setOnAction(e->switchTheme());
 
-        selectNspBtn.setOnAction(e-> selectFilesBtnAction());
         selectNspBtn.getStyleClass().add("buttonSelect");
-
-        selectFolderBtn.setOnAction(e-> selectFoldersBtnAction());
-        selectFolderBtn.getStyleClass().add("buttonSelect");
-        selectFolderBtn.setTooltip(new Tooltip(resourceBundle.getString("btn_OpenFolders_tooltip")));
+        this.btnSelectImage = new Region();
+        setFilesSelectorButtonBehaviour(preferences.getDirectoriesChooserForRoms());
 
         selectSplitNspBtn.setOnAction(e-> selectSplitBtnAction());
         selectSplitNspBtn.getStyleClass().add("buttonSelect");
@@ -158,7 +156,7 @@ public class GamesController implements Initializable {
         uploadStopBtn.getStyleClass().add("buttonUp");
         uploadStopBtn.setGraphic(btnUpStopImage);
 
-        this.previouslyOpenedPath = AppPreferences.getInstance().getRecent();
+        this.previouslyOpenedPath = preferences.getRecent();
     }
     /**
      * Changes UI theme on the go
@@ -206,11 +204,11 @@ public class GamesController implements Initializable {
     }
     
     private boolean isAllFiletypesAllowedForGL() {
-        return ! MediatorControl.getInstance().getContoller().getSettingsCtrlr().getGoldleafSettings().getNSPFileFilterForGL();
+        return ! MediatorControl.getInstance().getSettingsController().getGoldleafSettings().getNSPFileFilterForGL();
     }
     
     private boolean isXciNszXczSupport() {
-        return MediatorControl.getInstance().getContoller().getSettingsCtrlr().getTinfoilSettings().isXciNszXczSupport();
+        return MediatorControl.getInstance().getSettingsController().getTinfoilSettings().isXciNszXczSupport();
     }
     
     /**
@@ -301,6 +299,9 @@ public class GamesController implements Initializable {
                               final String filesRegex,
                               final String foldersRegex)
     {
+        if (startFolder == null)
+            return;
+
         final String startFolderNameInLowercase = startFolder.getName().toLowerCase();
 
         if (startFolder.isFile()) {
@@ -368,7 +369,7 @@ public class GamesController implements Initializable {
             nspToUpload = new LinkedList<>();
         }
 
-        SettingsController settings = MediatorControl.getInstance().getContoller().getSettingsCtrlr();
+        SettingsController settings = MediatorControl.getInstance().getSettingsController();
         // If USB selected
         if (getSelectedProtocol().equals("GoldLeaf") ){
             final SettingsBlockGoldleafController goldleafSettings = settings.getGoldleafSettings();
@@ -509,7 +510,25 @@ public class GamesController implements Initializable {
             Platform.runLater(() -> update.accept(result));
         }).start();
     }
-    
+
+    public void updateFilesSelectorButtonBehaviour(boolean isDirectoryChooser){
+        btnSelectImage.getStyleClass().clear();
+        setFilesSelectorButtonBehaviour(isDirectoryChooser);
+    }
+    private void setFilesSelectorButtonBehaviour(boolean isDirectoryChooser){
+        if (isDirectoryChooser){
+            selectNspBtn.setOnAction(e -> selectFoldersBtnAction());
+            btnSelectImage.getStyleClass().add("regionScanFolders");
+            selectSplitNspBtn.setVisible(false);
+        }
+        else {
+            selectNspBtn.setOnAction(e -> selectFilesBtnAction());
+            btnSelectImage.getStyleClass().add("regionSelectFiles");
+            selectSplitNspBtn.setVisible(true);
+        }
+        selectNspBtn.setGraphic(btnSelectImage);
+        //selectFolderBtn.setTooltip(new Tooltip(resourceBundle.getString("btn_OpenFolders_tooltip")));
+    }
     /**
      * Get 'Recent' path
      */

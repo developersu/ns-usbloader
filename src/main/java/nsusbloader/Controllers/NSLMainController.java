@@ -41,7 +41,7 @@ public class NSLMainController implements Initializable {
     public ProgressBar progressBar;            // Accessible from Mediator
 
     @FXML
-    public GamesController GamesTabController;             // Accessible from Mediator | todo: incapsulate
+    private GamesController GamesTabController;             // Accessible from Mediator | todo: incapsulate
     @FXML
     private SettingsController SettingsTabController;
     @FXML

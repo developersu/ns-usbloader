@@ -43,5 +43,18 @@
            <Insets left="5.0" />
         </VBox.margin>
               </HBox>
+      <HBox spacing="5.0">
+         <children>
+            <VBox spacing="5.0">
+               <children>
+                  <CheckBox fx:id="direcroriesChooserForRomsCB" mnemonicParsing="false" text="%tab2_Cb_foldersSelectorForRoms" />
+                  <Label disable="true" text="%tab2_Cb_foldersSelectorForRomsDesc" wrapText="true" />
+               </children>
+            </VBox>
+         </children>
+         <VBox.margin>
+            <Insets left="5.0" />
+         </VBox.margin>
+      </HBox>
        </children>
 </VBox>

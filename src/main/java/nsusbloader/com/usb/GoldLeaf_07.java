@@ -914,7 +914,7 @@ class GoldLeaf_07 extends TransferModule {
     private boolean selectFile(){
         File selectedFile = CompletableFuture.supplyAsync(() -> {
             FileChooser fChooser = new FileChooser();
-            fChooser.setTitle(MediatorControl.getInstance().getContoller().getResourceBundle().getString("btn_OpenFile")); // TODO: FIX BAD IMPLEMENTATION
+            fChooser.setTitle(MediatorControl.getInstance().getResourceBundle().getString("btn_OpenFile")); // TODO: FIX BAD IMPLEMENTATION
             fChooser.setInitialDirectory(new File(System.getProperty("user.home")));                                            // TODO: Consider fixing; not a prio.
             fChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("*", "*"));
             return fChooser.showOpenDialog(null);    // Leave as is for now.

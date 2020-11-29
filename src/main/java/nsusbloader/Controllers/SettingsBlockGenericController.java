@@ -28,6 +28,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.layout.Region;
 import nsusbloader.AppPreferences;
+import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.UpdatesChecker;
 import nsusbloader.ServiceWindow;
 import nsusbloader.UI.LocaleHolder;
@@ -47,7 +48,8 @@ public class SettingsBlockGenericController implements Initializable {
             driversInstallBtn,
             checkForUpdBtn;
     @FXML
-    private CheckBox autoCheckForUpdatesCB;
+    private CheckBox autoCheckForUpdatesCB,
+            direcroriesChooserForRomsCB;
     @FXML
     private Hyperlink newVersionHyperlink;
 
@@ -61,6 +63,10 @@ public class SettingsBlockGenericController implements Initializable {
         final AppPreferences preferences = AppPreferences.getInstance();
 
         autoCheckForUpdatesCB.setSelected(preferences.getAutoCheckUpdates());
+        direcroriesChooserForRomsCB.setSelected(preferences.getDirectoriesChooserForRoms());
+        direcroriesChooserForRomsCB.setOnAction(actionEvent ->
+                    MediatorControl.getInstance().getGamesController().updateFilesSelectorButtonBehaviour(direcroriesChooserForRomsCB.isSelected())
+                );
 
         Region btnSwitchImage = new Region();
         btnSwitchImage.getStyleClass().add("regionUpdatesCheck");
@@ -124,7 +130,13 @@ public class SettingsBlockGenericController implements Initializable {
                 ResourceBundle.getBundle("locale", newLocale).getString("windowBodyRestartToApplyLang"));
     }
 
-    private boolean getAutoCheckForUpdates(){ return autoCheckForUpdatesCB.isSelected(); }
+    private boolean getAutoCheckForUpdates(){
+        return autoCheckForUpdatesCB.isSelected();
+    }
+
+    public boolean isDirectoriesChooserForRoms(){
+        return direcroriesChooserForRomsCB.isSelected();
+    }
 
     protected void registerHostServices(HostServices hostServices){ this.hostServices = hostServices;}
 
@@ -135,5 +147,6 @@ public class SettingsBlockGenericController implements Initializable {
 
     void updatePreferencesOnExit() {
         AppPreferences.getInstance().setAutoCheckUpdates(getAutoCheckForUpdates());
+        AppPreferences.getInstance().setDirectoriesChooserForRoms(isDirectoriesChooserForRoms());
     }
 }

@@ -18,14 +18,15 @@
 */
 package nsusbloader;
 
-import nsusbloader.Controllers.NSLMainController;
+import nsusbloader.Controllers.*;
 import nsusbloader.NSLDataTypes.EModule;
 
+import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MediatorControl {
-    private AtomicBoolean isTransferActive = new AtomicBoolean(false);  // Overcoded just for sure
-    private NSLMainController mainCtrler;
+    private final AtomicBoolean isTransferActive = new AtomicBoolean(false);  // Overcoded just for sure
+    private NSLMainController mainController;
 
     public static MediatorControl getInstance(){
         return MediatorControlHold.INSTANCE;
@@ -35,16 +36,26 @@ public class MediatorControl {
         private static final MediatorControl INSTANCE = new MediatorControl();
     }
     public void setController(NSLMainController controller){
-        this.mainCtrler = controller;
+        this.mainController = controller;
     }
-    public NSLMainController getContoller(){ return this.mainCtrler; }
+
+    public NSLMainController getContoller(){ return mainController; }
+    public GamesController getGamesController(){ return mainController.getGamesCtrlr(); };
+    public SettingsController getSettingsController(){ return mainController.getSettingsCtrlr(); };
+    public SplitMergeController getSplitMergeController(){ return mainController.getSmCtrlr(); };
+    public RcmController getRcmController(){ return mainController.getRcmCtrlr(); };
+    public NxdtController getNxdtController(){ return mainController.getNXDTabController(); };
+
+    public ResourceBundle getResourceBundle(){
+        return mainController.getResourceBundle();
+    }
 
     public synchronized void setBgThreadActive(boolean isActive, EModule appModuleType) {
         isTransferActive.set(isActive);
-        mainCtrler.getGamesCtrlr().notifyThreadStarted(isActive, appModuleType);
-        mainCtrler.getSmCtrlr().notifySmThreadStarted(isActive, appModuleType);
-        mainCtrler.getRcmCtrlr().notifyThreadStarted(isActive, appModuleType);
-        mainCtrler.getNXDTabController().notifyThreadStarted(isActive, appModuleType);
+        getGamesController().notifyThreadStarted(isActive, appModuleType);
+        getSplitMergeController().notifyThreadStarted(isActive, appModuleType);
+        getRcmController().notifyThreadStarted(isActive, appModuleType);
+        getNxdtController().notifyThreadStarted(isActive, appModuleType);
     }
     public synchronized boolean getTransferActive() { return this.isTransferActive.get(); }
 }

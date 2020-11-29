@@ -102,6 +102,9 @@ public class AppPreferences {
     public boolean getAutoCheckUpdates(){return preferences.getBoolean("AUTOCHECK4UPDATES", false); }
     public void setAutoCheckUpdates(boolean prop){preferences.putBoolean("AUTOCHECK4UPDATES", prop); }
 
+    public boolean getDirectoriesChooserForRoms(){return preferences.getBoolean("dirchooser4roms", false); }
+    public void setDirectoriesChooserForRoms(boolean prop){preferences.putBoolean("dirchooser4roms", prop); }
+
     public boolean getTfXCI(){return preferences.getBoolean("TF_XCI", true);}
     public void setTfXCI(boolean prop){ preferences.putBoolean("TF_XCI", prop); }
 
