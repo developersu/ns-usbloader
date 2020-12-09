@@ -23,13 +23,12 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import nsusbloader.AppPreferences;
 import nsusbloader.MediatorControl;
@@ -41,11 +40,6 @@ import java.util.ResourceBundle;
 public class FilesDropHandle {
 
     public FilesDropHandle(List<File> files, String filesRegex, String foldersRegex){
-
-        //
-        // TODO: ADD GRAPHICS BEFORE RELEASE !
-        //
-
         FilesDropHandleTask filesDropHandleTask = new FilesDropHandleTask(files, filesRegex, foldersRegex);
 
         ResourceBundle resourceBundle = MediatorControl.getInstance().getResourceBundle();
@@ -54,9 +48,10 @@ public class FilesDropHandle {
         ProgressIndicator progressIndicator = new ProgressIndicator();
         progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
 
-        Label downloadStatusLabel = new Label();
-        downloadStatusLabel.setWrapText(true);
-        downloadStatusLabel.textProperty().bind(filesDropHandleTask.messageProperty());
+        Label statusLabel = new Label();
+        statusLabel.setWrapText(true);
+        statusLabel.setTextAlignment(TextAlignment.CENTER);
+        statusLabel.textProperty().bind(filesDropHandleTask.messageProperty());
 
         Pane fillerPane1 = new Pane();
         Pane fillerPane2 = new Pane();
@@ -68,12 +63,12 @@ public class FilesDropHandle {
         parentVBox.setPadding(new Insets(5.0));
         parentVBox.setFillWidth(true);
         parentVBox.getChildren().addAll(
-                downloadStatusLabel,
+                statusLabel,
                 fillerPane1,
                 progressIndicator,
                 fillerPane2,
                 cancelButton
-        ); // TODO:FIX
+        );
 
         VBox.setVgrow(fillerPane1, Priority.ALWAYS);
         VBox.setVgrow(fillerPane2, Priority.ALWAYS);
@@ -81,10 +76,10 @@ public class FilesDropHandle {
         Stage stage = new Stage();
         stage.setTitle(resourceBundle.getString("windowTitleAddingFiles"));
         stage.getIcons().addAll(
-                new Image("/res/dwnload_ico32x32.png"),    //TODO: REDRAW
-                new Image("/res/dwnload_ico48x48.png"),
-                new Image("/res/dwnload_ico64x64.png"),
-                new Image("/res/dwnload_ico128x128.png")
+                new Image("/res/info_ico32x32.png"),
+                new Image("/res/info_ico48x48.png"),
+                new Image("/res/info_ico64x64.png"),
+                new Image("/res/info_ico128x128.png")
         );
         stage.setMinWidth(300);
         stage.setMinHeight(175);
