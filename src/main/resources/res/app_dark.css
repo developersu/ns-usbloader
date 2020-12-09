@@ -78,6 +78,10 @@
     -fx-padding: 0.23em;
 }
 
+.progress-indicator {
+    -fx-progress-color: #00bce4;
+}
+
 .dialog-pane {
     -fx-background-color: #4f4f4f;
 }
@@ -131,7 +135,7 @@
 }
 
 
-// -======================== TAB PANE =========================-
+/* -======================== TAB PANE =========================- */
 .tab-pane .tab SVGPath{
     -fx-fill: #f7fafa;
 }

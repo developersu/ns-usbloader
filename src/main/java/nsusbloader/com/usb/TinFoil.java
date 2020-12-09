@@ -222,7 +222,6 @@ class TinFoil extends TransferModule {
             if ((currentOffset + chunk) >= size )
                 chunk = Math.toIntExact(size - currentOffset);
             //System.out.println("CO: "+currentOffset+"\t\tEO: "+size+"\t\tRP: "+chunk);  // NOTE: DEBUG
-            logPrinter.updateProgress((currentOffset + chunk) / (size / 100.0) / 100.0);
 
             readBuffer = new byte[chunk];     // TODO: not perfect moment, consider refactoring.
 
@@ -232,6 +231,7 @@ class TinFoil extends TransferModule {
             if (writeUsb(readBuffer))
                 throw new IOException("TF Failure during file transfer.");
             currentOffset += chunk;
+            logPrinter.updateProgress((double)currentOffset / (double)size);
         }
         nsSplitReader.close();
         logPrinter.updateProgress(1.0);
@@ -251,7 +251,6 @@ class TinFoil extends TransferModule {
             if ((currentOffset + chunk) >= size)
                 chunk = Math.toIntExact(size - currentOffset);
             //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+chunk);  // NOTE: DEBUG
-            logPrinter.updateProgress((currentOffset + chunk) / (size / 100.0) / 100.0);
 
             readBuffer = new byte[chunk];
 
@@ -261,6 +260,7 @@ class TinFoil extends TransferModule {
             if (writeUsb(readBuffer))
                 throw new IOException("TF Failure during file transfer.");
             currentOffset += chunk;
+            logPrinter.updateProgress((double)currentOffset / (double)size);
         }
         bufferedInStream.close();
         logPrinter.updateProgress(1.0);

@@ -231,7 +231,7 @@ public class NSTableViewController implements Initializable {
     /**
      * Add files when user selected them
      * */
-    public void setFiles(List<File> newFiles){
+    public synchronized void setFiles(List<File> newFiles){
         if (!rowsObsLst.isEmpty()){
             List<String> filesAlreayInList = new ArrayList<>();
             for (NSLRowModel model : rowsObsLst)

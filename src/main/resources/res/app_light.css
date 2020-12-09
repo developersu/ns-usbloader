@@ -24,7 +24,7 @@
     -fx-effect: dropshadow(three-pass-box, #00caca, 2, 0, 0, 0);
 }
 .button:focused, .buttonStop:focused, .buttonUp:focused, .buttonSelect:focused, .choice-box:focused{
-    -fx-background-color: #cccccc;
+    -fx-background-color: #fefefe;
     -fx-background-insets: 0 0 0 0, 0, 1, 2;
     -fx-border-color: #cccccc;
     -fx-border-radius: 3;
@@ -93,6 +93,10 @@
     -fx-background-radius: 2;
     -fx-background-insets: 1 1 2 1;
     -fx-padding: 0.23em;
+}
+
+.progress-indicator {
+    -fx-progress-color: #00bce4;
 }
 
 .dialog-pane {
@@ -183,9 +187,9 @@
 
 .tab-pane > .tab-header-area > .tab-header-background
 {
-   -fx-background-color: #ebebeb;
-
+   -fx-background-color: linear-gradient(to right, #ebebeb 0%, #fefefe 7.5%, #fefefe 100%);
 }
+
 .tab-pane > .tab-header-area > .headers-region > .tab {
     -fx-padding: 10;
 }
@@ -220,7 +224,7 @@
     -fx-text-fill: #2c2c2c;
 }
 .table-row-cell, .table-row-cell:filled:selected, .table-row-cell:selected{
-    -fx-background-color: -fx-table-cell-border-color, #d3fffd;
+    -fx-background-color: -fx-table-cell-border-color, #ebfffe;
     -fx-background-insets: 0, 0 0 1 0;
     -fx-padding: 0.0em; /* 0 */
     -fx-table-cell-border-color: #b0b0b0;

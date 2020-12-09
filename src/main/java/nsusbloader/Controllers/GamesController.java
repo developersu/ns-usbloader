@@ -41,10 +41,7 @@ import nsusbloader.ServiceWindow;
 
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -294,6 +291,7 @@ public class GamesController implements Initializable {
      * @param filesRegex for filenames
      */
     // TODO: Too sophisticated. Should be moved to simple class to keep things simplier
+
     private void collectFiles(List<File> storage,
                               File startFolder,
                               final String filesRegex,
@@ -437,24 +435,10 @@ public class GamesController implements Initializable {
      * */
     @FXML
     private void handleDrop(DragEvent event) {
-        final String regexForFiles = getRegexForFiles();
-        final String regexForFolders = getRegexForFolders();
-
         List<File> files = event.getDragboard().getFiles();
-
-        performInBackgroundAndUpdate(() -> {
-            List<File> allFiles = new ArrayList<>();
-            if (files != null && files.size() != 0) {
-                files.forEach(f -> collectFiles(allFiles, f, regexForFiles, regexForFolders));
-            }
-            return allFiles;
-        }, allFiles -> {
-            if (!allFiles.isEmpty())
-                tableFilesListController.setFiles(allFiles);
-
-            event.setDropCompleted(true);
-            event.consume();
-        });
+        new FilesDropHandle(files, getRegexForFiles(), getRegexForFolders());
+        event.setDropCompleted(true);
+        event.consume();
     }
     
     /**
@@ -527,7 +511,6 @@ public class GamesController implements Initializable {
             selectSplitNspBtn.setVisible(true);
         }
         selectNspBtn.setGraphic(btnSelectImage);
-        //selectFolderBtn.setTooltip(new Tooltip(resourceBundle.getString("btn_OpenFolders_tooltip")));
     }
     /**
      * Get 'Recent' path
