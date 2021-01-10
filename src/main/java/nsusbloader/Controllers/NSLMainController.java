@@ -155,7 +155,7 @@ public class NSLMainController implements Initializable {
     private void saveLastOpenedTab(){
         String tabId = mainTabPane.getSelectionModel().getSelectedItem().getId();
         if (tabId == null || tabId.isEmpty())
-            return;
+            tabId = "";
         AppPreferences.getInstance().setLastOpenedTab(tabId);
     }
 }
