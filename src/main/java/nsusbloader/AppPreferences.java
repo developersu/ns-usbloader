@@ -135,4 +135,7 @@ public class AppPreferences {
     // NXDT //
     public String getNXDTSaveToLocation(){ return FilesHelper.getRealFolder(preferences.get("nxdt_saveto", System.getProperty("user.home"))); }
     public void setNXDTSaveToLocation(String value){ preferences.put("nxdt_saveto", value); }
+
+    public String getLastOpenedTab(){ return preferences.get("recent_tab", ""); }
+    public void setLastOpenedTab(String tabId){ preferences.put("recent_tab", tabId); }
 }

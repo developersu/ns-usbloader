@@ -8,7 +8,7 @@
     <name>NS-USBloader</name>
 
     <artifactId>ns-usbloader</artifactId>
-    <version>5.0-SNAPSHOT</version>
+    <version>5.1-SNAPSHOT</version>
 
     <url>https://github.com/developersu/ns-usbloader/</url>
     <description>

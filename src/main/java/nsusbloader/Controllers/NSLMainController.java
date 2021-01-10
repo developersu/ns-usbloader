@@ -41,6 +41,11 @@ public class NSLMainController implements Initializable {
     public ProgressBar progressBar;            // Accessible from Mediator
 
     @FXML
+    private TabPane mainTabPane;
+    @FXML
+    private Tab GamesTabHolder, RCMTabHolder, SMTabHolder;
+
+    @FXML
     private GamesController GamesTabController;             // Accessible from Mediator | todo: incapsulate
     @FXML
     private SettingsController SettingsTabController;
@@ -70,16 +75,22 @@ public class NSLMainController implements Initializable {
                 if (result != null){
                     if (!result.get(0).isEmpty()) {
                         SettingsTabController.getGenericSettings().setNewVersionLink(result.get(0));
-                        ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionAval"), resourceBundle.getString("windowTitleNewVersionAval") + ": " + result.get(0) + "\n\n" + result.get(1));
+                        ServiceWindow.getInfoNotification(
+                                resourceBundle.getString("windowTitleNewVersionAval"),
+                                resourceBundle.getString("windowTitleNewVersionAval") + ": " + result.get(0) + "\n\n" + result.get(1));
                     }
                 }
                 else
-                    ServiceWindow.getInfoNotification(resourceBundle.getString("windowTitleNewVersionUnknown"), resourceBundle.getString("windowBodyNewVersionUnknown"));
+                    ServiceWindow.getInfoNotification(
+                            resourceBundle.getString("windowTitleNewVersionUnknown"),
+                            resourceBundle.getString("windowBodyNewVersionUnknown"));
             });
             Thread updates = new Thread(updTask);
             updates.setDaemon(true);
             updates.start();
         }
+
+        openLastOpenedTab();
     }
 
     /**
@@ -123,5 +134,28 @@ public class NSLMainController implements Initializable {
         SplitMergeTabController.updatePreferencesOnExit(); // NOTE: This shit above should be re-written to similar pattern
         RcmTabController.updatePreferencesOnExit();
         NXDTabController.updatePreferencesOnExit();
+
+        saveLastOpenedTab();
+    }
+
+    private void openLastOpenedTab(){
+        String tabId = AppPreferences.getInstance().getLastOpenedTab();
+        switch (tabId){
+            case "GamesTabHolder":
+                mainTabPane.getSelectionModel().select(GamesTabHolder);
+                break;
+            case "RCMTabHolder":
+                mainTabPane.getSelectionModel().select(RCMTabHolder);
+                break;
+            case "SMTabHolder":
+                mainTabPane.getSelectionModel().select(SMTabHolder);
+                break;
+        }
+    }
+    private void saveLastOpenedTab(){
+        String tabId = mainTabPane.getSelectionModel().getSelectedItem().getId();
+        if (tabId == null || tabId.isEmpty())
+            return;
+        AppPreferences.getInstance().setLastOpenedTab(tabId);
     }
 }
