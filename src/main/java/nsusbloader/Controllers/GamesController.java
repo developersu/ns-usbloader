@@ -84,7 +84,7 @@ public class GamesController implements Initializable {
         choiceProtocol.getSelectionModel().select(preferences.getProtocol());
         choiceProtocol.setOnAction(e-> {
             tableFilesListController.setNewProtocol(getSelectedProtocol());
-            if (isGoldleaf()) {
+            if (getSelectedProtocol().equals("GoldLeaf")) {
                 choiceNetUsb.setDisable(true);
                 choiceNetUsb.getSelectionModel().select("USB");
                 nsIpLbl.setVisible(false);
@@ -105,7 +105,7 @@ public class GamesController implements Initializable {
         ObservableList<String> choiceNetUsbList = FXCollections.observableArrayList("USB", "NET");
         choiceNetUsb.setItems(choiceNetUsbList);
         choiceNetUsb.getSelectionModel().select(preferences.getNetUsb());
-        if (isGoldLeaf()) {
+        if (getSelectedProtocol().equals("GoldLeaf")) {
             choiceNetUsb.setDisable(true);
             choiceNetUsb.getSelectionModel().select("USB");
         }
@@ -121,7 +121,7 @@ public class GamesController implements Initializable {
         });
         // Set and configure NS IP field behavior
         nsIpTextField.setText(preferences.getNsIp());
-        if (isTinfoil() && getSelectedNetUsb().equals("NET")){
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) && getSelectedNetUsb().equals("NET")){
             nsIpLbl.setVisible(true);
             nsIpTextField.setVisible(true);
         }
@@ -145,7 +145,7 @@ public class GamesController implements Initializable {
         selectSplitNspBtn.getStyleClass().add("buttonSelect");
 
         uploadStopBtn.setOnAction(e-> uploadBtnAction());
-        uploadStopBtn.setDisable(isTinfoil());
+        uploadStopBtn.setDisable(( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ));
 
         this.btnUpStopImage = new Region();
         btnUpStopImage.getStyleClass().add("regionUpload");
