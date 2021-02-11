@@ -196,7 +196,7 @@ public class GamesController implements Initializable {
         return getSelectedProtocol().equals("GoldLeaf");
     }
 
-    private boolean ( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) {
+    private boolean isTinfoil() {
         return getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer");
     }
     
