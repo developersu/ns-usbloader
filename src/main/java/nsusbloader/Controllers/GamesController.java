@@ -78,7 +78,7 @@ public class GamesController implements Initializable {
         this.resourceBundle = resourceBundle;
         AppPreferences preferences = AppPreferences.getInstance();
 
-        ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "GoldLeaf");
+        ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "Awoo-installer", "GoldLeaf");
 
         choiceProtocol.setItems(choiceProtocolList);
         choiceProtocol.getSelectionModel().select(preferences.getProtocol());
@@ -121,7 +121,7 @@ public class GamesController implements Initializable {
         });
         // Set and configure NS IP field behavior
         nsIpTextField.setText(preferences.getNsIp());
-        if (getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("NET")){
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) && getSelectedNetUsb().equals("NET")){
             nsIpLbl.setVisible(true);
             nsIpTextField.setVisible(true);
         }
@@ -145,7 +145,7 @@ public class GamesController implements Initializable {
         selectSplitNspBtn.getStyleClass().add("buttonSelect");
 
         uploadStopBtn.setOnAction(e-> uploadBtnAction());
-        uploadStopBtn.setDisable(getSelectedProtocol().equals("TinFoil"));
+        uploadStopBtn.setDisable(( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ));
 
         this.btnUpStopImage = new Region();
         btnUpStopImage.getStyleClass().add("regionUpload");
@@ -197,7 +197,7 @@ public class GamesController implements Initializable {
     }
 
     private boolean isTinfoil() {
-        return getSelectedProtocol().equals("TinFoil");
+        return getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer");
     }
     
     private boolean isAllFiletypesAllowedForGL() {
@@ -216,7 +216,7 @@ public class GamesController implements Initializable {
      * etc..
      */
     private String getRegexForFiles() {
-        if (isTinfoil() && isXciNszXczSupport())
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) && isXciNszXczSupport())
             return REGEX_ALLFILES_TINFOIL;
         else if (isGoldLeaf() && isAllFiletypesAllowedForGL())
             return REGEX_ALLFILES;
@@ -241,7 +241,7 @@ public class GamesController implements Initializable {
 
         fileChooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
 
-        if (isTinfoil() && isXciNszXczSupport()) {
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) && isXciNszXczSupport()) {
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
         }
         else if (isGoldLeaf() && isAllFiletypesAllowedForGL()) {
@@ -353,7 +353,7 @@ public class GamesController implements Initializable {
 
         TextArea logArea = MediatorControl.getInstance().getContoller().logArea;
 
-        if (getSelectedProtocol().equals("TinFoil") && tableFilesListController.getFilesForUpload() == null) {
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer")) && tableFilesListController.getFilesForUpload() == null) {
             logArea.setText(resourceBundle.getString("tab3_Txt_NoFolderOrFileSelected"));
             return;
         }
@@ -369,11 +369,11 @@ public class GamesController implements Initializable {
 
         SettingsController settings = MediatorControl.getInstance().getSettingsController();
         // If USB selected
-        if (getSelectedProtocol().equals("GoldLeaf") ){
+        if (getSelectedProtocol().equals("GoldLeaf")){
             final SettingsBlockGoldleafController goldleafSettings = settings.getGoldleafSettings();
             usbNetCommunications = new UsbCommunications(nspToUpload, "GoldLeaf" + goldleafSettings.getGlVer(), goldleafSettings.getNSPFileFilterForGL());
         }
-        else if (( getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("USB") )){
+        else if (( ( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) && getSelectedNetUsb().equals("USB") )){
             usbNetCommunications = new UsbCommunications(nspToUpload, "TinFoil", false);
         }
         else {      // NET INSTALL OVER TINFOIL
@@ -477,7 +477,7 @@ public class GamesController implements Initializable {
      * Crunch. This function called from NSTableViewController
      * */
     public void disableUploadStopBtn(boolean disable){
-        if (getSelectedProtocol().equals("TinFoil"))
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ))
             uploadStopBtn.setDisable(disable);
         else
             uploadStopBtn.setDisable(false);
