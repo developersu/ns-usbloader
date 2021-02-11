@@ -196,7 +196,7 @@ public class GamesController implements Initializable {
         return getSelectedProtocol().equals("GoldLeaf");
     }
 
-    private boolean isTinfoil() {
+    private boolean ( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) {
         return getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer");
     }
     
@@ -216,7 +216,7 @@ public class GamesController implements Initializable {
      * etc..
      */
     private String getRegexForFiles() {
-        if (isTinfoil() && isXciNszXczSupport())
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) && isXciNszXczSupport())
             return REGEX_ALLFILES_TINFOIL;
         else if (isGoldLeaf() && isAllFiletypesAllowedForGL())
             return REGEX_ALLFILES;
@@ -241,7 +241,7 @@ public class GamesController implements Initializable {
 
         fileChooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
 
-        if (isTinfoil() && isXciNszXczSupport()) {
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) && isXciNszXczSupport()) {
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NSP/XCI/NSZ/XCZ", "*.nsp", "*.xci", "*.nsz", "*.xcz"));
         }
         else if (isGoldLeaf() && isAllFiletypesAllowedForGL()) {
@@ -353,7 +353,7 @@ public class GamesController implements Initializable {
 
         TextArea logArea = MediatorControl.getInstance().getContoller().logArea;
 
-        if (isTinfoil() && tableFilesListController.getFilesForUpload() == null) {
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer")) && tableFilesListController.getFilesForUpload() == null) {
             logArea.setText(resourceBundle.getString("tab3_Txt_NoFolderOrFileSelected"));
             return;
         }
@@ -369,11 +369,11 @@ public class GamesController implements Initializable {
 
         SettingsController settings = MediatorControl.getInstance().getSettingsController();
         // If USB selected
-        if (isGoldLeaf()){
+        if (getSelectedProtocol().equals("GoldLeaf")){
             final SettingsBlockGoldleafController goldleafSettings = settings.getGoldleafSettings();
             usbNetCommunications = new UsbCommunications(nspToUpload, "GoldLeaf" + goldleafSettings.getGlVer(), goldleafSettings.getNSPFileFilterForGL());
         }
-        else if (( isTinfoil() && getSelectedNetUsb().equals("USB") )){
+        else if (( ( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ) && getSelectedNetUsb().equals("USB") )){
             usbNetCommunications = new UsbCommunications(nspToUpload, "TinFoil", false);
         }
         else {      // NET INSTALL OVER TINFOIL
@@ -477,7 +477,7 @@ public class GamesController implements Initializable {
      * Crunch. This function called from NSTableViewController
      * */
     public void disableUploadStopBtn(boolean disable){
-        if (isTinfoil())
+        if (( getSelectedProtocol().equals("TinFoil") || getSelectedProtocol().equals("Awoo-installer") ))
             uploadStopBtn.setDisable(disable);
         else
             uploadStopBtn.setDisable(false);
