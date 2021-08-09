@@ -18,6 +18,7 @@
 */
 package nsusbloader.Controllers;
 
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -33,11 +34,11 @@ import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
-import nsusbloader.Utilities.splitmerge.MergeTask;
-import nsusbloader.Utilities.splitmerge.SplitTask;
+import nsusbloader.Utilities.splitmerge.SplitMergeTaskExecutor;
 
 import java.io.File;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class SplitMergeController implements Initializable {
@@ -53,40 +54,39 @@ public class SplitMergeController implements Initializable {
             changeSaveToBtn,
             convertBtn;
     @FXML
-    private Label fileFolderLabelLbl,
-            fileFolderActualPathLbl,
-            saveToPathLbl,
+    private Label saveToPathLbl,
             statusLbl;
+
+    @FXML
+    private BlockListViewController BlockListViewController;
 
     private ResourceBundle resourceBundle;
 
     private Region convertRegion;
     private Thread smThread;
-    private CancellableRunnable smTask;
+    private Runnable smTask;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
+
         convertRegion = new Region();
         convertBtn.setGraphic(convertRegion);
+        convertBtn.disableProperty().bind(Bindings.isEmpty(BlockListViewController.getItems()));
 
         splitRad.setOnAction((actionEvent -> {
             statusLbl.setText("");
             convertRegion.getStyleClass().clear();
             convertRegion.getStyleClass().add("regionSplitToOne");
-            fileFolderLabelLbl.setText(resourceBundle.getString("tabSplMrg_Txt_File"));
             selectFileFolderBtn.setText(resourceBundle.getString("tabSplMrg_Btn_SelectFile"));
-            fileFolderActualPathLbl.setText("");
-            convertBtn.setDisable(true);
+            BlockListViewController.clear();
         }));
         mergeRad.setOnAction((actionEvent -> {
             statusLbl.setText("");
             convertRegion.getStyleClass().clear();
             convertRegion.getStyleClass().add("regionOneToSplit");
-            fileFolderLabelLbl.setText(resourceBundle.getString("tabSplMrg_Txt_Folder"));
             selectFileFolderBtn.setText(resourceBundle.getString("tabSplMrg_Btn_SelectFolder"));
-            fileFolderActualPathLbl.setText("");
-            convertBtn.setDisable(true);
+            BlockListViewController.clear();
         }));
 
         if (AppPreferences.getInstance().getSplitMergeType() == 0)
@@ -110,32 +110,27 @@ public class SplitMergeController implements Initializable {
 
         selectFileFolderBtn.setOnAction(actionEvent -> {
             statusLbl.setText("");
+            List<File> alreadyAddedFiles = BlockListViewController.getItems();
             if (splitRad.isSelected()) {
                 FileChooser fc = new FileChooser();
                 fc.setTitle(resourceBundle.getString("tabSplMrg_Btn_SelectFile"));
-                if (! fileFolderActualPathLbl.getText().isEmpty()){
-                    File temporaryFile = new File(fileFolderActualPathLbl.getText()).getParentFile();
-                    if (temporaryFile != null && temporaryFile.exists())
-                        fc.setInitialDirectory(temporaryFile);
-                    else
-                        fc.setInitialDirectory(new File(System.getProperty("user.home")));
+                if (! alreadyAddedFiles.isEmpty()){
+                    String recentLocation = FilesHelper.getRealFolder(alreadyAddedFiles.get(0).getParentFile().getAbsolutePath());
+                    fc.setInitialDirectory(new File(recentLocation));
                 }
                 else
                     fc.setInitialDirectory(new File(System.getProperty("user.home")));
-                File fileFile = fc.showOpenDialog(changeSaveToBtn.getScene().getWindow());
-                if (fileFile == null)
+                List<File> files = fc.showOpenMultipleDialog(changeSaveToBtn.getScene().getWindow());
+                if (files == null || files.isEmpty())
                     return;
-                fileFolderActualPathLbl.setText(fileFile.getAbsolutePath());
+                this.BlockListViewController.addAll(files);
             }
             else{
                 DirectoryChooser dc = new DirectoryChooser();
                 dc.setTitle(resourceBundle.getString("tabSplMrg_Btn_SelectFolder"));
-                if (! fileFolderActualPathLbl.getText().isEmpty()){
-                    File temporaryFile = new File(fileFolderActualPathLbl.getText());
-                    if (temporaryFile.exists())
-                        dc.setInitialDirectory(temporaryFile);
-                    else
-                        dc.setInitialDirectory(new File(System.getProperty("user.home")));
+                if (! alreadyAddedFiles.isEmpty()){
+                    String recentLocation = FilesHelper.getRealFolder(alreadyAddedFiles.get(0).getParentFile().getAbsolutePath());
+                    dc.setInitialDirectory(new File(recentLocation));
                 }
                 else
                     dc.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -143,9 +138,8 @@ public class SplitMergeController implements Initializable {
                 File folderFile = dc.showDialog(changeSaveToBtn.getScene().getWindow());
                 if (folderFile == null)
                     return;
-                fileFolderActualPathLbl.setText(folderFile.getAbsolutePath());
+                this.BlockListViewController.add(folderFile);
             }
-            convertBtn.setDisable(false);
         });
 
         convertBtn.setOnAction(actionEvent -> setConvertBtnAction());
@@ -192,7 +186,7 @@ public class SplitMergeController implements Initializable {
      * */
     private void stopBtnAction(){
         if (smThread != null && smThread.isAlive()) {
-            smTask.cancel();
+            smThread.interrupt();
         }
     }
     /**
@@ -209,9 +203,9 @@ public class SplitMergeController implements Initializable {
         }
 
         if (splitRad.isSelected())
-            smTask = new SplitTask(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
+            smTask = new SplitMergeTaskExecutor(true, BlockListViewController.getItems(), saveToPathLbl.getText());
         else
-            smTask = new MergeTask(fileFolderActualPathLbl.getText(), saveToPathLbl.getText());
+            smTask = new SplitMergeTaskExecutor(false, BlockListViewController.getItems(), saveToPathLbl.getText());
         smThread = new Thread(smTask);
         smThread.setDaemon(true);
         smThread.start();
@@ -230,14 +224,16 @@ public class SplitMergeController implements Initializable {
      * */
     @FXML
     private void handleDrop(DragEvent event) {
-        File fileDrpd = event.getDragboard().getFiles().get(0);
+        List<File> files = event.getDragboard().getFiles();
+        File firstFile = files.get(0);
 
-        if (fileDrpd.isDirectory())
+        if (firstFile.isDirectory())
             mergeRad.fire();
         else
             splitRad.fire();
-        fileFolderActualPathLbl.setText(fileDrpd.getAbsolutePath());
-        convertBtn.setDisable(false);
+
+        this.BlockListViewController.addAll(files);
+
         event.setDropCompleted(true);
         event.consume();
     }

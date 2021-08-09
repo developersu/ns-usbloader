@@ -55,15 +55,21 @@ public class NetworkSetupValidator {
             resolvePort(hostPortNum);
         }
         catch (Exception e){
-            logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            try {
+                logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            }
+            catch (InterruptedException ignore){}
             valid = false;
             return;
         }
         valid = true;
     }
 
-    private void validateFiles(List<File> filesList) {
-        filesList.removeIf(f -> {
+    private void validateFiles(List<File> filesList){
+        filesList.removeIf(this::validator);
+    }
+    private boolean validator(File f){
+        try {
             if (f.isFile())
                 return false;
 
@@ -76,24 +82,27 @@ public class NetworkSetupValidator {
 
             Arrays.sort(subFiles, Comparator.comparingInt(file -> Integer.parseInt(file.getName())));
 
-            for (int i = subFiles.length - 2; i > 0 ; i--){
-                if (subFiles[i].length() != subFiles[i-1].length()) {
-                    logPrinter.print("NET: Exclude split file: "+f.getName()+
+            for (int i = subFiles.length - 2; i > 0; i--) {
+                if (subFiles[i].length() != subFiles[i - 1].length()) {
+                    logPrinter.print("NET: Exclude split file: " + f.getName() +
                             "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
                     return true;
                 }
             }
 
             long firstFileLength = subFiles[0].length();
-            long lastFileLength = subFiles[subFiles.length-1].length();
+            long lastFileLength = subFiles[subFiles.length - 1].length();
 
-            if (lastFileLength > firstFileLength){
-                logPrinter.print("NET: Exclude split file: "+f.getName()+
+            if (lastFileLength > firstFileLength) {
+                logPrinter.print("NET: Exclude split file: " + f.getName() +
                         "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
                 return true;
             }
             return false;
-        });
+        }
+        catch (InterruptedException ie){
+            return false;
+        }
     }
 
     private void encodeAndAddFilesToMap(List<File> filesList) throws UnsupportedEncodingException, FileNotFoundException {
@@ -108,7 +117,7 @@ public class NetworkSetupValidator {
         }
     }
 
-    private void resolveIp(String hostIPaddr) throws IOException{
+    private void resolveIp(String hostIPaddr) throws IOException, InterruptedException{
         if (! hostIPaddr.isEmpty()){
             this.hostIP = hostIPaddr;
             logPrinter.print("NET: Host IP defined as: " + hostIP, EMsgType.PASS);
@@ -124,7 +133,7 @@ public class NetworkSetupValidator {
         throw new IOException("Try using 'Expert mode' and set IP manually. " + getAvaliableIpExamples());
     }
 
-    private boolean findIpUsingHost(String host) {
+    private boolean findIpUsingHost(String host) throws InterruptedException{
         try {
             Socket scoketK;
             scoketK = new Socket();

@@ -65,7 +65,10 @@ public class UsbConnect {
             usbConnect.connected = true;
         }
         catch (Exception e){
-            logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            try {
+                logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            }
+            catch (InterruptedException ignore){}
             usbConnect.close();
         }
 
@@ -89,7 +92,10 @@ public class UsbConnect {
         }
         catch (Exception e){
             e.printStackTrace();
-            logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            try {
+                logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            }
+            catch (InterruptedException ignore){}
             usbConnect.close();
         }
         return usbConnect;
@@ -100,7 +106,7 @@ public class UsbConnect {
     private UsbConnect(ILogPrinter logPrinter){
         this.logPrinter = logPrinter;
         this.connected = false;
-    };
+    }
 
     private void createContextAndInitLibUSB() throws Exception{
         // Creating Context required by libusb. Optional? Consider removing.
@@ -178,7 +184,7 @@ public class UsbConnect {
         // Actually, there are no drivers in Linux kernel which uses this device.
         returningValue = LibUsb.setAutoDetachKernelDriver(handlerNS, true);
         if (returningValue != LibUsb.SUCCESS)
-            logPrinter.print("Skip kernel driver attach & detach ("+UsbErrorCodes.getErrCode(returningValue)+")", EMsgType.INFO);
+            print("Skip kernel driver attach & detach ("+UsbErrorCodes.getErrCode(returningValue)+")", EMsgType.INFO);
     }
 
     /*
@@ -230,7 +236,7 @@ public class UsbConnect {
             returningValue = LibUsb.releaseInterface(handlerNS, DEFAULT_INTERFACE);
 
             if (returningValue != LibUsb.SUCCESS) {
-                logPrinter.print("Release interface failure: " +
+                print("Release interface failure: " +
                         UsbErrorCodes.getErrCode(returningValue) +
                         " (sometimes it's not an issue)", EMsgType.WARNING);
             }
@@ -240,5 +246,14 @@ public class UsbConnect {
         // Close context in the end
         if (contextNS != null)
             LibUsb.exit(contextNS);
+    }
+    
+    private void print(String message, EMsgType type){
+        try {
+            logPrinter.print(message, type);
+        }
+        catch (InterruptedException ie){
+            ie.printStackTrace();
+        }
     }
 }

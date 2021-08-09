@@ -42,47 +42,42 @@
          </GridPane>
       </children>
    </VBox>
-   <VBox fillWidth="false" spacing="5.0">
+   <HBox spacing="15.0" VBox.vgrow="ALWAYS">
       <children>
-         <RadioButton fx:id="splitRad" contentDisplay="TOP" mnemonicParsing="false" text="%tabSplMrg_RadioBtn_Split">
-            <toggleGroup>
-               <ToggleGroup fx:id="splitMergeTogGrp" />
-            </toggleGroup>
-         </RadioButton>
-         <RadioButton fx:id="mergeRad" contentDisplay="TOP" mnemonicParsing="false" text="%tabSplMrg_RadioBtn_Merge" toggleGroup="$splitMergeTogGrp" />
-      </children>
-      <VBox.margin>
-         <Insets left="15.0" right="15.0" />
-      </VBox.margin>
-   </VBox>
-   <VBox spacing="5.0">
-      <children>
-         <HBox>
+         <fx:include fx:id="BlockListView" source="BlockListView.fxml" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" />
+         <VBox spacing="5.0">
             <children>
-               <Label fx:id="fileFolderLabelLbl" />
-                  <Label fx:id="fileFolderActualPathLbl" />
-            </children>
-         </HBox>
-            <Button fx:id="selectFileFolderBtn" contentDisplay="TOP" mnemonicParsing="false" />
-      </children>
-      <VBox.margin>
-         <Insets left="15.0" right="15.0" />
-      </VBox.margin>
-   </VBox>
-   <VBox spacing="5.0">
-      <children>
-         <HBox>
-            <children>
+               <RadioButton fx:id="splitRad" contentDisplay="TOP" mnemonicParsing="false" text="%tabSplMrg_RadioBtn_Split">
+                  <toggleGroup>
+                     <ToggleGroup fx:id="splitMergeTogGrp" />
+                  </toggleGroup>
+               </RadioButton>
+               <RadioButton fx:id="mergeRad" contentDisplay="TOP" mnemonicParsing="false" text="%tabSplMrg_RadioBtn_Merge" toggleGroup="$splitMergeTogGrp" />
+                  <Button fx:id="selectFileFolderBtn" contentDisplay="TOP" mnemonicParsing="false">
+                  <VBox.margin>
+                     <Insets bottom="10.0" />
+                  </VBox.margin>
+               </Button>
                   <Label text="%tabSplMrg_Lbl_SaveToLocation" />
-               <Label fx:id="saveToPathLbl" />
+               <Label fx:id="saveToPathLbl" maxWidth="200.0" textOverrun="CENTER_WORD_ELLIPSIS" />
+                  <Button fx:id="changeSaveToBtn" contentDisplay="TOP" mnemonicParsing="false" text="%tabSplMrg_Btn_ChangeSaveToLocation" />
+               <Pane VBox.vgrow="ALWAYS" />
+               <VBox>
+                  <children>
+                     <HBox alignment="CENTER">
+                        <children>
+                              <Button fx:id="convertBtn" contentDisplay="TOP" mnemonicParsing="false" styleClass="buttonUp" text="%tabSplMrg_Btn_Convert" />
+                        </children>
+                     </HBox>
+                  </children>
+               </VBox>
             </children>
-         </HBox>
-            <Button fx:id="changeSaveToBtn" contentDisplay="TOP" mnemonicParsing="false" text="%tabSplMrg_Btn_ChangeSaveToLocation" />
+         </VBox>
       </children>
       <VBox.margin>
          <Insets left="15.0" right="15.0" />
       </VBox.margin>
-   </VBox>
+   </HBox>
    <HBox alignment="CENTER">
       <children>
          <Label fx:id="statusLbl" />
@@ -91,16 +86,6 @@
          <Insets left="15.0" right="15.0" />
       </VBox.margin>
    </HBox>
-   <Pane VBox.vgrow="ALWAYS" />
-   <VBox>
-      <children>
-         <HBox alignment="CENTER">
-            <children>
-                  <Button fx:id="convertBtn" contentDisplay="TOP" mnemonicParsing="false" styleClass="buttonUp" text="%tabSplMrg_Btn_Convert" />
-            </children>
-         </HBox>
-      </children>
-   </VBox>
    <padding>
       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
    </padding>

@@ -46,7 +46,7 @@ public class NSLMainController implements Initializable {
     private Tab GamesTabHolder, RCMTabHolder, SMTabHolder;
 
     @FXML
-    private GamesController GamesTabController;             // Accessible from Mediator | todo: incapsulate
+    private GamesController GamesTabController;
     @FXML
     private SettingsController SettingsTabController;
     @FXML
@@ -69,30 +69,32 @@ public class NSLMainController implements Initializable {
         MediatorControl.getInstance().setController(this);
 
         if (AppPreferences.getInstance().getAutoCheckUpdates()){
-            Task<List<String>> updTask = new UpdatesChecker();
-            updTask.setOnSucceeded(event->{
-                List<String> result = updTask.getValue();
-                if (result != null){
-                    if (!result.get(0).isEmpty()) {
-                        SettingsTabController.getGenericSettings().setNewVersionLink(result.get(0));
-                        ServiceWindow.getInfoNotification(
-                                resourceBundle.getString("windowTitleNewVersionAval"),
-                                resourceBundle.getString("windowTitleNewVersionAval") + ": " + result.get(0) + "\n\n" + result.get(1));
-                    }
-                }
-                else
-                    ServiceWindow.getInfoNotification(
-                            resourceBundle.getString("windowTitleNewVersionUnknown"),
-                            resourceBundle.getString("windowBodyNewVersionUnknown"));
-            });
-            Thread updates = new Thread(updTask);
-            updates.setDaemon(true);
-            updates.start();
+            checkForUpdates();
         }
 
         openLastOpenedTab();
     }
-
+    private void checkForUpdates(){
+        Task<List<String>> updTask = new UpdatesChecker();
+        updTask.setOnSucceeded(event->{
+            List<String> result = updTask.getValue();
+            if (result != null){
+                if (!result.get(0).isEmpty()) {
+                    SettingsTabController.getGenericSettings().setNewVersionLink(result.get(0));
+                    ServiceWindow.getInfoNotification(
+                            resourceBundle.getString("windowTitleNewVersionAval"),
+                            resourceBundle.getString("windowTitleNewVersionAval") + ": " + result.get(0) + "\n\n" + result.get(1));
+                }
+            }
+            else
+                ServiceWindow.getInfoNotification(
+                        resourceBundle.getString("windowTitleNewVersionUnknown"),
+                        resourceBundle.getString("windowBodyNewVersionUnknown"));
+        });
+        Thread updates = new Thread(updTask);
+        updates.setDaemon(true);
+        updates.start();
+    }
     /**
      * Get resources
      * TODO: Find better solution; used in UsbCommunications() -> GL -> SelectFile command

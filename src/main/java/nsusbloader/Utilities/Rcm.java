@@ -72,8 +72,8 @@ public class Rcm implements Runnable{
 
     @Override
     public void run() {
-        logPrinter.print("Selected: "+filePath, EMsgType.INFO);
-        logPrinter.print("=============== RCM ===============", EMsgType.INFO);
+        print("Selected: "+filePath, EMsgType.INFO);
+        print("=============== RCM ===============", EMsgType.INFO);
 
         ECurrentOS ecurrentOS;
         String realOsName = System.getProperty("os.name").toLowerCase().replace(" ", "");
@@ -85,11 +85,11 @@ public class Rcm implements Runnable{
             ecurrentOS = ECurrentOS.lin;
         else
             ecurrentOS = ECurrentOS.unsupported;
-        logPrinter.print("Found your OS: "+System.getProperty("os.name"), EMsgType.PASS);
+        print("Found your OS: "+System.getProperty("os.name"), EMsgType.PASS);
 
         if (! ecurrentOS.equals(ECurrentOS.mac)){
             if (! RcmSmash.isSupported()){
-                logPrinter.print("Unfortunately your platform '"+System.getProperty("os.name")+
+                print("Unfortunately your platform '"+System.getProperty("os.name")+
                         "' of '"+System.getProperty("os.arch")+"' is not supported :("+
                         "\n         But you could file a bug with request."+
                         "\n\n         Nothing has been sent to NS. Execution stopped.", EMsgType.FAIL);
@@ -124,14 +124,14 @@ public class Rcm implements Runnable{
         // Send payload
         for (int i=0; i < fullPayload.length / 4096 ; i++){
             if (writeUsb(Arrays.copyOfRange(fullPayload, i*4096, (i+1)*4096))){
-                logPrinter.print("Failed to sent payload ["+i+"]"+
+                print("Failed to sent payload ["+i+"]"+
                         "\n\n         Execution stopped.", EMsgType.FAIL);
                 usbConnect.close();
                 logPrinter.close();
                 return;
             }
         }
-        logPrinter.print("Information sent to NS.", EMsgType.PASS);
+        print("Information sent to NS.", EMsgType.PASS);
 
         if (ecurrentOS.equals(ECurrentOS.mac)){
             if (smashMacOS()){
@@ -149,7 +149,7 @@ public class Rcm implements Runnable{
                 retval = RcmSmash.smashWindows();
             else {
                 // ( ?_?)
-                logPrinter.print("Failed to smash the stack since your OS is not supported. Please report this issue."+
+                print("Failed to smash the stack since your OS is not supported. Please report this issue."+
                         "\n\n         Execution stopped and failed. And it's strange.", EMsgType.FAIL);
                 usbConnect.close();
                 logPrinter.close();
@@ -157,17 +157,26 @@ public class Rcm implements Runnable{
             }
 
             if (retval != 0){
-                logPrinter.print("Failed to smash the stack ("+retval+")"+
+                print("Failed to smash the stack ("+retval+")"+
                         "\n\n         Execution stopped and failed.", EMsgType.FAIL);
                 usbConnect.close();
                 logPrinter.close();
                 return;
             }
         }
-        logPrinter.print(".:: Payload complete ::.", EMsgType.PASS);
+        print(".:: Payload complete ::.", EMsgType.PASS);
         usbConnect.close();
         logPrinter.updateOneLinerStatus(true);
         logPrinter.close();
+    }
+    
+    private void print(String message, EMsgType type){
+        try {
+            logPrinter.print(message, type);
+        }
+        catch (InterruptedException intr){
+            intr.printStackTrace();
+        }
     }
     /**
      * Prepare the 'big' or full-size byte-buffer that is actually is a payload that we're about to use.
@@ -179,7 +188,7 @@ public class Rcm implements Runnable{
 
         // 126296 b <- biggest size per CTCaer; 16384 selected randomly as minimum threshold. It's probably wrong.
         if (pldrFile.length() > 126296 || pldrFile.length() < 16384) {
-            logPrinter.print("File size of this payload looks wired. It's "+pldrFile.length()+" bytes."+
+            print("File size of this payload looks wired. It's "+pldrFile.length()+" bytes."+
                     "\n         1. Double-check that you're using the right payload." +
                     "\n         2. Please report this issue in case you're sure that you're doing everything right." +
                     "\n\n         Nothing has been sent to NS. Execution stopped.", EMsgType.FAIL);
@@ -194,7 +203,7 @@ public class Rcm implements Runnable{
             totalSize += 4096;
         // Double-check
         if (totalSize > 0x30298){
-            logPrinter.print("File size of the payload is too big. Comparing to maximum size, it's greater to "+(totalSize - 0x30298)+" bytes!"+
+            print("File size of the payload is too big. Comparing to maximum size, it's greater to "+(totalSize - 0x30298)+" bytes!"+
                     "\n         1. Double-check that you're using the right payload." +
                     "\n         2. Please report this issue in case you're sure that you're doing everything right." +
                     "\n\n         Nothing has been sent to NS. Execution stopped.", EMsgType.FAIL); // Occurs: never. I'm too lazy to check.
@@ -209,7 +218,7 @@ public class Rcm implements Runnable{
             BufferedInputStream bis = new BufferedInputStream(new FileInputStream(pldrFile));
             int readSize;
             if ((readSize = bis.read(dataPldFile)) != pldFileSize){
-                logPrinter.print("Failed to retrieve data from payload file." +
+                print("Failed to retrieve data from payload file." +
                         "\n         Got only "+readSize+" bytes while "+pldFileSize+" expected." +
                         "\n\n         Nothing has been sent to NS. Execution stopped.", EMsgType.FAIL);
                 bis.close();
@@ -218,7 +227,7 @@ public class Rcm implements Runnable{
             bis.close();
         }
         catch (Exception e){
-            logPrinter.print("Failed to retrieve data from payload file: " +e.getMessage()+
+            print("Failed to retrieve data from payload file: " +e.getMessage()+
                     "\n\n         Nothing has been sent to NS. Execution stopped.", EMsgType.FAIL);
             return true;
         }
@@ -241,7 +250,7 @@ public class Rcm implements Runnable{
         IntBuffer readBufTransferred = IntBuffer.allocate(1);
         int result = LibUsb.bulkTransfer(handler, (byte) 0x81, readBuffer, readBufTransferred, 1000);
         if (result != LibUsb.SUCCESS) {
-            logPrinter.print("Unable to get device ID" +
+            print("Unable to get device ID" +
                     "\n\n         Nothing has been sent to NS. Execution stopped.", EMsgType.FAIL);
             return true;
         }
@@ -251,7 +260,7 @@ public class Rcm implements Runnable{
         StringBuilder idStrBld = new StringBuilder("Found device with ID: ");
         for (byte b: receivedBytes)
             idStrBld.append(String.format("%02x ", b));
-        logPrinter.print(idStrBld.toString(), EMsgType.PASS);
+        print(idStrBld.toString(), EMsgType.PASS);
         return false;
     }
     /**
@@ -269,13 +278,13 @@ public class Rcm implements Runnable{
             if (writeBufTransferred.get() == 4096)
                 return false;
 
-            logPrinter.print("RCM Data transfer issue [write]" +
+            print("RCM Data transfer issue [write]" +
                     "\n         Requested: " + message.length +
                     "\n         Transferred: " + writeBufTransferred.get()+
                     "\n\n         Execution stopped.", EMsgType.FAIL);
             return true;
         }
-        logPrinter.print("RCM Data transfer issue [write]" +
+        print("RCM Data transfer issue [write]" +
                 "\n         Returned: " + UsbErrorCodes.getErrCode(result) +
                 "\n\n         Execution stopped.", EMsgType.FAIL);
         return true;

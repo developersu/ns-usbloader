@@ -51,7 +51,7 @@ public abstract class TransferModule {
             File[] subFiles = f.listFiles((file, name) -> name.matches("[0-9]{2}"));
 
             if (subFiles == null || subFiles.length == 0) {
-                logPrinter.print("TransferModule: Exclude folder: " + f.getName(), EMsgType.WARNING);
+                print("TransferModule: Exclude folder: " + f.getName(), EMsgType.WARNING);
                 return true;
             }
 
@@ -59,7 +59,7 @@ public abstract class TransferModule {
 
             for (int i = subFiles.length - 2; i > 0 ; i--){
                 if (subFiles[i].length() != subFiles[i-1].length()) {
-                    logPrinter.print("TransferModule: Exclude split file: "+f.getName()+
+                    print("TransferModule: Exclude split file: "+f.getName()+
                             "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
                     return true;
                 }
@@ -69,7 +69,7 @@ public abstract class TransferModule {
             long lastFileLength = subFiles[subFiles.length-1].length();
 
             if (lastFileLength > firstFileLength){
-                logPrinter.print("TransferModule: Exclude split file: "+f.getName()+
+                print("TransferModule: Exclude split file: "+f.getName()+
                         "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
                 return true;
             }
@@ -77,4 +77,13 @@ public abstract class TransferModule {
         });
     }
     public EFileStatus getStatus(){ return status; }
+
+    void print(String message, EMsgType type){
+        try {
+            logPrinter.print(message, type);
+        }
+        catch (InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
 }

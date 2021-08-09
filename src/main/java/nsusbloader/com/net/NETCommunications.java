@@ -90,7 +90,7 @@ public class NETCommunications extends CancellableRunnable {
         if (! isValid || isCancelled() )
             return;
 
-        logPrinter.print("\tStart chain", EMsgType.INFO);
+        print("\tStart chain", EMsgType.INFO);
 
         final String handshakeContent = buildHandshakeContent();
 
@@ -102,11 +102,11 @@ public class NETCommunications extends CancellableRunnable {
 
         // Check if we should serve requests
         if (this.doNotServe){
-            logPrinter.print("List of files transferred. Replies won't be served.", EMsgType.PASS);
+            print("List of files transferred. Replies won't be served.", EMsgType.PASS);
             close(EFileStatus.UNKNOWN);
             return;
         }
-        logPrinter.print("Initiation files list has been sent to NS.", EMsgType.PASS);
+        print("Initiation files list has been sent to NS.", EMsgType.PASS);
 
         // Go transfer
         serveRequestsLoop();
@@ -142,7 +142,7 @@ public class NETCommunications extends CancellableRunnable {
             handshakeSocket.close();
         }
         catch (IOException uhe){
-            logPrinter.print("Unable to connect to NS and send files list:\n         "
+            print("Unable to connect to NS and send files list:\n         "
                     + uhe.getMessage(), EMsgType.FAIL);
             close(EFileStatus.UNKNOWN);
             return true;
@@ -175,13 +175,13 @@ public class NETCommunications extends CancellableRunnable {
         }
         catch (Exception e){
             if (isCancelled())
-                logPrinter.print("Interrupted by user.", EMsgType.INFO);
+                print("Interrupted by user.", EMsgType.INFO);
             else
-                logPrinter.print(e.getMessage(), EMsgType.INFO);
+                print(e.getMessage(), EMsgType.INFO);
             close(EFileStatus.UNKNOWN);
             return;
         }
-        logPrinter.print("All transfers complete", EMsgType.PASS);
+        print("All transfers complete", EMsgType.PASS);
         close(EFileStatus.UPLOADED);
     }
     /**
@@ -199,7 +199,7 @@ public class NETCommunications extends CancellableRunnable {
 
         if (! files.containsKey(reqFileName)){
             writeToSocket(NETPacket.getCode404());
-            logPrinter.print("File "+reqFileName+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
+            print("File "+reqFileName+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
             return;
         }
 
@@ -208,13 +208,13 @@ public class NETCommunications extends CancellableRunnable {
 
         if (! requestedFile.exists() || reqFileSize == 0){   // well.. tell 404 if file exists with 0 length is against standard, but saves time
             writeToSocket(NETPacket.getCode404());
-            logPrinter.print("File "+requestedFile.getName()+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
+            print("File "+requestedFile.getName()+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
             logPrinter.update(requestedFile, EFileStatus.FAILED);
             return;
         }
         if (packet.get(0).startsWith("HEAD")){
             writeToSocket(NETPacket.getCode200(reqFileSize));
-            logPrinter.print("Replying for requested file: "+requestedFile.getName(), EMsgType.INFO);
+            print("Replying for requested file: "+requestedFile.getName(), EMsgType.INFO);
             return;
         }
         if (packet.get(0).startsWith("GET")) {
@@ -237,7 +237,7 @@ public class NETCommunications extends CancellableRunnable {
 
                 if (fromRange > toRange){ // If start bytes greater then end bytes
                     writeToSocket(NETPacket.getCode400());
-                    logPrinter.print("Requested range for "
+                    print("Requested range for "
                             + file.getName()
                             + " is incorrect. Returning 400", EMsgType.FAIL);
                     logPrinter.update(file, EFileStatus.FAILED);
@@ -254,7 +254,7 @@ public class NETCommunications extends CancellableRunnable {
 
             if (rangeStr[1].isEmpty()) { // If Range not defined: like "Range: bytes=-"
                 writeToSocket(NETPacket.getCode400());
-                logPrinter.print("Requested range for "
+                print("Requested range for "
                         + file.getName()
                         + " is incorrect (empty start & end). Returning 400", EMsgType.FAIL);
                 logPrinter.update(file, EFileStatus.FAILED);
@@ -267,7 +267,7 @@ public class NETCommunications extends CancellableRunnable {
             }
             // If file smaller than 500 bytes
             writeToSocket(NETPacket.getCode416());
-            logPrinter.print("File size requested for "
+            print("File size requested for "
                     + file.getName()
                     + " while actual size of it: "
                     + fileSize+". Returning 416", EMsgType.FAIL);
@@ -275,7 +275,7 @@ public class NETCommunications extends CancellableRunnable {
         }
         catch (NumberFormatException nfe){
             writeToSocket(NETPacket.getCode400());
-            logPrinter.print("Requested range for "
+            print("Requested range for "
                     + file.getName()
                     + " has incorrect format. Returning 400\n\t"
                     + nfe.getMessage(), EMsgType.FAIL);
@@ -293,7 +293,7 @@ public class NETCommunications extends CancellableRunnable {
     private void writeToSocket(String fileName, long start, long end) throws Exception{
         File file = files.get(fileName).getFile();
 
-        logPrinter.print("Reply to range: "+start+"-"+end, EMsgType.INFO);
+        print("Reply to range: "+start+"-"+end, EMsgType.INFO);
 
         writeToSocket(NETPacket.getCode206(files.get(fileName).getSize(), start, end));
         try{
@@ -379,11 +379,11 @@ public class NETCommunications extends CancellableRunnable {
         try {
             if (serverSocket != null && ! serverSocket.isClosed()) {
                 serverSocket.close();
-                logPrinter.print("Closing server socket.", EMsgType.PASS);
+                print("Closing server socket.", EMsgType.PASS);
             }
         }
         catch (IOException ioe){
-            logPrinter.print("Closing server socket failed. Sometimes it's not an issue.", EMsgType.WARNING);
+            print("Closing server socket failed. Sometimes it's not an issue.", EMsgType.WARNING);
         }
 
         HashMap<String, File> tempMap = new HashMap<>();
@@ -392,7 +392,15 @@ public class NETCommunications extends CancellableRunnable {
 
         logPrinter.update(tempMap, status);
 
-        logPrinter.print("\tEnd chain", EMsgType.INFO);
+        print("\tEnd chain", EMsgType.INFO);
         logPrinter.close();
+    }
+    private void print(String message, EMsgType type){
+        try {
+            logPrinter.print(message, type);
+        }
+        catch (InterruptedException ie){
+            ie.printStackTrace();
+        }
     }
 }

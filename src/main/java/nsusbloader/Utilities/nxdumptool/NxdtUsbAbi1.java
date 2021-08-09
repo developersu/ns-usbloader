@@ -119,7 +119,7 @@ class NxdtUsbAbi1 {
         USBSTATUS_SUCCESS[9] = (byte)((endpointMaxPacketSize >> 8) & 0xFF);
     }
 
-    private void readLoop(){
+    private void readLoop() throws InterruptedException{
         logPrinter.print("Awaiting for handshake", EMsgType.INFO);
         try {
             byte[] directive;
@@ -292,7 +292,7 @@ class NxdtUsbAbi1 {
         return nspFile != null;
     }
 
-    private String getAbsoluteFilePath(String filename) throws Exception{
+    private String getAbsoluteFilePath(String filename) {
         if (isRomFs(filename) && isWindows)     // Since RomFS entry starts from '/' it should be replaced to '\'.
             return saveToPath + filename.replaceAll("/", "\\\\");
         return saveToPath + filename;

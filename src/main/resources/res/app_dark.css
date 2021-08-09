@@ -205,6 +205,7 @@
 .table-view .table-cell{
     -fx-text-fill: #f7fafa;
 }
+
 .table-row-cell, .table-row-cell:selected, .table-row-cell:filled:selected{
     -fx-background-color: -fx-table-cell-border-color, #424242;
     -fx-background-insets: 0, 0 0 1 0;
@@ -223,7 +224,35 @@
     -fx-padding: 0.0em; /* 0 */
     -fx-table-cell-border-color: #6d8484;
 }
-// -========================== Context menu =====================-
+/* -========================== ListView =====================- */
+.list-view {
+    -fx-background-color: #4f4f4f;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-background-radius: 3;
+    -fx-border-color: #00ffc9;
+    -fx-border-radius: 3;
+    -fx-border-width: 2;
+}
+
+.list-cell, .list-cell:selected, .list-cell:filled:selected{
+    -fx-background-color: -fx-table-cell-border-color, #424242;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-table-cell-border-color: #6d8484;
+}
+.list-cell:odd, .list-cell:odd:selected, .list-cell:odd:filled:selected{
+    -fx-background-color: -fx-table-cell-border-color, #4f4f4f;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-table-cell-border-color: #6d8484;
+}
+
+.list-cell .text, .list-cell:odd .text{
+    -fx-fill: #f7fafa;
+}
+.list-cell:filled:selected .text, .list-cell:odd:filled:selected .text{
+    -fx-fill: #08f3ff;
+}
+/* -========================== Context menu =====================- */
 .context-menu {
   -fx-background-color: #2d2d2d;
   -fx-cursor: hand;
@@ -234,7 +263,7 @@
 .context-menu .menu-item:focused .label {
   -fx-text-fill: white;
 }
-// -========================== Text Field =====================-
+/* -========================== Text Field =====================- */
 .text-field {
     -fx-prompt-text-fill: #40596c;
     -fx-border-color: #289de8;

@@ -49,7 +49,7 @@ public class UsbCommunications extends CancellableRunnable {
 
     @Override
     public void run() {
-        logPrinter.print("\tStart", EMsgType.INFO);
+        print("\tStart", EMsgType.INFO);
 
         UsbConnect usbConnect = UsbConnect.connectHomebrewMode(logPrinter);
 
@@ -87,7 +87,15 @@ public class UsbCommunications extends CancellableRunnable {
      */
     private void close(EFileStatus status){
         logPrinter.update(nspMap, status);
-        logPrinter.print("\tEnd", EMsgType.INFO);
+        print("\tEnd", EMsgType.INFO);
         logPrinter.close();
+    }
+    private void print(String message, EMsgType type){
+        try {
+            logPrinter.print(message, type);
+        }
+        catch (InterruptedException ie){
+            ie.printStackTrace();
+        }
     }
 }

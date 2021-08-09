@@ -18,16 +18,14 @@
 */
 package nsusbloader.cli;
 
-import nsusbloader.Utilities.splitmerge.SplitTask;
+import nsusbloader.Utilities.splitmerge.SplitMergeTaskExecutor;
 
 import java.io.File;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class SplitCli {
 
-    private String[] arguments;
+    private final String[] arguments;
     private String saveTo;
     private String[] files;
 
@@ -95,12 +93,20 @@ public class SplitCli {
     }
 
     private void runBackend() throws InterruptedException{
-        for (String filePath : files){
-            Runnable splitTaks = new SplitTask(filePath, saveTo);
-            Thread thread = new Thread(splitTaks);
-            thread.setDaemon(true);
-            thread.start();
-            thread.join();
+        Runnable splitTasks = new SplitMergeTaskExecutor(
+                true,
+                getFilesFromStrings(),
+                saveTo);
+        Thread thread = new Thread(splitTasks);
+        thread.setDaemon(true);
+        thread.start();
+        thread.join();
+    }
+    private List<File> getFilesFromStrings(){
+        ArrayList<File> realFiles = new ArrayList<>();
+        for (String fileString : files){
+            realFiles.add(new File(fileString));
         }
+        return realFiles;
     }
 }

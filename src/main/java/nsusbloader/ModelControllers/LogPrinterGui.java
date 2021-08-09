@@ -32,8 +32,10 @@ public class LogPrinterGui implements ILogPrinter {
     private final MessagesConsumer msgConsumer;
     private final BlockingQueue<String> msgQueue;
     private final BlockingQueue<Double> progressQueue;
-    private final HashMap<String, EFileStatus> statusMap;      // BlockingQueue for literally one object. TODO: read more books ; replace to hashMap
+    private final HashMap<String, EFileStatus> statusMap;
     private final AtomicBoolean oneLinerStatus;
+
+    /* TODO: Rewrite 'print()' implementation everywhere */
 
     LogPrinterGui(EModule whoIsAsking){
         this.msgQueue = new LinkedBlockingQueue<>();
@@ -47,38 +49,30 @@ public class LogPrinterGui implements ILogPrinter {
      * This is what will print to textArea of the application.
      * */
     @Override
-    public void print(String message, EMsgType type){
-        try {
-            switch (type){
-                case PASS:
-                    msgQueue.put("[ PASS ] "+message+"\n");
-                    break;
-                case FAIL:
-                    msgQueue.put("[ FAIL ] "+message+"\n");
-                    break;
-                case INFO:
-                    msgQueue.put("[ INFO ] "+message+"\n");
-                    break;
-                case WARNING:
-                    msgQueue.put("[ WARN ] "+message+"\n");
-                    break;
-                default:
-                    msgQueue.put(message);
-            }
-        }
-        catch (InterruptedException ie){
-            ie.printStackTrace();
+    public void print(String message, EMsgType type) throws InterruptedException{
+        switch (type){
+            case PASS:
+                msgQueue.put("[ PASS ] "+message+"\n");
+                break;
+            case FAIL:
+                msgQueue.put("[ FAIL ] "+message+"\n");
+                break;
+            case INFO:
+                msgQueue.put("[ INFO ] "+message+"\n");
+                break;
+            case WARNING:
+                msgQueue.put("[ WARN ] "+message+"\n");
+                break;
+            default:
+                msgQueue.put(message);
         }
     }
     /**
      * Update progress for progress bar
      * */
     @Override
-    public void updateProgress(Double value) {
-        try {
-            progressQueue.put(value);
-        }
-        catch (InterruptedException ignored){}               // TODO: Do something with this
+    public void updateProgress(Double value) throws InterruptedException {
+        progressQueue.put(value);
     }
     /**
      * When we're done - update status

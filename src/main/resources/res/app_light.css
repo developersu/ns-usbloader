@@ -242,6 +242,35 @@
     -fx-padding: 0.0em; /* 0 */
     -fx-table-cell-border-color: #b0b0b0;
 }
+/* -========================== ListView =====================- */
+.list-view {
+    -fx-background-color: #fefefe;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-background-radius: 3;
+    -fx-border-color: #06b9bb;
+    -fx-border-radius: 3;
+    -fx-border-width: 2;
+}
+
+.list-cell, .list-cell:selected, .list-cell:filled:selected{
+    -fx-background-color: -fx-table-cell-border-color, #ebfffe;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-table-cell-border-color: #b0b0b0;
+}
+.list-cell:odd, .list-cell:odd:selected, .list-cell:odd:filled:selected{
+    -fx-background-color: -fx-table-cell-border-color, #fefefe;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-table-cell-border-color: #b0b0b0;
+}
+
+.list-cell .text, .list-cell:odd .text{
+    -fx-fill: #2c2c2c;
+}
+.list-cell:filled:selected .text, .list-cell:odd:filled:selected .text{
+    -fx-fill: #2c2c2c;
+    -fx-font-weight: bold
+}
 /* -========================= Separator ===================- */
 .separator *.line {
     -fx-border-style: solid;

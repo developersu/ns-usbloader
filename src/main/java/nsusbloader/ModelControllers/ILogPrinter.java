@@ -26,8 +26,8 @@ import java.io.File;
 import java.util.HashMap;
 
 public interface ILogPrinter {
-    void print(String message, EMsgType type);
-    void updateProgress(Double value);
+    void print(String message, EMsgType type) throws InterruptedException;
+    void updateProgress(Double value) throws InterruptedException;
     void update(HashMap<String, File> nspMap, EFileStatus status);
     void update(File file, EFileStatus status);
     void updateOneLinerStatus(boolean status);

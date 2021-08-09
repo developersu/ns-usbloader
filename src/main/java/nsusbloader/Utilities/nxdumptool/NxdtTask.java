@@ -38,8 +38,8 @@ public class NxdtTask extends CancellableRunnable {
 
     @Override
     public void run() {
-        logPrinter.print("Save to location: "+ saveToLocation, EMsgType.INFO);
-        logPrinter.print("=============== nxdumptool ===============", EMsgType.INFO);
+        print("Save to location: "+ saveToLocation, EMsgType.INFO);
+        print("=============== nxdumptool ===============", EMsgType.INFO);
 
         UsbConnect usbConnect = UsbConnect.connectHomebrewMode(logPrinter);
         
@@ -54,13 +54,22 @@ public class NxdtTask extends CancellableRunnable {
             new NxdtUsbAbi1(handler, logPrinter, saveToLocation, this);
         }
         catch (Exception e){
-            logPrinter.print(e.getMessage(), EMsgType.FAIL);
+            print(e.getMessage(), EMsgType.FAIL);
         }
 
-        logPrinter.print(".:: Complete ::.", EMsgType.PASS);
+        print(".:: Complete ::.", EMsgType.PASS);
 
         usbConnect.close();
         logPrinter.updateOneLinerStatus(true);
         logPrinter.close();
+    }
+
+    private void print(String message, EMsgType type){
+        try {
+            logPrinter.print(message, type);
+        }
+        catch (InterruptedException ie){
+            ie.printStackTrace();
+        }
     }
 }

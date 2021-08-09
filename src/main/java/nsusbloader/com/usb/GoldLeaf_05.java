@@ -59,17 +59,17 @@ public class GoldLeaf_05 extends TransferModule {
         this.task = task;
         status = EFileStatus.FAILED;
 
-        logPrinter.print("============= GoldLeaf v0.5 =============\n" +
+        print("============= GoldLeaf v0.5 =============\n" +
             "        Only one file per time could be sent. In case you selected more the first one would be picked.", EMsgType.INFO);
         if (nspMap.isEmpty()){
-            logPrinter.print("For using this GoldLeaf version you have to add file to the table and select it for upload", EMsgType.INFO);
+            print("For using this GoldLeaf version you have to add file to the table and select it for upload", EMsgType.INFO);
             return;
         }
         File nspFile = (File) nspMap.values().toArray()[0];
-        logPrinter.print("File for upload: "+nspFile.getAbsolutePath(), EMsgType.INFO);
+        print("File for upload: "+nspFile.getAbsolutePath(), EMsgType.INFO);
 
         if (!nspFile.getName().toLowerCase().endsWith(".nsp")) {
-            logPrinter.print("GL This file doesn't look like NSP", EMsgType.FAIL);
+            print("GL This file doesn't look like NSP", EMsgType.FAIL);
             return;
         }
         PFSProvider pfsElement;
@@ -77,11 +77,11 @@ public class GoldLeaf_05 extends TransferModule {
             pfsElement = new PFSProvider(nspFile, logPrinter);
         }
         catch (Exception e){
-            logPrinter.print("GL File provided has incorrect structure and won't be uploaded\n\t"+e.getMessage(), EMsgType.FAIL);
+            print("GL File provided has incorrect structure and won't be uploaded\n\t"+e.getMessage(), EMsgType.FAIL);
             status = EFileStatus.INCORRECT_FILE_FAILED;
             return;
         }
-        logPrinter.print("GL File structure validated and it will be uploaded", EMsgType.PASS);
+        print("GL File structure validated and it will be uploaded", EMsgType.PASS);
 
         try{
             if (nspFile.isDirectory())
@@ -90,7 +90,7 @@ public class GoldLeaf_05 extends TransferModule {
                 this.raf = new RandomAccessFile(nspFile, "r");
         }
         catch (IOException ioe){
-            logPrinter.print("GL File not found\n\t"+ioe.getMessage(), EMsgType.FAIL);
+            print("GL File not found\n\t"+ioe.getMessage(), EMsgType.FAIL);
             return;
         }
 
@@ -99,15 +99,15 @@ public class GoldLeaf_05 extends TransferModule {
 
         // Go connect to GoldLeaf
         if (writeUsb(CMD_GLUC)) {
-            logPrinter.print("GL Initiating GoldLeaf connection [1/2]", EMsgType.FAIL);
+            print("GL Initiating GoldLeaf connection [1/2]", EMsgType.FAIL);
             return;
         }
-        logPrinter.print("GL Initiating GoldLeaf connection: [1/2]", EMsgType.PASS);
+        print("GL Initiating GoldLeaf connection: [1/2]", EMsgType.PASS);
         if (writeUsb(CMD_ConnectionRequest)){
-            logPrinter.print("GL Initiating GoldLeaf connection: [2/2]", EMsgType.FAIL);
+            print("GL Initiating GoldLeaf connection: [2/2]", EMsgType.FAIL);
             return;
         }
-        logPrinter.print("GL Initiating GoldLeaf connection: [2/2]", EMsgType.PASS);
+        print("GL Initiating GoldLeaf connection: [2/2]", EMsgType.PASS);
 
         while (true) {
             readByte = readUsb();
@@ -143,7 +143,7 @@ public class GoldLeaf_05 extends TransferModule {
                         continue;
                 }
                 if (Arrays.equals(readByte, CMD_Finish)) {
-                    logPrinter.print("GL Closing GoldLeaf connection: Transfer successful.", EMsgType.PASS);
+                    print("GL Closing GoldLeaf connection: Transfer successful.", EMsgType.PASS);
                     status = EFileStatus.UPLOADED;
                     break;
                 }
@@ -164,29 +164,29 @@ public class GoldLeaf_05 extends TransferModule {
      *         false if no issues
      * */
     private boolean handleConnectionResponse(PFSProvider pfsElement){
-        logPrinter.print("GL 'ConnectionResponse' command:", EMsgType.INFO);
+        print("GL 'ConnectionResponse' command:", EMsgType.INFO);
         if (writeUsb(CMD_GLUC)) {
-            logPrinter.print("  [1/4]", EMsgType.FAIL);
+            print("  [1/4]", EMsgType.FAIL);
             return true;
         }
-        logPrinter.print("  [1/4]", EMsgType.PASS);
+        print("  [1/4]", EMsgType.PASS);
         if (writeUsb(CMD_NSPName)) {
-            logPrinter.print("  [2/4]", EMsgType.FAIL);
+            print("  [2/4]", EMsgType.FAIL);
             return true;
         }
-        logPrinter.print("  [2/4]", EMsgType.PASS);
+        print("  [2/4]", EMsgType.PASS);
 
         if (writeUsb(pfsElement.getBytesNspFileNameLength())) {
-            logPrinter.print("  [3/4]", EMsgType.FAIL);
+            print("  [3/4]", EMsgType.FAIL);
             return true;
         }
-        logPrinter.print("  [3/4]", EMsgType.PASS);
+        print("  [3/4]", EMsgType.PASS);
 
         if (writeUsb(pfsElement.getBytesNspFileName())) {
-            logPrinter.print("  [4/4]", EMsgType.FAIL);
+            print("  [4/4]", EMsgType.FAIL);
             return true;
         }
-        logPrinter.print("  [4/4]", EMsgType.PASS);
+        print("  [4/4]", EMsgType.PASS);
 
         return false;
     }
@@ -196,50 +196,50 @@ public class GoldLeaf_05 extends TransferModule {
      *         false if no issues
      * */
     private boolean handleStart(PFSProvider pfsElement){
-        logPrinter.print("GL Handle 'Start' command:", EMsgType.INFO);
+        print("GL Handle 'Start' command:", EMsgType.INFO);
         if (writeUsb(CMD_GLUC)) {
-            logPrinter.print("  [Prefix]", EMsgType.FAIL);
+            print("  [Prefix]", EMsgType.FAIL);
             return true;
         }
-        logPrinter.print("  [Prefix]", EMsgType.PASS);
+        print("  [Prefix]", EMsgType.PASS);
 
         if (writeUsb(CMD_NSPData)) {
-            logPrinter.print("  [Command]", EMsgType.FAIL);
+            print("  [Command]", EMsgType.FAIL);
             return true;
         }
-        logPrinter.print("  [Command]", EMsgType.PASS);
+        print("  [Command]", EMsgType.PASS);
 
         if (writeUsb(pfsElement.getBytesCountOfNca())) {
-            logPrinter.print("  [Sub-files count]", EMsgType.FAIL);
+            print("  [Sub-files count]", EMsgType.FAIL);
             return true;
         }
-        logPrinter.print("  [Sub-files count]", EMsgType.PASS);
+        print("  [Sub-files count]", EMsgType.PASS);
 
         int ncaCount = pfsElement.getIntCountOfNca();
-        logPrinter.print("  [Information for "+ncaCount+" sub-files]", EMsgType.INFO);
+        print("  [Information for "+ncaCount+" sub-files]", EMsgType.INFO);
         for (int i = 0; i < ncaCount; i++){
-            logPrinter.print("File #"+i, EMsgType.INFO);
+            print("File #"+i, EMsgType.INFO);
             if (writeUsb(pfsElement.getNca(i).getNcaFileNameLength())) {
-                logPrinter.print("  [1/4] Name length", EMsgType.FAIL);
+                print("  [1/4] Name length", EMsgType.FAIL);
                 return true;
             }
-            logPrinter.print("  [1/4] Name length", EMsgType.PASS);
+            print("  [1/4] Name length", EMsgType.PASS);
 
             if (writeUsb(pfsElement.getNca(i).getNcaFileName())) {
-                logPrinter.print("  [2/4] Name", EMsgType.FAIL);
+                print("  [2/4] Name", EMsgType.FAIL);
                 return true;
             }
-            logPrinter.print("  [2/4] Name", EMsgType.PASS);
+            print("  [2/4] Name", EMsgType.PASS);
             if (writeUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getBodySize()+pfsElement.getNca(i).getNcaOffset()).array())) {   // offset. real.
-                logPrinter.print("  [3/4] Offset", EMsgType.FAIL);
+                print("  [3/4] Offset", EMsgType.FAIL);
                 return true;
             }
-            logPrinter.print("  [3/4] Offset", EMsgType.PASS);
+            print("  [3/4] Offset", EMsgType.PASS);
             if (writeUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getNca(i).getNcaSize()).array())) {  // size
-                logPrinter.print("  [4/4] Size", EMsgType.FAIL);
+                print("  [4/4] Size", EMsgType.FAIL);
                 return true;
             }
-            logPrinter.print("  [4/4] Size", EMsgType.PASS);
+            print("  [4/4] Size", EMsgType.PASS);
         }
         return false;
     }
@@ -254,18 +254,18 @@ public class GoldLeaf_05 extends TransferModule {
         int requestedNcaID;
 
         if (isItRawRequest) {
-            logPrinter.print("GL Handle 'Content' command", EMsgType.INFO);
+            print("GL Handle 'Content' command", EMsgType.INFO);
             byte[] readByte = readUsb();
             if (readByte == null || readByte.length != 4) {
-                logPrinter.print("  [Read requested ID]", EMsgType.FAIL);
+                print("  [Read requested ID]", EMsgType.FAIL);
                 return true;
             }
             requestedNcaID = ByteBuffer.wrap(readByte).order(ByteOrder.LITTLE_ENDIAN).getInt();
-            logPrinter.print("  [Read requested ID = "+requestedNcaID+" ]", EMsgType.PASS);
+            print("  [Read requested ID = "+requestedNcaID+" ]", EMsgType.PASS);
         }
         else {
             requestedNcaID = pfsElement.getNcaTicketID();
-            logPrinter.print("GL Handle 'Ticket' command (ID = "+requestedNcaID+" )", EMsgType.INFO);
+            print("GL Handle 'Ticket' command (ID = "+requestedNcaID+" )", EMsgType.INFO);
         }
 
         long realNcaOffset = pfsElement.getNca(requestedNcaID).getNcaOffset()+pfsElement.getBodySize();
@@ -317,8 +317,8 @@ public class GoldLeaf_05 extends TransferModule {
             logPrinter.updateProgress(1.0);
             //-----------------------------------------/
         }
-        catch (IOException ioe){
-            logPrinter.print("GL Failed to read NCA ID "+requestedNcaID+". IO Exception:\n  "+ioe.getMessage(), EMsgType.FAIL);
+        catch (IOException | InterruptedException ioe){
+            print("GL Failed to read NCA ID "+requestedNcaID+". Exception:\n  "+ioe.getMessage(), EMsgType.FAIL);
             ioe.printStackTrace();
             return true;
         }
@@ -345,18 +345,18 @@ public class GoldLeaf_05 extends TransferModule {
                     if (writeBufTransferred.get() == message.length)
                         return false;
                     else {
-                        logPrinter.print("GL Data transfer issue [write]\n  Requested: "+message.length+"\n  Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
+                        print("GL Data transfer issue [write]\n  Requested: "+message.length+"\n  Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
                         return true;
                     }
                 case LibUsb.ERROR_TIMEOUT:
                     continue;
                 default:
-                    logPrinter.print("GL Data transfer issue [write]\n  Returned: "+ UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
-                    logPrinter.print("GL Execution stopped", EMsgType.FAIL);
+                    print("GL Data transfer issue [write]\n  Returned: "+ UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
+                    print("GL Execution stopped", EMsgType.FAIL);
                     return true;
             }
         }
-        logPrinter.print("GL Execution interrupted", EMsgType.INFO);
+        print("GL Execution interrupted", EMsgType.INFO);
         return true;
     }
     /**
@@ -382,12 +382,12 @@ public class GoldLeaf_05 extends TransferModule {
                 case LibUsb.ERROR_TIMEOUT:
                     continue;
                 default:
-                    logPrinter.print("GL Data transfer issue [read]\n  Returned: " + UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
-                    logPrinter.print("GL Execution stopped", EMsgType.FAIL);
+                    print("GL Data transfer issue [read]\n  Returned: " + UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
+                    print("GL Execution stopped", EMsgType.FAIL);
                     return null;
             }
         }
-        logPrinter.print("GL Execution interrupted", EMsgType.INFO);
+        print("GL Execution interrupted", EMsgType.INFO);
         return null;
     }
 }

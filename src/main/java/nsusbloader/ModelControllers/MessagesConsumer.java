@@ -42,7 +42,7 @@ public class MessagesConsumer extends AnimationTimer {
     private final NSTableViewController tableViewController;
     private final EModule appModuleType;
 
-    private AtomicBoolean oneLinerStatus;
+    private final AtomicBoolean oneLinerStatus;
 
     private boolean isInterrupted;
 
@@ -50,7 +50,7 @@ public class MessagesConsumer extends AnimationTimer {
                      BlockingQueue<String> msgQueue,
                      BlockingQueue<Double> progressQueue,
                      HashMap<String, EFileStatus> statusMap,
-                     AtomicBoolean oneLinerStatus) {
+                     AtomicBoolean oneLinerStatus){
         this.appModuleType = appModuleType;
         this.isInterrupted = false;
 
@@ -72,15 +72,15 @@ public class MessagesConsumer extends AnimationTimer {
     }
 
     @Override
-    public void handle(long l) {
+    public void handle(long l){
         ArrayList<String> messages = new ArrayList<>();
-        int msgRecieved = msgQueue.drainTo(messages);
-        if (msgRecieved > 0)
+        int msgReceived = msgQueue.drainTo(messages);
+        if (msgReceived > 0)
             messages.forEach(logsArea::appendText);
 
         ArrayList<Double> progress = new ArrayList<>();
-        int progressRecieved = progressQueue.drainTo(progress);
-        if (progressRecieved > 0) {
+        int progressReceived = progressQueue.drainTo(progress);
+        if (progressReceived > 0) {
             progress.forEach(prg -> {
                 if (prg != 1.0)
                     progressBar.setProgress(prg);
@@ -89,29 +89,31 @@ public class MessagesConsumer extends AnimationTimer {
             });
         }
 
-        if (isInterrupted) {                                                // It's safe 'cuz it's could't be interrupted while HashMap populating
-            MediatorControl.getInstance().setBgThreadActive(false, appModuleType);
-            progressBar.setProgress(0.0);
+        if (isInterrupted)                 // It's safe 'cuz it's could't be interrupted while HashMap populating
+            updateElementsAndStop();
+    }
 
-            if (statusMap.size() > 0){
-                for (String key : statusMap.keySet())
-                    tableViewController.setFileStatus(key, statusMap.get(key));
-            }
+    private void updateElementsAndStop(){
+        MediatorControl.getInstance().setBgThreadActive(false, appModuleType);
+        progressBar.setProgress(0.0);
 
-            switch (appModuleType){
-                case RCM:
-                    MediatorControl.getInstance().getRcmController().setOneLineStatus(oneLinerStatus.get());
-                    break;
-                case NXDT:
-                    MediatorControl.getInstance().getNxdtController().setOneLineStatus(oneLinerStatus.get());
-                    break;
-                case SPLIT_MERGE_TOOL:
-                    MediatorControl.getInstance().getSplitMergeController().setOneLineStatus(oneLinerStatus.get());
-                    break;
-            }
-
-            this.stop();
+        if (statusMap.size() > 0){
+            for (String key : statusMap.keySet())
+                tableViewController.setFileStatus(key, statusMap.get(key));
         }
+
+        switch (appModuleType){
+            case RCM:
+                MediatorControl.getInstance().getRcmController().setOneLineStatus(oneLinerStatus.get());
+                break;
+            case NXDT:
+                MediatorControl.getInstance().getNxdtController().setOneLineStatus(oneLinerStatus.get());
+                break;
+            case SPLIT_MERGE_TOOL:
+                MediatorControl.getInstance().getSplitMergeController().setOneLineStatus(oneLinerStatus.get());
+                break;
+        }
+        this.stop();
     }
 
     public void interrupt(){
