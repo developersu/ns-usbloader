@@ -41,12 +41,14 @@ public class AppPreferences {
             theme = "/res/app_dark.css";
         return theme;
     }
-    public String getProtocol(){
-        String protocol = preferences.get("PROTOCOL", "TinFoil");           // Don't let user to change settings manually
-        if (!protocol.matches("(^TinFoil$)|(^GoldLeaf$)"))
-            protocol = "TinFoil";
-        return protocol;
+    public int getProtocol(){
+        int protocolIndex = preferences.getInt("protocol_index", 0);           // Don't let user to change settings manually
+        if (protocolIndex < 0 || protocolIndex > 1)
+            protocolIndex = 0;
+        return protocolIndex;
     }
+    public void setProtocol(int protocolIndex){ preferences.putInt("protocol_index", protocolIndex); }
+
     public String getNetUsb(){
         String netUsb = preferences.get("NETUSB", "USB");           // Don't let user to change settings manually
         if (!netUsb.matches("(^USB$)|(^NET$)"))
@@ -55,7 +57,7 @@ public class AppPreferences {
     }
 
     public void setTheme(String theme){ preferences.put("THEME", theme); }
-    public void setProtocol(String protocol){ preferences.put("PROTOCOL", protocol); }
+
     public void setNetUsb(String netUsb){ preferences.put("NETUSB", netUsb); }
 
     public void setNsIp(String ip){preferences.put("NSIP", ip);}

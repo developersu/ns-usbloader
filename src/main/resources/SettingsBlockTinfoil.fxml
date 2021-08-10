@@ -9,7 +9,7 @@
 
 <VBox spacing="5.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsBlockTinfoilController">
    <children>
-   <Label text="Tinfoil" />
+   <Label text="%tab2_Lbl_AwooBlockTitle" />
             <CheckBox mnemonicParsing="false" text="%tab2_Cb_AllowXciNszXcz" fx:id="xciNszXczSupportCB">
       <VBox.margin>
          <Insets left="5.0" />

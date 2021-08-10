@@ -5,11 +5,12 @@
 [Support author](#support-this-app)
 
 NS-USBloader is:
-* A PC-side installer for **[Adubbz/TinFoil (v0.2.1)](https://github.com/Adubbz/Tinfoil/)**, **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** (USB and Network supported) and **[XorTroll/GoldLeaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
-Replacement for default **usb_install_pc.py**, **remote_install_pc.py**, **GoldTree**/**Quark**. 
+* A PC-side installer for **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** / other compatible installers (USB and Network supported) and **[XorTroll/GoldLeaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
+Alternative to default **usb_install_pc.py**, **remote_install_pc.py**, **GoldTree**/**Quark**. 
 * This application also could be used as RCM payload on Windows, MacOS and Linux (supported arch: x86, x86_64 and Raspberry Pi).
-* And of course it's a tool for split files! 
-* And also for merging split-files into one :) 
+* It's a tool for creating split files! 
+* Also you can use it for merging split-files into one :)
+
 
 [Click here for Android version ;)](https://github.com/developersu/ns-usbloader-mobile)
 
@@ -49,6 +50,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * Czech by [Spenaat](https://github.com/spenaat)
 * Chinese (Traditional) by [qazrfv1234](https://github.com/qazrfv1234)
 * Arabic by [eslamabdel](https://github.com/eslamabdel)
+* Romanian by [Călin Ilie](https://github.com/calini)
 
 ### System requirements
 
@@ -67,11 +69,13 @@ JDK 11 for MacOS and Linux
 
 where '+' means 'any next NS-USBloader version'.
 
-### Awoo Installer support
+### Awoo Installer and compatible applications support
 
-Awoo Installer uses the same command-set (or 'protocol') to TinFoil. So just select 'TinFoil' in case you're going to use Awoo.
+Awoo Installer uses the same command-set (or 'protocol') to [Adubbz/Tinfoil](https://github.com/Adubbz/Tinfoil/).
 
-Also, please go to 'Settings' tab of NS-USBloader after first installation and check 'Allow XCI / NSZ / XCZ files selection for TinFoil' option. This installer can install not only NSPs but a way more formats!
+A lot of other forks/apps uses the same command-set. To stop speculating about the name it's now called 'Awoo'. It WAS called 'TinFoil' before. Not any more.
+
+Also, please go to 'Settings' tab of NS-USBloader after first installation and check 'Allow XCI / NSZ / XCZ files selection for Awoo' option. This installer can install not only NSPs but a way more formats!
 
 ### Usage
 ##### Linux:
@@ -121,9 +125,9 @@ Set 'Security & Privacy' settings if needed.
 
 #### And how to use it?
 
-The first thing you should do it install TinFoil ([Adubbz](https://github.com/Adubbz/Tinfoil/)), GoldLeaf ([XorTroll](https://github.com/XorTroll/Goldleaf)) or Awoo ([Huntereb](https://github.com/Huntereb/Awoo-Installer)) on your NS. 
+The first thing you should do it install Awoo ([Huntereb](https://github.com/Huntereb/Awoo-Installer)) or GoldLeaf ([XorTroll](https://github.com/XorTroll/Goldleaf)) on your NS. 
 
-Take a look on app, find where is the option to install from USB and/or Network. Maybe [this article (about TinFoil)](https://developersu.blogspot.com/2019/02/ns-usbloader-en.html) will be helpful.
+Take a look on app, find where is the option to install from USB and/or Network. Maybe (very old) [this article (about TinFoil)](https://developersu.blogspot.com/2019/02/ns-usbloader-en.html) will be helpful.
 
 #### In details
 
@@ -137,7 +141,7 @@ Then you may drag-n-drop files (split-files aka folders) to application or use '
 
 Table.
 
-There you can select checkbox for files that will be send to application (TF/GL). ~~Since GoldLeaf allow you only one file transmission per time, only one file is available for selection.~~ 
+There you can select checkbox for files that will be sent to application (AW/GL). ~~Since GoldLeaf v0.5 allow you only one file transmission per time, only one file is available for selection.~~ 
 
 Also you can use space to select/un-select files and 'delete' button for deleting. By right-mouse-click you can see context menu where you can delete one OR all items from the table.
 
@@ -151,11 +155,11 @@ On this tab you can select payloader like Hekate or LockPick_RCM and send it to 
 
 ##### 'Folder with arrows and zeroes' tab
 
-On this tab you can split and merge files. Select 'Split' or 'Merge' and split (or merge).
+On this tab you can split and merge files. Select 'Split' or 'Merge' and split (or merge). BTW Drag-n-drop supported.
 
 ##### 'Gears' tab.
 
-Here you can configure settings for network file transmission. Usually you shouldn't change anything. But it you're cool hacker, go ahead! The most interesting option here is 'Don't serve requests'. Architecture of the TinFoil's NET part is working interesting way. When you select in TF network NSP transfer, application will wait at port 2000 for the information about where should it take files from. Like '192.168.1.5:6060/my file.nsp'. Usually NS-USBloader serves requests by implementing simplified HTTP server and bringing it up and so on. But if this option selected, you can define path to remote location of the files. For example if you set in settings '192.168.4.2:80/ROMS/NS/' and add in table file 'my file.nsp' then NS-USBloader will simply tell TinFoil "Hey, go take files from '192.168.4.2:80/ROMS/NS/my%20file.nsp' ". Of course you have to bring '192.168.4.2' host up and make file accessible from such address (just go install nginx). As I said, this feature is interesting, but I guess won't be popular.
+Here you can configure settings for network file transmission. Usually you shouldn't change anything. But it you're cool hacker, go ahead! The most interesting option here is 'Don't serve requests'. Architecture of the Awoo's NET part is working interesting way. When you select in Awoo network NSP transfer, application will wait at port 2000 for the information about where should it take files from. Like '192.168.1.5:6060/my file.nsp'. Usually NS-USBloader serves requests by implementing simplified HTTP server and bringing it up and so on. But if this option selected, you can define path to remote location of the files. For example if you set in settings '192.168.4.2:80/ROMS/NS/' and add in table file 'my file.nsp' then NS-USBloader will simply tell Awoo "Hey, go take files from '192.168.4.2:80/ROMS/NS/my%20file.nsp' ". Of course you have to bring '192.168.4.2' host up and make file accessible from such address (just go install nginx). As I said, this feature is interesting, but I guess won't be popular.
 
 Also here you can:
 * Set 'Auto-check for updates' for checking for updates when application starts, or click button to verify if new version released immediately.
@@ -175,10 +179,10 @@ To get help run ``$ java -jar ns-usbloader-4.0.jar --help``
  -g,--goldleaf <...>             Install via GoldLeaf mode. Check '-g help' for information.
  -h,--help                       Show this help
  -m,--merge <...>                Merge files. Check '-m help' for information.
- -n,--tfn <...>                  Install via Tinfoil/Awoo Network mode. Check '-n help' for information.
+ -n,--tfn <...>                  Install via Awoo Network mode. Check '-n help' for information.
  -r,--rcm <[PATH/]payload.bin>   Send payload
  -s,--split <...>                Split files. Check '-s help' for information.
- -t,--tinfoil <FILE...>          Install via Tinfoil/Awoo USB mode.
+ -t,--tinfoil <FILE...>          Install via Awoo USB mode.
  -v,--version                    Show application version
 ```
 
@@ -214,22 +218,19 @@ $ java -jar ns-usbloader-4.0.jar -m /tmp/ ~/*.nsp
 ### Other notes
 
 'Status' = 'Uploaded' that appears in the table does not mean that file has been installed. It means that it has been sent to NS without any issues! That's what this app about. 
-Handling successful/failed installation is a purpose of the other side application: TinFoil or GoldLeaf. And they don't provide any feedback interfaces so I can't detect success/failure.
+Handling successful/failed installation is a purpose of the other side application: Awoo/Awoo-like or GoldLeaf. And they don't provide any feedback interfaces so I can't detect success/failure.
 
 usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This should not impact anyone except users of macOS High Sierra (and Sierra, and El Capitan) where previous versions of NS-USBloader didn't work. Now builds with usb4java-1.2.0 marked as '-legacy' and builds with usb4java-1.3.0 doesn't have postfixes.
 
 ### Translators!
+
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
 
 Upload somewhere (create PR, use pastebin/google drive/whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add.
 
 To convert files of any locale to readable format (and vise-versa) you can use this site [https://itpro.cz/juniconv/](https://itpro.cz/juniconv/)
 
-#### TODO (maybe):
-- [x] [Android support](https://github.com/developersu/ns-usbloader-mobile)
-
 ## Support this app
-
 
 If you like this app, just give a star. 
 
@@ -239,9 +240,9 @@ If you want to make a donation*, please see below:
 
 <a href="https://paypal.me/developersu" title="PayPal"><img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" border="0" alt="PayPal Logo" /></a>
 
-[Yandex.Money](https://money.yandex.ru/to/410014301951665)
+[yoomoney](https://yoomoney.ru/to/410014301951665)
 
-* Please note: this is non-commercial application.
+*Please note: this is non-commercial application.
 
 Thanks
 

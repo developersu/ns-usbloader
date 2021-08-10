@@ -78,13 +78,13 @@ public class GamesController implements Initializable {
         this.resourceBundle = resourceBundle;
         AppPreferences preferences = AppPreferences.getInstance();
 
-        ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("TinFoil", "GoldLeaf");
+        ObservableList<String> choiceProtocolList = FXCollections.observableArrayList("Awoo", "GoldLeaf");
 
         choiceProtocol.setItems(choiceProtocolList);
         choiceProtocol.getSelectionModel().select(preferences.getProtocol());
         choiceProtocol.setOnAction(e-> {
-            tableFilesListController.setNewProtocol(getSelectedProtocol());
-            if (getSelectedProtocol().equals("GoldLeaf")) {
+            tableFilesListController.setNewProtocol(getSelectedProtocolByName());
+            if (isGoldLeaf()) {
                 choiceNetUsb.setDisable(true);
                 choiceNetUsb.getSelectionModel().select("USB");
                 nsIpLbl.setVisible(false);
@@ -100,12 +100,12 @@ public class GamesController implements Initializable {
             // Really bad disable-enable upload button function
             disableUploadStopBtn(tableFilesListController.isFilesForUploadListEmpty());
         });  // Add listener to notify tableView controller
-        tableFilesListController.setNewProtocol(getSelectedProtocol());   // Notify tableView controller
+        tableFilesListController.setNewProtocol(getSelectedProtocolByName());   // Notify tableView controller
 
         ObservableList<String> choiceNetUsbList = FXCollections.observableArrayList("USB", "NET");
         choiceNetUsb.setItems(choiceNetUsbList);
         choiceNetUsb.getSelectionModel().select(preferences.getNetUsb());
-        if (getSelectedProtocol().equals("GoldLeaf")) {
+        if (isGoldLeaf()) {
             choiceNetUsb.setDisable(true);
             choiceNetUsb.getSelectionModel().select("USB");
         }
@@ -121,7 +121,7 @@ public class GamesController implements Initializable {
         });
         // Set and configure NS IP field behavior
         nsIpTextField.setText(preferences.getNsIp());
-        if (getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("NET")){
+        if (isTinfoil() && getSelectedNetUsb().equals("NET")){
             nsIpLbl.setVisible(true);
             nsIpTextField.setVisible(true);
         }
@@ -145,7 +145,7 @@ public class GamesController implements Initializable {
         selectSplitNspBtn.getStyleClass().add("buttonSelect");
 
         uploadStopBtn.setOnAction(e-> uploadBtnAction());
-        uploadStopBtn.setDisable(getSelectedProtocol().equals("TinFoil"));
+        uploadStopBtn.setDisable(isTinfoil());
 
         this.btnUpStopImage = new Region();
         btnUpStopImage.getStyleClass().add("regionUpload");
@@ -174,30 +174,33 @@ public class GamesController implements Initializable {
         AppPreferences.getInstance().setTheme(styleSheets.get(0));
     }
     /**
-     * Get selected protocol (GL/TF)
+     * Get selected protocol index (GL/Awoo)
      * */
-    String getSelectedProtocol(){
+    private int getSelectedProtocolByIndex(){
+        return choiceProtocol.getSelectionModel().getSelectedIndex();
+    }
+    private String getSelectedProtocolByName(){
         return choiceProtocol.getSelectionModel().getSelectedItem();
     }
     /**
      * Get selected protocol (USB/NET)
      * */
-    String getSelectedNetUsb(){
+    private String getSelectedNetUsb(){
         return choiceNetUsb.getSelectionModel().getSelectedItem();
     }
     /**
      * Get NS IP address
      * */
-    String getNsIp(){
+    private String getNsIp(){
         return nsIpTextField.getText();
     }
     
     private boolean isGoldLeaf() {
-        return getSelectedProtocol().equals("GoldLeaf");
+        return getSelectedProtocolByName().equals("GoldLeaf");
     }
 
     private boolean isTinfoil() {
-        return getSelectedProtocol().equals("TinFoil");
+        return getSelectedProtocolByName().equals("Awoo");
     }
     
     private boolean isAllFiletypesAllowedForGL() {
@@ -290,7 +293,7 @@ public class GamesController implements Initializable {
      * @param startFolder where to start
      * @param filesRegex for filenames
      */
-    // TODO: Too sophisticated. Should be moved to simple class to keep things simplier
+    // TODO: Too sophisticated. Should be moved to simple class to keep things simpler
 
     private void collectFiles(List<File> storage,
                               File startFolder,
@@ -353,7 +356,7 @@ public class GamesController implements Initializable {
 
         TextArea logArea = MediatorControl.getInstance().getContoller().logArea;
 
-        if (getSelectedProtocol().equals("TinFoil") && tableFilesListController.getFilesForUpload() == null) {
+        if (isTinfoil() && tableFilesListController.getFilesForUpload() == null) {
             logArea.setText(resourceBundle.getString("tab3_Txt_NoFolderOrFileSelected"));
             return;
         }
@@ -369,11 +372,11 @@ public class GamesController implements Initializable {
 
         SettingsController settings = MediatorControl.getInstance().getSettingsController();
         // If USB selected
-        if (getSelectedProtocol().equals("GoldLeaf") ){
+        if (isGoldLeaf()){
             final SettingsBlockGoldleafController goldleafSettings = settings.getGoldleafSettings();
             usbNetCommunications = new UsbCommunications(nspToUpload, "GoldLeaf" + goldleafSettings.getGlVer(), goldleafSettings.getNSPFileFilterForGL());
         }
-        else if (( getSelectedProtocol().equals("TinFoil") && getSelectedNetUsb().equals("USB") )){
+        else if (( isTinfoil() && getSelectedNetUsb().equals("USB") )){
             usbNetCommunications = new UsbCommunications(nspToUpload, "TinFoil", false);
         }
         else {      // NET INSTALL OVER TINFOIL
@@ -477,7 +480,7 @@ public class GamesController implements Initializable {
      * Crunch. This function called from NSTableViewController
      * */
     public void disableUploadStopBtn(boolean disable){
-        if (getSelectedProtocol().equals("TinFoil"))
+        if (isTinfoil())
             uploadStopBtn.setDisable(disable);
         else
             uploadStopBtn.setDisable(false);
@@ -522,7 +525,7 @@ public class GamesController implements Initializable {
     public void updatePreferencesOnExit(){
         AppPreferences preferences = AppPreferences.getInstance();
 
-        preferences.setProtocol(getSelectedProtocol());
+        preferences.setProtocol(getSelectedProtocolByIndex());
         preferences.setRecent(getRecentPath());
         preferences.setNetUsb(getSelectedNetUsb());
         preferences.setNsIp(getNsIp());

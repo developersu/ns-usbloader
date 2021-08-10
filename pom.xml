@@ -12,7 +12,7 @@
 
     <url>https://github.com/developersu/ns-usbloader/</url>
     <description>
-        NSP USB loader for TinFoil (USB and Network) and GoldLeaf
+        NSP USB loader for Awoo Installer and compatible (USB and Network) and GoldLeaf
     </description>
     <inceptionYear>2019</inceptionYear>
     <organization>
@@ -257,7 +257,7 @@
                             <versionInfo>
                                 <fileVersion>1.0.0.0</fileVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
-                                <fileDescription>TinFoil and GoldLeaf installer for your NS</fileDescription>
+                                <fileDescription>Awoo and GoldLeaf installer for your NS</fileDescription>
                                 <copyright>GNU General Public License v3, 2019 ${project.organization.name}. Russia/LPR.</copyright>
                                 <productVersion>1.0.0.0</productVersion>
                                 <txtProductVersion>${project.version}</txtProductVersion>

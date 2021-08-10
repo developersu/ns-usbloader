@@ -50,7 +50,7 @@ class TinFoil extends TransferModule {
 
     TinFoil(DeviceHandle handler, LinkedHashMap<String, File> nspMap, CancellableRunnable task, ILogPrinter logPrinter){
         super(handler, nspMap, task, logPrinter);
-        print("============= Tinfoil =============", EMsgType.INFO);
+        print("======== Awoo Installer and compatibles ========", EMsgType.INFO);
 
         if (! sendListOfFiles())
             return;
@@ -69,25 +69,25 @@ class TinFoil extends TransferModule {
         byte[] padding = new byte[8];
 
         if (writeUsb(TUL0)) {
-            print("TF Send list of files: handshake   [1/4]", EMsgType.FAIL);
+            print("Send list of files: handshake   [1/4]", EMsgType.FAIL);
             return false;
         }
 
         if (writeUsb(nspListNamesSize)) {                                 // size of the list we can transfer
-            print("TF Send list of files: list length [2/4]", EMsgType.FAIL);
+            print("Send list of files: list length [2/4]", EMsgType.FAIL);
             return false;
         }
 
         if (writeUsb(padding)) {
-            print("TF Send list of files: padding     [3/4]", EMsgType.FAIL);
+            print("Send list of files: padding     [3/4]", EMsgType.FAIL);
             return false;
         }
 
         if (writeUsb(nspListNames)) {
-            print("TF Send list of files: list itself [4/4]", EMsgType.FAIL);
+            print("Send list of files: list itself [4/4]", EMsgType.FAIL);
             return false;
         }
-        print("TF Send list of files complete.", EMsgType.PASS);
+        print("Send list of files complete.", EMsgType.PASS);
 
         return true;
     }
@@ -114,7 +114,7 @@ class TinFoil extends TransferModule {
      * After we sent commands to NS, this chain starts
      * */
     private boolean proceedCommands(){
-        print("TF Awaiting for NS commands.", EMsgType.INFO);
+        print("Awaiting for NS commands.", EMsgType.INFO);
         try{
             byte[] deviceReply;
             byte command;
@@ -127,11 +127,11 @@ class TinFoil extends TransferModule {
 
                 switch (command){
                     case CMD_EXIT:
-                        print("TF Transfer complete.", EMsgType.PASS);
+                        print("Transfer complete.", EMsgType.PASS);
                         return true;
                     case CMD_FILE_RANGE_DEFAULT:
                     case CMD_FILE_RANGE_ALTERNATIVE:
-                        //print("TF Received 'FILE RANGE' command [0x0"+command+"].", EMsgType.PASS);
+                        //print("Received 'FILE RANGE' command [0x0"+command+"].", EMsgType.PASS);
                         if (fileRangeCmd())
                             return false;      // catches exception
                 }
@@ -169,7 +169,7 @@ class TinFoil extends TransferModule {
 
             String nspFileName = new String(receivedArray, StandardCharsets.UTF_8);
 
-            print(String.format("TF Reply to: %s" +
+            print(String.format("Reply to: %s" +
                     "\n         Offset: %-20d 0x%x" +
                     "\n         Size:   %-20d 0x%x",
                     nspFileName,
@@ -188,16 +188,16 @@ class TinFoil extends TransferModule {
             else
                 sendNormalFile(nspFile, size, offset);
         } catch (IOException ioe){
-            print("TF IOException:\n         "+ioe.getMessage(), EMsgType.FAIL);
+            print("IOException:\n         "+ioe.getMessage(), EMsgType.FAIL);
             ioe.printStackTrace();
             return true;
         } catch (ArithmeticException ae){
-            print("TF ArithmeticException (can't cast 'offset end' - 'offsets current' to 'integer'):" +
+            print("ArithmeticException (can't cast 'offset end' - 'offsets current' to 'integer'):" +
                     "\n         "+ae.getMessage(), EMsgType.FAIL);
             ae.printStackTrace();
             return true;
         } catch (NullPointerException npe){
-            print("TF NullPointerException (in some moment application didn't find something. Something important.):" +
+            print("NullPointerException (in some moment application didn't find something. Something important.):" +
                     "\n         "+npe.getMessage(), EMsgType.FAIL);
             npe.printStackTrace();
             return true;
@@ -216,7 +216,7 @@ class TinFoil extends TransferModule {
 
         NSSplitReader nsSplitReader = new NSSplitReader(nspFile, size);
         if (nsSplitReader.seek(offset) != offset)
-            throw new IOException("TF Requested offset is out of file size. Nothing to transmit.");
+            throw new IOException("Requested offset is out of file size. Nothing to transmit.");
 
         while (currentOffset < size){
             if ((currentOffset + chunk) >= size )
@@ -226,10 +226,10 @@ class TinFoil extends TransferModule {
             readBuffer = new byte[chunk];     // TODO: not perfect moment, consider refactoring.
 
             if (nsSplitReader.read(readBuffer) != chunk)
-                throw new IOException("TF Reading from stream suddenly ended.");
+                throw new IOException("Reading from stream suddenly ended.");
 
             if (writeUsb(readBuffer))
-                throw new IOException("TF Failure during file transfer.");
+                throw new IOException("Failure during file transfer.");
             currentOffset += chunk;
             logPrinter.updateProgress((double)currentOffset / (double)size);
         }
@@ -245,7 +245,7 @@ class TinFoil extends TransferModule {
         BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspFile));
 
         if (bufferedInStream.skip(offset) != offset)
-            throw new IOException("TF Requested offset is out of file size. Nothing to transmit.");
+            throw new IOException("Requested offset is out of file size. Nothing to transmit.");
 
         while (currentOffset < size) {
             if ((currentOffset + chunk) >= size)
@@ -255,10 +255,10 @@ class TinFoil extends TransferModule {
             readBuffer = new byte[chunk];
 
             if (bufferedInStream.read(readBuffer) != chunk)
-                throw new IOException("TF Reading from stream suddenly ended.");
+                throw new IOException("Reading from stream suddenly ended.");
 
             if (writeUsb(readBuffer))
-                throw new IOException("TF Failure during file transfer.");
+                throw new IOException("Failure during file transfer.");
             currentOffset += chunk;
             logPrinter.updateProgress((double)currentOffset / (double)size);
         }
@@ -278,17 +278,17 @@ class TinFoil extends TransferModule {
         final byte[] twelveZeroBytes = new byte[12];
 
         if (writeUsb(standardReplyBytes)){       // Send integer value of '1' in Little-endian format.
-            print("TF Sending response failed [1/3]", EMsgType.FAIL);
+            print("Sending response failed [1/3]", EMsgType.FAIL);
             return true;
         }
 
         if(writeUsb(sizeAsBytes)) {                                                          // Send EXACTLY what has been received
-            print("TF Sending response failed [2/3]", EMsgType.FAIL);
+            print("Sending response failed [2/3]", EMsgType.FAIL);
             return true;
         }
 
         if(writeUsb(twelveZeroBytes)) {                                                       // kinda another one padding
-            print("TF Sending response failed [3/3]", EMsgType.FAIL);
+            print("Sending response failed [3/3]", EMsgType.FAIL);
             return true;
         }
         return false;
@@ -317,7 +317,7 @@ class TinFoil extends TransferModule {
                 case LibUsb.SUCCESS:
                     if (writeBufTransferred.get() == message.length)
                         return false;
-                    print("TF Data transfer issue [write]" +
+                    print("Data transfer issue [write]" +
                             "\n         Requested: "+message.length+
                             "\n         Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
                     return true;
@@ -326,13 +326,13 @@ class TinFoil extends TransferModule {
                     //writeBufTransferred.clear();    // MUST BE HERE IF WE 'GET()' IT
                     continue;
                 default:
-                    print("TF Data transfer issue [write]" +
+                    print("Data transfer issue [write]" +
                             "\n         Returned: "+ UsbErrorCodes.getErrCode(result) +
                             "\n         (execution stopped)", EMsgType.FAIL);
                     return true;
             }
         }
-        print("TF Execution interrupted", EMsgType.INFO);
+        print("Execution interrupted", EMsgType.INFO);
         return true;
     }
     /**
@@ -357,11 +357,11 @@ class TinFoil extends TransferModule {
                 case LibUsb.ERROR_TIMEOUT:
                     continue;
                 default:
-                    throw new Exception("TF Data transfer issue [read]" +
+                    throw new Exception("Data transfer issue [read]" +
                             "\n         Returned: " + UsbErrorCodes.getErrCode(result)+
                             "\n         (execution stopped)");
             }
         }
-        throw new InterruptedException("TF Execution interrupted");
+        throw new InterruptedException("Execution interrupted");
     }
 }

@@ -136,14 +136,14 @@ public class CommandLineInterface {
         /* Tinfoil network mode options */
         final Option tinfoilNetOption = Option.builder("n")
                 .longOpt("tfn")
-                .desc("Install via Tinfoil/Awoo Network mode. Check '-n help' for information.")
+                .desc("Install via Awoo Network mode. Check '-n help' for information.")
                 .hasArgs()
                 .argName("...")
                 .build();
         /* Tinfoil/Awoo USB */
         final Option tinfoilOption = Option.builder("t")
                 .longOpt("tinfoil")
-                .desc("Install via Tinfoil/Awoo USB mode.")
+                .desc("Install via Awoo USB mode.")
                 .hasArgs()
                 .argName("FILE...")
                 .build();
