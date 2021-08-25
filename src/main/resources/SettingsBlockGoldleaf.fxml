@@ -7,9 +7,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-
-<VBox spacing="5.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="nsusbloader.Controllers.SettingsBlockGoldleafController">
+<VBox spacing="5.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsBlockGoldleafController">
        <children>
      <Label text="GoldLeaf" />
      <CheckBox fx:id="nspFilesFilterForGLCB" mnemonicParsing="false" text="%tab2_Cb_GLshowNspOnly">
@@ -19,7 +17,7 @@
      <HBox alignment="CENTER_LEFT" spacing="5.0">
         <children>
            <Label text="%tab2_Cb_GlVersion" />
-           <ChoiceBox fx:id="glVersionChoiceBox" prefWidth="75.0" />
+           <ChoiceBox fx:id="glVersionChoiceBox" prefWidth="120.0" />
         </children>
         <VBox.margin>
            <Insets left="5.0" />

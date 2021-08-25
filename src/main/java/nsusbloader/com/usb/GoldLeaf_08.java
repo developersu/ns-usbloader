@@ -103,7 +103,7 @@ class GoldLeaf_08 extends TransferModule {
 
         this.nspFilterForGl = nspFilter;
 
-        print("============= GoldLeaf v0.8 =============\n\t" +
+        print("=========== GoldLeaf v0.8-0.9 ===========\n\t" +
                 "VIRT:/ equals files added into the application\n\t" +
                 "HOME:/ equals "
                 +System.getProperty("user.home"), EMsgType.INFO);

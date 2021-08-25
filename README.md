@@ -65,7 +65,7 @@ JDK 11 for MacOS and Linux
 | v0.6             | none                 |
 | v0.6.1           | v0.6                 |
 | v0.7 - 0.7.3     | v0.7+                |
-| v0.8             | v1.0+                |
+| v0.8 - 0.9       | v1.0+                |
 
 where '+' means 'any next NS-USBloader version'.
 

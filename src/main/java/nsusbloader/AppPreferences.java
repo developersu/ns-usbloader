@@ -27,7 +27,7 @@ public class AppPreferences {
 
     private final Preferences preferences;
     private final Locale locale;
-    public static final String[] goldleafSupportedVersions = {"v0.5", "v0.7.x", "v0.8"};
+    public static final String[] goldleafSupportedVersions = {"v0.5", "v0.7.x", "v0.8-0.9"};
 
     private AppPreferences(){
         this.preferences = Preferences.userRoot().node("NS-USBloader");
@@ -113,12 +113,10 @@ public class AppPreferences {
     public boolean getNspFileFilterGL(){return preferences.getBoolean("GL_NSP_FILTER", false); }
     public void setNspFileFilterGL(boolean prop){preferences.putBoolean("GL_NSP_FILTER", prop);}
 
-    public String getGlVersion(){
-        int recentGlVersionIndex = goldleafSupportedVersions.length - 1;
-        String recentGlVersion = goldleafSupportedVersions[recentGlVersionIndex];
-        return preferences.get("gl_version", recentGlVersion);
+    public int getGlVersion(){
+        return preferences.getInt("gl_ver", goldleafSupportedVersions.length - 1);
     }
-    public void setGlVersion(String version){ preferences.put("gl_version", version);}
+    public void setGlVersion(int version){ preferences.putInt("gl_ver", version);}
 
     public double getSceneWidth(){ return preferences.getDouble("WIND_WIDTH", 850.0); }
     public void setSceneWidth(double value){ preferences.putDouble("WIND_WIDTH", value); }

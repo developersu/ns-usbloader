@@ -53,6 +53,6 @@ public class SettingsBlockGoldleafController implements Initializable {
         final AppPreferences preferences = AppPreferences.getInstance();
 
         preferences.setNspFileFilterGL(getNSPFileFilterForGL());
-        preferences.setGlVersion(getGlVer());
+        preferences.setGlVersion(glVersionChoiceBox.getSelectionModel().getSelectedIndex());
     }
 }
