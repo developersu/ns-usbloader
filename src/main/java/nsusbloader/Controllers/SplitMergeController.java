@@ -94,7 +94,9 @@ public class SplitMergeController implements Initializable {
         else
             mergeRad.fire();
 
-        saveToPathLbl.setText(AppPreferences.getInstance().getSplitMergeRecent());
+        String previouslyUsedSaveToPath = AppPreferences.getInstance().getSplitMergeRecent();
+
+        saveToPathLbl.setText(FilesHelper.getRealFolder(previouslyUsedSaveToPath));
 
         changeSaveToBtn.setOnAction((actionEvent -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();

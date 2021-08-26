@@ -59,7 +59,7 @@
                   </VBox.margin>
                </Button>
                   <Label text="%tabSplMrg_Lbl_SaveToLocation" />
-               <Label fx:id="saveToPathLbl" maxWidth="200.0" textOverrun="CENTER_WORD_ELLIPSIS" />
+               <Label fx:id="saveToPathLbl" maxWidth="-Infinity" prefWidth="175.0" textOverrun="CENTER_WORD_ELLIPSIS" />
                   <Button fx:id="changeSaveToBtn" contentDisplay="TOP" mnemonicParsing="false" text="%tabSplMrg_Btn_ChangeSaveToLocation" />
                <Pane VBox.vgrow="ALWAYS" />
                <VBox>

@@ -1,7 +1,6 @@
 # NS-USBloader
 
-![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg)
-
+![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) ![CI](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fredrise.ru%2Fjen%2Fjob%2Fns-usbloader%2Fjob%2Fmaster%2F)
 [Support author](#support-this-app)
 
 NS-USBloader is:
@@ -47,7 +46,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * Chinese (Simplified) by [Huang YunKun (htynkn)](https://github.com/htynkn), [exiori](https://github.com/exiori)
 * German by [Swarsele](https://github.com/Swarsele)
 * Vietnamese by [Hai Phan Nguyen (pnghai)](https://github.com/pnghai)
-* Czech by [Spenaat](https://github.com/spenaat)
+* Czech by [Spenaat](https://github.com/spenaat)r
 * Chinese (Traditional) by [qazrfv1234](https://github.com/qazrfv1234)
 * Arabic by [eslamabdel](https://github.com/eslamabdel)
 * Romanian by [Călin Ilie](https://github.com/calini)
