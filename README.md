@@ -86,17 +86,15 @@ Also, please go to 'Settings' tab of NS-USBloader after first installation and c
 3. Optional: add user to 'udev' rules to use NS not-from-root-account
 ```
 root # vim /etc/udev/rules.d/99-NS.rules
-SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="3000", MODE="0666"
 root # udevadm control --reload-rules && udevadm trigger
 ```
 4. For RCM part
 ```
 root # vim /etc/udev/rules.d/99-NS-RCM.rules
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0955", ATTRS{idProduct}=="7321", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0955", ATTRS{idProduct}=="7321", MODE="0666"
 root # udevadm control --reload-rules && udevadm trigger
 ```
-
-Please note: you may have to change 'plugdev' group from example above to the different one. It depends on you linux distro.
 
 ##### Raspberry Pi
 
