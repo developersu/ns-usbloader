@@ -43,11 +43,11 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * Korean by [DDinghoya](https://github.com/DDinghoya)
 * Portuguese by [almircanella](https://github.com/almircanella)
 * Spanish by [/u/cokimaya007](https://www.reddit.com/u/cokimaya007), Kuziel Alejandro
-* Chinese (Simplified) by [Huang YunKun (htynkn)](https://github.com/htynkn), [FFT9 (XXgame Group](https://www.xxgame.net)
+* Chinese (Simplified) by [Huang YunKun (htynkn)](https://github.com/htynkn), [FFT9 (XXgame Group)](https://www.xxgame.net)
+* Chinese (Traditional) by [qazrfv1234](https://github.com/qazrfv1234), [FFT9 (XXgame Group)](https://www.xxgame.net)
 * German by [Swarsele](https://github.com/Swarsele)
 * Vietnamese by [Hai Phan Nguyen (pnghai)](https://github.com/pnghai)
-* Czech by [Spenaat](https://github.com/spenaat)r
-* Chinese (Traditional) by [qazrfv1234](https://github.com/qazrfv1234), [FFT9 (XXgame Group](https://www.xxgame.net)
+* Czech by [Spenaat](https://github.com/spenaat)
 * Arabic by [eslamabdel](https://github.com/eslamabdel)
 * Romanian by [Călin Ilie](https://github.com/calini)
 
