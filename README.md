@@ -36,7 +36,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 
 * [Pablo Curiel (DarkMatterCore)](https://github.com/DarkMatterCore)
 * [wolfposd](https://github.com/wolfposd)
-
+* [agungrbudiman](https://github.com/agungrbudiman)
 
 * French by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 
 * Italian by [unbranched](https://github.com/unbranched)
@@ -74,8 +74,6 @@ Awoo Installer uses the same command-set (or 'protocol') to [Adubbz/Tinfoil](htt
 
 A lot of other forks/apps uses the same command-set. To stop speculating about the name it's now called 'Awoo'. It WAS called 'TinFoil' before. Not any more.
 
-Also, please go to 'Settings' tab of NS-USBloader after first installation and check 'Allow XCI / NSZ / XCZ files selection for Awoo' option. This installer can install not only NSPs but a way more formats!
-
 ### Usage
 ##### Linux:
 
@@ -111,6 +109,13 @@ Double-click on downloaded .jar file. Follow instructions. Or see 'Linux' sectio
 Set 'Security & Privacy' settings if needed.
 
 *Please note: JDK 11 is recommended for using on MacOS. There are few really weird issues already reported from JDK 14 users on Mac.*
+
+##### macOS on Apple Silicon (ARM)
+
+1. Some users [tested](https://github.com/developersu/ns-usbloader/issues/91) this application with [Zulu-JDK with FX support](https://www.azul.com/downloads/zulu-community/?version=java-11-lts&os=macos&architecture=arm-64-bit&package=jdk-fx)
+2. Try OpenJDK 17 that has m1 support. 
+
+You should try it too while we're waiting for platform support at OpenJDK/Oracle JDKs.
 
 ##### Windows: 
 

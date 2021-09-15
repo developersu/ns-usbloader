@@ -32,7 +32,7 @@ import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
 
-    public static final String appVersion = "v5.1";
+    public static final String appVersion = "v5.2";
     public static boolean isCli;
 
     @Override
@@ -67,7 +67,8 @@ public class NSLMain extends Application {
 
         primaryStage.setOnCloseRequest(e->{
             if (MediatorControl.getInstance().getTransferActive())
-                if(! ServiceWindow.getConfirmationWindow(rb.getString("windowTitleConfirmExit"), rb.getString("windowBodyConfirmExit")))
+                if(! ServiceWindow.getConfirmationWindow(rb.getString("windowTitleConfirmExit"),
+                        rb.getString("windowBodyConfirmExit")))
                     e.consume();
         });
 
