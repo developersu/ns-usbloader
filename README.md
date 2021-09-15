@@ -108,14 +108,12 @@ Double-click on downloaded .jar file. Follow instructions. Or see 'Linux' sectio
 
 Set 'Security & Privacy' settings if needed.
 
-*Please note: JDK 11 is recommended for using on MacOS. There are few really weird issues already reported from JDK 14 users on Mac.*
+*Please note: JDK 11 is recommended for using on MacOS (EXCEPT APPLE SILICONE). There are few really weird issues already reported from JDK 14 users on Mac.*
 
 ##### macOS on Apple Silicon (ARM)
 
-1. Some users [tested](https://github.com/developersu/ns-usbloader/issues/91) this application with [Zulu-JDK with FX support](https://www.azul.com/downloads/zulu-community/?version=java-11-lts&os=macos&architecture=arm-64-bit&package=jdk-fx)
-2. Try OpenJDK 17 that has m1 support. 
-
-You should try it too while we're waiting for platform support at OpenJDK/Oracle JDKs.
+* Some users [tested](https://github.com/developersu/ns-usbloader/issues/91) this application with [Zulu-JDK with FX support](https://www.azul.com/downloads/zulu-community/?version=java-11-lts&os=macos&architecture=arm-64-bit&package=jdk-fx). Try it!
+* OpenJDK 17 also should be a working solution.
 
 ##### Windows: 
 
