@@ -1,12 +1,13 @@
 # NS-USBloader
 
 ![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) ![CI](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fredrise.ru%2Fjen%2Fjob%2Fns-usbloader%2Fjob%2Fmaster%2F)
-[Support author](#support-this-app)
+
+[Support author link](#support-this-app)
 
 NS-USBloader is:
 * A PC-side installer for **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** / other compatible installers (USB and Network supported) and **[XorTroll/GoldLeaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
 Alternative to default **usb_install_pc.py**, **remote_install_pc.py**, **GoldTree**/**Quark**. 
-* This application also could be used as RCM payload on Windows, MacOS and Linux (supported arch: x86, x86_64 and Raspberry Pi).
+* RCM payload tool that works on Windows, macOS (Intel and Apple Silicon) and Linux (x86, amd64 and Raspberry Pi ARM).
 * It's a tool for creating split files! 
 * Also you can use it for merging split-files into one :)
 
@@ -108,12 +109,12 @@ Double-click on downloaded .jar file. Follow instructions. Or see 'Linux' sectio
 
 Set 'Security & Privacy' settings if needed.
 
-*Please note: JDK 11 is recommended for using on MacOS (EXCEPT APPLE SILICONE). There are few really weird issues already reported from JDK 14 users on Mac.*
+*Please note: JDK 11 is recommended for using on MacOS (EXCEPT APPLE SILICON). There are few really weird issues already reported from JDK 14 users on Mac.*
 
 ##### macOS on Apple Silicon (ARM)
 
 * Some users [tested](https://github.com/developersu/ns-usbloader/issues/91) this application with [Zulu-JDK with FX support](https://www.azul.com/downloads/zulu-community/?version=java-11-lts&os=macos&architecture=arm-64-bit&package=jdk-fx). Try it!
-* OpenJDK 17 also should be a working solution.
+* OpenJDK 17 also should be a working solution. [Tell us if it works for you!]((https://github.com/developersu/ns-usbloader/issues/91))
 
 ##### Windows: 
 
@@ -220,7 +221,14 @@ $ java -jar ns-usbloader-4.0.jar -m /tmp/ ~/*.nsp
 'Status' = 'Uploaded' that appears in the table does not mean that file has been installed. It means that it has been sent to NS without any issues! That's what this app about. 
 Handling successful/failed installation is a purpose of the other side application: Awoo/Awoo-like or GoldLeaf. And they don't provide any feedback interfaces so I can't detect success/failure.
 
-usb4java since NS-USBloader-v0.2.3 switched to 1.2.0 instead of 1.3.0. This should not impact anyone except users of macOS High Sierra (and Sierra, and El Capitan) where previous versions of NS-USBloader didn't work. Now builds with usb4java-1.2.0 marked as '-legacy' and builds with usb4java-1.3.0 doesn't have postfixes.
+#### What is this '-legacy' jar?!
+
+**JAR with NO postfixes** recommended for Windows users, Linux users and MacOS users who're using Mojave or later versions.
+
+**JAR with '-legacy' postfix** is for MacOS users who're still using OS X releases before (!) Mojave.
+(It also works for Linux and for Windows but sometimes it doesn't work for Windows and I don't know why).
+
+We have this situation because of weird behaviour inside usb4java library used in this application for USB interactions. In '-legacy' it's v1.2.0 and in 'normal' it's v1.3.0
 
 ### Translators!
 
