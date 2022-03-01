@@ -2,6 +2,8 @@
 
 ![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) ![CI](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fredrise.ru%2Fjen%2Fjob%2Fns-usbloader%2Fjob%2Fmaster%2F)
 
+## Mirror: [source code](https://git.redrise.ru/desu/ns-usbloader) | [builds](https://redrise.ru/jen/blue/organizations/jenkins/ns-usbloader/activity)
+
 [Support author link](#support-this-app)
 
 NS-USBloader is:
@@ -60,12 +62,13 @@ JDK 11 for MacOS and Linux
 
 ### Supported GoldLeaf versions
 | GoldLeaf version | NS-USBloader version |
-| ---------------- | -------------------- |
+|------------------|----------------------|
 | v0.5             | v0.4 - v0.5.2, v0.8+ |
 | v0.6             | none                 |
 | v0.6.1           | v0.6                 |
 | v0.7 - 0.7.3     | v0.7+                |
 | v0.8 - 0.9       | v1.0+                |
+| v0.10            | not supported; TBD   |
 
 where '+' means 'any next NS-USBloader version'.
 
@@ -95,6 +98,8 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="0955", ATTRS{idProduct}=="7321", MODE="0666"
 root # udevadm control --reload-rules && udevadm trigger
 ```
 
+5. For HiDPI use scaling like `java -Dglass.gtk.uiScale=150% -jar application.jar`
+
 ##### Raspberry Pi
 
 1. Install JDK: `sudo apt install default-jdk`
@@ -119,7 +124,7 @@ Set 'Security & Privacy' settings if needed.
 ##### Windows: 
 
 * [Download and install Java JRE](http://java.com/download/) (8u60 or higher)
-* Get this application (JAR file) and double-click on on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
+* Get this application (JAR file) and double-click on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
 * Once application opens click on 'Gear' icon. 
 * Click 'Download and install drivers'
 * Install drivers
