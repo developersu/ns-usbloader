@@ -6,31 +6,32 @@ steps:
   - name: test
     image: maven:3-jdk-11
     commands:
-      - mvn -B -DskipTests clean package
-      - mvn test -B
+    - mvn -B -DskipTests clean package
+    - mvn test -B
     volumes:
-      - name: m2
-        path: /root/.m2
+    - name: m2
+      path: /root/.m2
 
   - name: archive-standard-artifact
     image: alpine:latest
     commands:
-      - mkdir -p /builds/ns-usbloader
-      - cp target/ns-usbloader-*jar /builds/ns-usbloader/
+    - mkdir -p /builds/ns-usbloader
+    - cp target/ns-usbloader-*jar /builds/ns-usbloader/
     volumes:
-      - name: builds
-        path: /builds
+    - name: builds
+      path: /builds
 
-  - name: make-store-legacy-artifact
+  - name: emerge-legacy-artifact
     image: maven:3-jdk-11
     commands:
-      - sed -z -i -e 's/<groupId>org.usb4java<\/groupId>\n\s*<artifactId>usb4java<\/artifactId>\s*<version>1.3.0<\/version>/<groupId>org.usb4java<\/groupId>\n<artifactId>usb4java<\/artifactId>\n<version>1.2.0<\/version>/g' pom.xml
-      - sed -z -i -e 's/<finalName>${project.artifactId}-${project.version}-${maven.build.timestamp}<\/finalName>/<finalName>${project.artifactId}-legacy-${project.version}-${maven.build.timestamp}<\/finalName>/g' pom.xml
-      - mvn -B -DskipTests clean package
-      - cp target/ns-usbloader-*jar /builds/ns-usbloader/
+    - . ./.make_legacy
+    - mvn -B -DskipTests clean package
+    - cp target/ns-usbloader-*jar /builds/ns-usbloader/
     volumes:
-      - name: m2
-        path: /root/.m2
+    - name: m2
+      path: /root/.m2
+    - name: builds
+      path: /builds
 
 volumes:
   - name: m2
