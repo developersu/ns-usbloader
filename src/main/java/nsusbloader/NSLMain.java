@@ -32,7 +32,7 @@ import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
 
-    public static final String appVersion = "v5.2";
+    public static String appVersion;
     public static boolean isCli;
 
     @Override
@@ -41,6 +41,7 @@ public class NSLMain extends Application {
 
         Locale userLocale = AppPreferences.getInstance().getLocale();
         ResourceBundle rb = ResourceBundle.getBundle("locale", userLocale);
+        NSLMain.appVersion = ResourceBundle.getBundle("app").getString("_version");
 
         loader.setResources(rb);
         Parent root = loader.load();

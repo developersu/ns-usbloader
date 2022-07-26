@@ -27,7 +27,7 @@ public class AppPreferences {
 
     private final Preferences preferences;
     private final Locale locale;
-    public static final String[] goldleafSupportedVersions = {"v0.5", "v0.7.x", "v0.8-0.9"};
+    public static final String[] goldleafSupportedVersions = {"v0.5", "v0.7.x", "v0.8-0.9", "v0.10"};
 
     private AppPreferences(){
         this.preferences = Preferences.userRoot().node("NS-USBloader");

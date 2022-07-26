@@ -197,7 +197,7 @@ class TinFoil extends TransferModule {
             ae.printStackTrace();
             return true;
         } catch (NullPointerException npe){
-            print("NullPointerException (in some moment application didn't find something. Something important.):" +
+            print("Application didn't find something important. Make sure you have enough space on medium!" +
                     "\n         "+npe.getMessage(), EMsgType.FAIL);
             npe.printStackTrace();
             return true;

@@ -1,10 +1,6 @@
 # NS-USBloader
 
-![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) ![CI](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fredrise.ru%2Fjen%2Fjob%2Fns-usbloader%2Fjob%2Fmaster%2F)
-
-## Mirror: [source code](https://git.redrise.ru/desu/ns-usbloader) | [builds](https://redrise.ru/jen/blue/organizations/jenkins/ns-usbloader/activity)
-
-[Support author link](#support-this-app)
+![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) [![Build Status](https://ci.redrise.ru/api/badges/desu/ns-usbloader/status.svg)](https://ci.redrise.ru/desu/ns-usbloader)
 
 NS-USBloader is:
 * A PC-side installer for **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** / other compatible installers (USB and Network supported) and **[XorTroll/GoldLeaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
@@ -17,8 +13,14 @@ Alternative to default **usb_install_pc.py**, **remote_install_pc.py**, **GoldTr
 [Click here for Android version ;)](https://github.com/developersu/ns-usbloader-mobile)
 
 With GUI and cookies. Works on Windows, macOS and Linux.
+### Let's stay in touch:
+#### [→ Independent source code storage](https://git.redrise.ru/desu/ns-usbloader)
+#### [→ Mirror, issues tracker, place to send PRs](https://github.com/developersu/ns-usbloader)
+#### [→ Nightly builds](https://redrise.ru/builds/ns-usbloader/)
 
-Sometimes I add new posts about this project [on my home page](https://developersu.blogspot.com/search/label/NS-USBloader).
+[Support/Donate](#support-this-app)
+
+Sometimes I add new posts about this project [on my blog page](https://developersu.blogspot.com/search/label/NS-USBloader).
 
 ![Application screenshot](screenshots/1.png)  
 <img src="screenshots/2.png" alt="screenshot" width="250"/>  <img src="screenshots/3.png" alt="screenshot" width="250"/>  
@@ -45,7 +47,7 @@ Sometimes I add new posts about this project [on my home page](https://developer
 * Italian by [unbranched](https://github.com/unbranched)
 * Korean by [DDinghoya](https://github.com/DDinghoya)
 * Portuguese by [almircanella](https://github.com/almircanella)
-* Spanish by [/u/cokimaya007](https://www.reddit.com/u/cokimaya007), Kuziel Alejandro
+* Spanish by [/u/cokimaya007](https://www.reddit.com/u/cokimaya007), [Kuziel Alejandro](https://github.com/Uzi-Oni)
 * Chinese (Simplified) by [Huang YunKun (htynkn)](https://github.com/htynkn), [FFT9 (XXgame Group)](https://www.xxgame.net)
 * Chinese (Traditional) by [qazrfv1234](https://github.com/qazrfv1234), [FFT9 (XXgame Group)](https://www.xxgame.net)
 * German by [Swarsele](https://github.com/Swarsele)
@@ -68,7 +70,7 @@ JDK 11 for MacOS and Linux
 | v0.6.1           | v0.6                 |
 | v0.7 - 0.7.3     | v0.7+                |
 | v0.8 - 0.9       | v1.0+                |
-| v0.10            | not supported; TBD   |
+| v0.10            | v6.0                 |
 
 where '+' means 'any next NS-USBloader version'.
 
@@ -245,14 +247,19 @@ To convert files of any locale to readable format (and vise-versa) you can use t
 
 ## Support this app
 
-If you like this app, just give a star. 
+If you like this app, just give a star (@ GitHub).
 
-If you want to make a donation*, please see below:
+This is non-commercial project.
 
-[yoomoney](https://yoomoney.ru/to/410014301951665)
+Nevertheless, I'll be more than happy if you find a chance to make a donation for charity to people I trust:
 
-*Please note: this is non-commercial application.
+* BTC → 1YoBdyiL4TTVsCWmJ93TkfU2a1s9UfJcY
+* LTC → MEXnCLjwvaAZpaoJ1J4biF4DpoAx86gCkf
+* ETH → 0x82Ab0ddE183C12cAa6eD61DF3671675C4bdC42fc
+* DOGE → DFfVjsbcs9VfV9EQTSFF3xJVbjZSbmctP3
+* DOT → 13javzN4ixHPmBfR1oZHjAecydvWbEuqRtBWuxrZyKvkUrg3
+* USDT (TRC20) → THhhs883gH1AcvmNb2EVfhR7QNkWnoa1vN
 
-Thanks
+Thanks!
 
 Appreciate assistance and support of both [Vitaliy](https://github.com/SebastianUA) and [Konstantin](https://github.com/konstantin-kelemen). Without you all this magic would not have happened.

@@ -49,7 +49,7 @@ public class UsbCommunications extends CancellableRunnable {
 
     @Override
     public void run() {
-        print("\tStart", EMsgType.INFO);
+        print("\tStart");
 
         UsbConnect usbConnect = UsbConnect.connectHomebrewMode(logPrinter);
 
@@ -65,6 +65,9 @@ public class UsbCommunications extends CancellableRunnable {
         switch (protocol) {
             case "TinFoil":
                 module = new TinFoil(handler, nspMap, this, logPrinter);
+                break;
+            case "GoldLeafv0.10":
+                module = new GoldLeaf_010(handler, nspMap, this, logPrinter, nspFilterForGl);
                 break;
             case "GoldLeafv0.8-0.9":
                 module = new GoldLeaf_08(handler, nspMap, this, logPrinter, nspFilterForGl);
@@ -87,12 +90,12 @@ public class UsbCommunications extends CancellableRunnable {
      */
     private void close(EFileStatus status){
         logPrinter.update(nspMap, status);
-        print("\tEnd", EMsgType.INFO);
+        print("\tEnd");
         logPrinter.close();
     }
-    private void print(String message, EMsgType type){
+    private void print(String message){
         try {
-            logPrinter.print(message, type);
+            logPrinter.print(message, EMsgType.INFO);
         }
         catch (InterruptedException ie){
             ie.printStackTrace();
