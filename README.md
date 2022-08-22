@@ -55,6 +55,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Czech by [Spenaat](https://github.com/spenaat)
 * Arabic by [eslamabdel](https://github.com/eslamabdel)
 * Romanian by [Călin Ilie](https://github.com/calini)
+* Swedish by [Daniel Nylander](https://github.com/yeager) - (coming soon)
 
 ### System requirements
 
