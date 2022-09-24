@@ -8,7 +8,7 @@
     <name>NS-USBloader</name>
 
     <artifactId>ns-usbloader</artifactId>
-    <version>6.0</version>
+    <version>6.1</version>
 
     <url>https://redrise.ru</url>
     <description>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>17</version>
+            <version>18.0.1</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
@@ -155,19 +155,19 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.8.2</version>
+            <version>5.9.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.8.2</version>
+            <version>5.9.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.8.2</version>
+            <version>5.9.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -207,6 +207,7 @@
             </plugin>
             <!-- Don't generate default JAR without dependencies -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.4</version>
                 <executions>
