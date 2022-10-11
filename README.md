@@ -55,7 +55,9 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Czech by [Spenaat](https://github.com/spenaat)
 * Arabic by [eslamabdel](https://github.com/eslamabdel)
 * Romanian by [Călin Ilie](https://github.com/calini)
-* Swedish by [Daniel Nylander](https://github.com/yeager) - (coming soon)
+* Swedish by [Daniel Nylander](https://github.com/yeager)
+* Japanese by [kuragehime](https://github.com/kuragehimekurara1)
+* Ryukyuan languages by [kuragehime](https://github.com/kuragehimekurara1)
 
 ### System requirements
 
@@ -71,7 +73,7 @@ JDK 11 for MacOS and Linux
 | v0.6.1           | v0.6                 |
 | v0.7 - 0.7.3     | v0.7+                |
 | v0.8 - 0.9       | v1.0+                |
-| v0.10            | v6.0                 |
+| v0.10            | v6.0+                |
 
 where '+' means 'any next NS-USBloader version'.
 

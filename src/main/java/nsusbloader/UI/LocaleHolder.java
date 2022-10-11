@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2022 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -26,16 +26,14 @@ public class LocaleHolder {
     private final String localeCode;
     private final String languageName;
 
-    public LocaleHolder(Locale locale){
-        this.locale = locale;
-        this.localeCode = locale.toString();
-        this.languageName = locale.getDisplayLanguage(locale) + " (" + locale + ")";
-    }
-
     public LocaleHolder(String localeFileName) {
-        String country = localeFileName.substring(7, 9);
-        String language = localeFileName.substring(10, 12);
-        this.locale = new Locale(country, language);
+        String language = localeFileName.substring(7, 9);
+        String country;
+        if (localeFileName.length() > 23)               // ISO 639-3 not supported by Java
+            country = localeFileName.substring(10, localeFileName.indexOf('.'));
+        else                                            // ISO 639-1
+            country = localeFileName.substring(10, 12);
+        this.locale = new Locale(language, country);
         this.localeCode = locale.toString();
         this.languageName = locale.getDisplayLanguage(locale) + " (" + locale + ")";
     }
@@ -47,7 +45,7 @@ public class LocaleHolder {
 
     public String getLocaleCode(){
         return localeCode;
-    };
+    }
 
     public Locale getLocale() {
         return locale;

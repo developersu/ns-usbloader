@@ -32,7 +32,7 @@ public class AppPreferences {
     private AppPreferences(){
         this.preferences = Preferences.userRoot().node("NS-USBloader");
         String localeCode = preferences.get("locale", Locale.getDefault().toString());
-        this.locale = new Locale(localeCode.substring(0, 2), localeCode.substring(3, 5));
+        this.locale = new Locale(localeCode.substring(0, 2), localeCode.substring(3));
     }
 
     public String getTheme(){
