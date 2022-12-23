@@ -88,6 +88,8 @@ public class AppPreferences {
     public String getHostIp(){ return preferences.get("HOSTIP", "0.0.0.0").replaceAll("(\\s)|(\t)", "");}   // who the hell said 'paranoid'?
     public void setHostIp(String ip){preferences.put("HOSTIP", ip);}
 
+    public void give(){preferences.putBoolean("man", true);}
+    public boolean take(){return preferences.getBoolean("man", false);}
     public String getHostPort(){
         String value = preferences.get("HOSTPORT", "6042");
         if (!value.matches("^[0-9]{1,5}$"))
@@ -138,4 +140,10 @@ public class AppPreferences {
 
     public String getLastOpenedTab(){ return preferences.get("recent_tab", ""); }
     public void setLastOpenedTab(String tabId){ preferences.put("recent_tab", tabId); }
+    // Patches
+    public String getKeysLocation(){ return preferences.get("keys", ""); }
+    public void setKeysLocation(String path){ preferences.put("keys", path); }
+
+    public String getPatchesSaveToLocation(){ return FilesHelper.getRealFolder(preferences.get("patches_saveto", System.getProperty("user.home"))); }
+    public void setPatchesSaveToLocation(String value){ preferences.put("patches_saveto", value); }
 }

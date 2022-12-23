@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=NS-USBloader
+Exec=ns-usbloader
+Comment=NS multi tool
+Terminal=false
+Icon=ns-usbloader.svg
+Categories=Game;

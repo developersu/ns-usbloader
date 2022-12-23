@@ -1,9 +1,9 @@
-# NS-USBloader
+<h1 align="center"><img src="screenshots/ApplicationLogo.svg" alt="NS-USBloader" width="450px"/></h1>
 
 ![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) [![Build Status](https://ci.redrise.ru/api/badges/desu/ns-usbloader/status.svg)](https://ci.redrise.ru/desu/ns-usbloader)
 
 NS-USBloader is:
-* A PC-side installer for **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** / other compatible installers (USB and Network supported) and **[XorTroll/GoldLeaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
+* A PC-side installer for **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** / other compatible installers (USB and Network supported) and **[XorTroll/Goldleaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
 Alternative to default **usb_install_pc.py**, **remote_install_pc.py**, **GoldTree**/**Quark**. 
 * RCM payload tool that works on Windows, macOS (Intel and Apple Silicon) and Linux (x86, amd64 and Raspberry Pi ARM).
 * It's a tool for creating split files! 
@@ -59,14 +59,16 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Japanese by [kuragehime](https://github.com/kuragehimekurara1)
 * Ryukyuan languages by [kuragehime](https://github.com/kuragehimekurara1)
 
+* angelodalzotto makes packages in AUR
+
 ### System requirements
 
 JRE/JDK 8u60 or higher for Windows
 
 JDK 11 for MacOS and Linux
 
-### Supported GoldLeaf versions
-| GoldLeaf version | NS-USBloader version |
+### Supported Goldleaf versions
+| Goldleaf version | NS-USBloader version |
 |------------------|----------------------|
 | v0.5             | v0.4 - v0.5.2, v0.8+ |
 | v0.6             | none                 |
@@ -136,7 +138,7 @@ Set 'Security & Privacy' settings if needed.
 
 #### And how to use it?
 
-The first thing you should do it install Awoo ([Huntereb](https://github.com/Huntereb/Awoo-Installer)) or GoldLeaf ([XorTroll](https://github.com/XorTroll/Goldleaf)) on your NS. 
+The first thing you should do it install Awoo ([Huntereb](https://github.com/Huntereb/Awoo-Installer)) or Goldleaf ([XorTroll](https://github.com/XorTroll/Goldleaf)) on your NS. 
 
 Take a look on app, find where is the option to install from USB and/or Network. Maybe (very old) [this article (about TinFoil)](https://developersu.blogspot.com/2019/02/ns-usbloader-en.html) will be helpful.
 
@@ -146,19 +148,19 @@ There are three tabs. First one is main.
 
 ##### 'Gamepad' tab.
 
-At the top of you selecting from drop-down application and protocol that you're going to use. For GoldLeaf only USB is available. Lamp icon stands for switching themes (light or dark).
+At the top of you selecting from drop-down application and protocol that you're going to use. For Goldleaf only USB is available. Lamp icon stands for switching themes (light or dark).
 
 Then you may drag-n-drop files (split-files aka folders) to application or use 'Select NSP files' button. Multiple selection for files available. Click it again and select files from another folder it you want, it will be added into the table.
 
 Table.
 
-There you can select checkbox for files that will be sent to application (AW/GL). ~~Since GoldLeaf v0.5 allow you only one file transmission per time, only one file is available for selection.~~ 
+There you can select checkbox for files that will be sent to application (AW/GL). ~~Since Goldleaf v0.5 allow you only one file transmission per time, only one file is available for selection.~~ 
 
 Also you can use space to select/un-select files and 'delete' button for deleting. By right-mouse-click you can see context menu where you can delete one OR all items from the table.
 
-For GoldLeaf v0.6.1 and NS-USBloader v0.6 (and higher) you will have to use 'Explore content' -> 'Remote PC (via USB)' You will see two drives HOME:/ and VIRT:/. First drive is pointing to your home directory. Second one is reflection of what you've added to table (first application tab). Also VIRT:/ drive have limited functionality in comparison to HOME:/. E.g. you can't write files to this drive since it's not a drive. But don't worry, it won't make any impact on GoldLeaf or your NS if you try.
+For Goldleaf v0.6.1 and NS-USBloader v0.6 (and higher) you will have to use 'Explore content' -> 'Remote PC (via USB)' You will see two drives HOME:/ and VIRT:/. First drive is pointing to your home directory. Second one is reflection of what you've added to table (first application tab). Also VIRT:/ drive have limited functionality in comparison to HOME:/. E.g. you can't write files to this drive since it's not a drive. But don't worry, it won't make any impact on Goldleaf or your NS if you try.
 
-Also, for GoldLeaf write files (from NS to PC): You have to 'Stop execution' properly before accessing files transferred from GL. Usually you have to wait 5sec or less. It will guarantee that your files properly written to PC.
+Also, for Goldleaf write files (from NS to PC): You have to 'Stop execution' properly before accessing files transferred from GL. Usually you have to wait 5sec or less. It will guarantee that your files properly written to PC.
 
 ##### 'RCM' tab
 
@@ -174,7 +176,7 @@ Here you can configure settings for network file transmission. Usually you shoul
 
 Also here you can:
 * Set 'Auto-check for updates' for checking for updates when application starts, or click button to verify if new version released immediately.
-* Set 'Show only *.nsp in GoldLeaf' to filter all files displayed at HOME:/ drive. So only NSP files will appear.
+* Set 'Show only *.nsp in Goldleaf' to filter all files displayed at HOME:/ drive. So only NSP files will appear.
 
 ##### 'Dialog with three dots' tab.
 
@@ -187,7 +189,7 @@ To get help run ``$ java -jar ns-usbloader-4.0.jar --help``
 
 ```
  -c,--clean                      Remove/reset settings and exit
- -g,--goldleaf <...>             Install via GoldLeaf mode. Check '-g help' for information.
+ -g,--Goldleaf <...>             Install via Goldleaf mode. Check '-g help' for information.
  -h,--help                       Show this help
  -m,--merge <...>                Merge files. Check '-m help' for information.
  -n,--tfn <...>                  Install via Awoo Network mode. Check '-n help' for information.
@@ -218,7 +220,7 @@ Send RCM payload:
 $ java -jar ns-usbloader-4.0.jar -r C:\Users\Superhero\hekate.bin
 Send files to Awoo Installer via Net-install: 
 $ java -jar ns-usbloader-4.0.jar -n nsip=192.168.0.1 ./file.nsz ./file.nsp ~/*.xci
-Send files to GoldLeaf v0.8:
+Send files to Goldleaf v0.8:
 $ java -jar ns-usbloader-4.0.jar -g ver=v0.8 ./*
 Split files:
 $ java -jar ns-usbloader-4.0.jar -s /tmp/ ~/*.nsp
@@ -229,7 +231,7 @@ $ java -jar ns-usbloader-4.0.jar -m /tmp/ ~/*.nsp
 ### Other notes
 
 'Status' = 'Uploaded' that appears in the table does not mean that file has been installed. It means that it has been sent to NS without any issues! That's what this app about. 
-Handling successful/failed installation is a purpose of the other side application: Awoo/Awoo-like or GoldLeaf. And they don't provide any feedback interfaces so I can't detect success/failure.
+Handling successful/failed installation is a purpose of the other side application: Awoo/Awoo-like or Goldleaf. And they don't provide any feedback interfaces so I can't detect success/failure.
 
 #### What is this '-legacy' jar?!
 

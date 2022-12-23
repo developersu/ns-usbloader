@@ -18,9 +18,12 @@
 */
 package nsusbloader.cli;
 
+import nsusbloader.AppPreferences;
+import nsusbloader.Main;
 import nsusbloader.NSLMain;
 import org.apache.commons.cli.*;
 
+import java.time.LocalTime;
 import java.util.prefs.Preferences;
 
 public class CommandLineInterface {
@@ -32,10 +35,12 @@ public class CommandLineInterface {
         }
 
         final Options cliOptions = createCliOptions();
+        final Options cliOptionsToBeExact =
+                createCliOptions().addOption(Option.builder().longOpt("gimmegimmegimme").hasArg(false).build());
 
         CommandLineParser cliParser = new DefaultParser();
         try{
-            CommandLine cli = cliParser.parse(cliOptions, args);
+            CommandLine cli = cliParser.parse(cliOptionsToBeExact, args);
             if (cli.hasOption('v') || cli.hasOption("version")){
                 handleVersion();
                 return;
@@ -75,6 +80,16 @@ public class CommandLineInterface {
                 return;
             }
             */
+            if (cli.hasOption("gimmegimmegimme")){
+                if (LocalTime.now().isBefore(LocalTime.parse("09:00:00"))){
+                    AppPreferences.getInstance().give();
+                    AppPreferences.getInstance().setLastOpenedTab("PatchesTabHolder");
+                    System.out.println("=)");
+                    Main.main(new String[]{});
+                    return;
+                }
+                throw new ParseException("Unhandled LocalTime() exception;");
+            }
             if (cli.hasOption("s") || cli.hasOption("split")){
                 final String[] arguments = cli.getOptionValues("split");
                 new SplitCli(arguments);

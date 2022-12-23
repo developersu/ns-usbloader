@@ -112,6 +112,8 @@ public class MessagesConsumer extends AnimationTimer {
             case SPLIT_MERGE_TOOL:
                 MediatorControl.getInstance().getSplitMergeController().setOneLineStatus(oneLinerStatus.get());
                 break;
+            case PATCHES:
+                MediatorControl.getInstance().getPatchesController().setOneLineStatus(oneLinerStatus.get());
         }
         this.stop();
     }

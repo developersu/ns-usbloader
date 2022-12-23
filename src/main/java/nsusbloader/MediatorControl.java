@@ -40,11 +40,12 @@ public class MediatorControl {
     }
 
     public NSLMainController getContoller(){ return mainController; }
-    public GamesController getGamesController(){ return mainController.getGamesCtrlr(); };
-    public SettingsController getSettingsController(){ return mainController.getSettingsCtrlr(); };
-    public SplitMergeController getSplitMergeController(){ return mainController.getSmCtrlr(); };
-    public RcmController getRcmController(){ return mainController.getRcmCtrlr(); };
-    public NxdtController getNxdtController(){ return mainController.getNXDTabController(); };
+    public GamesController getGamesController(){ return mainController.getGamesCtrlr(); }
+    public SettingsController getSettingsController(){ return mainController.getSettingsCtrlr(); }
+    public SplitMergeController getSplitMergeController(){ return mainController.getSmCtrlr(); }
+    public RcmController getRcmController(){ return mainController.getRcmCtrlr(); }
+    public NxdtController getNxdtController(){ return mainController.getNXDTabController(); }
+    public PatchesController getPatchesController(){ return mainController.getPatchesTabController(); }
 
     public ResourceBundle getResourceBundle(){
         return mainController.getResourceBundle();
@@ -56,6 +57,7 @@ public class MediatorControl {
         getSplitMergeController().notifyThreadStarted(isActive, appModuleType);
         getRcmController().notifyThreadStarted(isActive, appModuleType);
         getNxdtController().notifyThreadStarted(isActive, appModuleType);
+        getPatchesController().notifyThreadStarted(isActive, appModuleType);
     }
     public synchronized boolean getTransferActive() { return this.isTransferActive.get(); }
 }

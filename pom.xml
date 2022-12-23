@@ -12,7 +12,7 @@
 
     <url>https://redrise.ru</url>
     <description>
-        NS multi-tool
+        NS multi tool
     </description>
     <inceptionYear>2019</inceptionYear>
     <organization>
@@ -61,28 +61,28 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
@@ -90,28 +90,28 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
@@ -119,29 +119,58 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>18.0.1</version>
+            <version>19</version>
             <classifier>mac</classifier>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>19</version>
+            <classifier>mac-aarch64</classifier>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>19</version>
+            <classifier>mac-aarch64</classifier>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>19</version>
+            <classifier>mac-aarch64</classifier>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>19</version>
+            <classifier>mac-aarch64</classifier>
             <scope>compile</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.usb4java/usb4java -->
@@ -169,6 +198,13 @@
             <artifactId>junit-jupiter-params</artifactId>
             <version>5.9.0</version>
             <scope>test</scope>
+        </dependency>
+        <!-- picked from local repo -->
+        <dependency>
+            <groupId>ru.redrise</groupId>
+            <artifactId>libKonogonka</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
     <build>
@@ -243,10 +279,10 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Launch4j
             <plugin>
+                <!-- https://mvnrepository.com/artifact/com.akathist.maven.plugins.launch4j/launch4j-maven-plugin -->
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <version>1.7.25</version>
+                <version>2.2.0</version>
                 <artifactId>launch4j-maven-plugin</artifactId>
                 <executions>
                     <execution>
@@ -258,8 +294,8 @@
                         <configuration>
                             <headerType>gui</headerType>
                             <icon>appicon.ico</icon>
-                            <outfile>target/NS-USBloader-${project.version}.exe</outfile>
-                            <jar>target/ns-usbloader-${project.version}-jar-with-dependencies.jar</jar>
+                            <outfile>target/NS-USBloader-${project.version}-${maven.build.timestamp}.exe</outfile>
+                            <jar>target/${project.artifactId}-${project.version}-${maven.build.timestamp}.jar</jar>
                             <errTitle>NS-USBloader</errTitle>
                             <classPath>
                                 <mainClass>nsusbloader.Main</mainClass>
@@ -267,13 +303,14 @@
                                 <preCp>anything</preCp>
                             </classPath>
                             <jre>
-                                <minVersion>1.8</minVersion>
+                                <minVersion>1.8.0</minVersion>
+                                <path>%JAVA_HOME%;%PATH%</path>
                             </jre>
                             <versionInfo>
                                 <fileVersion>1.0.0.0</fileVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
-                                <fileDescription>Awoo and GoldLeaf installer for your NS</fileDescription>
-                                <copyright>GNU General Public License v3, 2019 ${project.organization.name}. Russia/LPR.</copyright>
+                                <fileDescription>NS multi tool</fileDescription>
+                                <copyright>GNU General Public License v3, 2019 ${project.organization.name}, Russia.</copyright>
                                 <productVersion>1.0.0.0</productVersion>
                                 <txtProductVersion>${project.version}</txtProductVersion>
                                 <companyName>${project.organization.name}</companyName>
@@ -285,7 +322,6 @@
                     </execution>
                 </executions>
             </plugin>
-            -->
         </plugins>
     </build>
 </project>

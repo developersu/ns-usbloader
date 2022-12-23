@@ -28,6 +28,7 @@ import nsusbloader.Controllers.NSLMainController;
 import nsusbloader.cli.CommandLineInterface;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 public class NSLMain extends Application {
@@ -47,10 +48,10 @@ public class NSLMain extends Application {
         Parent root = loader.load();
 
         primaryStage.getIcons().addAll(
-                new Image(getClass().getResourceAsStream("/res/app_icon32x32.png")),
-                new Image(getClass().getResourceAsStream("/res/app_icon48x48.png")),
-                new Image(getClass().getResourceAsStream("/res/app_icon64x64.png")),
-                new Image(getClass().getResourceAsStream("/res/app_icon128x128.png"))
+                new Image(Objects.requireNonNull(getClass().getResourceAsStream("/res/app_icon32x32.png"))),
+                new Image(Objects.requireNonNull(getClass().getResourceAsStream("/res/app_icon48x48.png"))),
+                new Image(Objects.requireNonNull(getClass().getResourceAsStream("/res/app_icon64x64.png"))),
+                new Image(Objects.requireNonNull(getClass().getResourceAsStream("/res/app_icon128x128.png")))
         );
 
         primaryStage.setTitle("NS-USBloader "+appVersion);

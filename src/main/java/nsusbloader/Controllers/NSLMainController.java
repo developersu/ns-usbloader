@@ -43,7 +43,7 @@ public class NSLMainController implements Initializable {
     @FXML
     private TabPane mainTabPane;
     @FXML
-    private Tab GamesTabHolder, RCMTabHolder, SMTabHolder;
+    private Tab GamesTabHolder, RCMTabHolder, SMTabHolder, PatchesTabHolder;
 
     @FXML
     private GamesController GamesTabController;
@@ -55,6 +55,8 @@ public class NSLMainController implements Initializable {
     private RcmController RcmTabController;
     @FXML
     private NxdtController NXDTabController;
+    @FXML
+    private PatchesController PatchesTabController;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -71,7 +73,7 @@ public class NSLMainController implements Initializable {
         if (AppPreferences.getInstance().getAutoCheckUpdates()){
             checkForUpdates();
         }
-
+        if (! AppPreferences.getInstance().take()) mainTabPane.getTabs().remove(3);
         openLastOpenedTab();
     }
     private void checkForUpdates(){
@@ -127,6 +129,8 @@ public class NSLMainController implements Initializable {
     public RcmController getRcmCtrlr(){ return RcmTabController; }
 
     public NxdtController getNXDTabController(){ return NXDTabController; }
+
+    public PatchesController getPatchesTabController(){ return PatchesTabController; }
     /**
      * Save preferences before exit
      * */
@@ -136,7 +140,7 @@ public class NSLMainController implements Initializable {
         SplitMergeTabController.updatePreferencesOnExit(); // NOTE: This shit above should be re-written to similar pattern
         RcmTabController.updatePreferencesOnExit();
         NXDTabController.updatePreferencesOnExit();
-
+        PatchesTabController.updatePreferencesOnExit();
         saveLastOpenedTab();
     }
 
@@ -151,6 +155,9 @@ public class NSLMainController implements Initializable {
                 break;
             case "SMTabHolder":
                 mainTabPane.getSelectionModel().select(SMTabHolder);
+                break;
+            case "PatchesTabHolder":
+                mainTabPane.getSelectionModel().select(PatchesTabHolder);
                 break;
         }
     }
