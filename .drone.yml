@@ -4,7 +4,7 @@ name: default
 
 steps:
   - name: test
-    image: maven:3-jdk-11
+    image: maven:3-openjdk-18
     commands:
     - mvn -B -DskipTests clean package
     - mvn test -B
@@ -17,7 +17,7 @@ steps:
     commands:
     - mkdir -p /builds/ns-usbloader
     - cp target/ns-usbloader-*jar /builds/ns-usbloader/
-    - cp target/ns-usbloader-*exe /builds/ns-usbloader/
+    - cp target/NS-USBloader-*exe /builds/ns-usbloader/
     volumes:
     - name: builds
       path: /builds
@@ -28,7 +28,7 @@ steps:
     - . ./.make_legacy
     - mvn -B -DskipTests clean package
     - cp target/ns-usbloader-*jar /builds/ns-usbloader/
-    - cp target/ns-usbloader-*exe /builds/ns-usbloader/
+    - cp target/NS-USBloader-*exe /builds/ns-usbloader/
     volumes:
     - name: m2
       path: /root/.m2

@@ -280,7 +280,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <!-- https://mvnrepository.com/artifact/com.akathist.maven.plugins.launch4j/launch4j-maven-plugin -->
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <version>2.2.0</version>
                 <artifactId>launch4j-maven-plugin</artifactId>
