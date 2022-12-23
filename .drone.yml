@@ -4,7 +4,7 @@ name: default
 
 steps:
   - name: test
-    image: maven:3-openjdk-18
+    image: maven:3-openjdk-17
     commands:
     - mvn -B -DskipTests clean package
     - mvn test -B
@@ -23,7 +23,7 @@ steps:
       path: /builds
 
   - name: emerge-legacy-artifact
-    image: maven:3-jdk-11
+    image: maven:3-openjdk-17
     commands:
     - . ./.make_legacy
     - mvn -B -DskipTests clean package
