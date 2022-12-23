@@ -42,6 +42,4 @@ interface IHeuristicEs {
      * @return isFound();
      * */
     boolean setOffsetsNearby(int offsetNearby);
-
-    int getId();
 }

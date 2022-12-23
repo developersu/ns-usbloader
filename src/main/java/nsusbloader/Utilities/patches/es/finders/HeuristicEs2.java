@@ -160,9 +160,4 @@ class HeuristicEs2 implements IHeuristicEs {
 
         return builder.toString();
     }
-
-    @Override
-    public int getId(){
-        return 2;
-    }
 }

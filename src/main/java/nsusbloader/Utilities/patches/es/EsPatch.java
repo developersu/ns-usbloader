@@ -67,6 +67,8 @@ public class EsPatch {
         fwVersion = Long.parseLong(""+ncaProvider.getSdkVersion()[3]+ncaProvider.getSdkVersion()[2]
                 +ncaProvider.getSdkVersion()[1] +ncaProvider.getSdkVersion()[0]);
         logPrinter.print("Internal firmware version: "+ncaProvider.getSdkVersion()[3] +"."+ncaProvider.getSdkVersion()[2] +"."+ncaProvider.getSdkVersion()[1] +"."+ncaProvider.getSdkVersion()[0], EMsgType.INFO);
+        if (fwVersion < 9300)
+            logPrinter.print("WARNING! FIRMWARES VERSIONS BEFORE 9.0.0 ARE NOT SUPPORTED! USING PRODUCED ES PATCHES (IF ANY) COULD BREAK SOMETHING! IT'S NEVER BEEN TESTED!", EMsgType.WARNING);
     }
     private void getBuildId(NSO0Provider nso0Provider) throws Exception{
         NSO0Header nso0DecompressedHeader = nso0Provider.getAsDecompressedNSO0().getHeader();

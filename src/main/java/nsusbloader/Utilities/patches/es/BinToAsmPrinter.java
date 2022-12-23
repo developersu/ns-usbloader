@@ -102,21 +102,21 @@ public class BinToAsmPrinter {
         }
 
         if ((instructionExpression >> 21 & 0x7FF) == 0x1C2)
-            return printLDURBSimplified(instructionExpression, offset);
+            return printImTooLazy("LDURB", instructionExpression, offset);
 
         // same to (afterJumpExpression >> 23 & 0x1F9) != 0xA1
         switch (instructionExpression >> 22 & 0x1FF){
             case 0xA3: // 0b10100011
             case 0xA7: // 0b10100111
             case 0xA5: // 0b10100101
-                return printLDPSimplified(instructionExpression, offset);
+                return printImTooLazy("LDP", instructionExpression, offset);
         }
 
         switch ((instructionExpression >> 23 & 0xff)){
             case 0xA5:
                 return printMOVSimplified(instructionExpression, offset);
             case 0x22:
-                return printADDSimplified(instructionExpression, offset);
+                return printImTooLazy("ADD", instructionExpression, offset);
             case 0x62:
                 if (((instructionExpression & 0x1f) == 0x1f)){
                     return printCMNSimplified(instructionExpression, offset);
@@ -416,22 +416,12 @@ public class BinToAsmPrinter {
                 getBConditionalMarker(instructionExpression & 0xf),
                 conditionalJumpLocation, (conditionalJumpLocation + 0x100));
     }
+    private static String printImTooLazy(String name, int instructionExpression, int offset){
+        return String.format(
+                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   "+name+"           . . . \n"+ ANSI_RESET,
+                offset, Integer.reverseBytes(instructionExpression), instructionExpression);
+    }
 
-    private static String printADDSimplified(int instructionExpression, int offset){    //ADD (immediate)
-        return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   ADD           . . . \n"+ ANSI_RESET,
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression);
-    }
-    private static String printLDPSimplified(int instructionExpression, int offset){
-        return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   LDP           . . . \n"+ ANSI_RESET,
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression);
-    }
-    private static String printLDURBSimplified(int instructionExpression, int offset){
-        return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   LDURB          . . . \n"+ ANSI_RESET,
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression);
-    }
     private static String printSUBSimplified(int instructionExpression, int offset){
         String wx = (instructionExpression >> 31 == 0) ? "W" : "X";
         int Rt = instructionExpression & 0x1f;

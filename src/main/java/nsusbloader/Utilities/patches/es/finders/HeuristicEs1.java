@@ -101,9 +101,4 @@ class HeuristicEs1 implements IHeuristicEs {
 
         return builder.toString();
     }
-
-    @Override
-    public int getId(){
-        return 1;
-    }
 }

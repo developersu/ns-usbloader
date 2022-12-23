@@ -22,9 +22,9 @@ With GUI and cookies. Works on Windows, macOS and Linux.
 
 Sometimes I add new posts about this project [on my blog page](https://developersu.blogspot.com/search/label/NS-USBloader).
 
-![Application screenshot](screenshots/1.png)  
-<img src="screenshots/2.png" alt="screenshot" width="250"/>  <img src="screenshots/3.png" alt="screenshot" width="250"/>  
-<img src="screenshots/4.png" alt="screenshot" width="250"/>  <img src="screenshots/5.png" alt="screenshot" width="250"/>
+<img src="screenshots/1.png" alt="screenshot" width="250"/>  <img src="screenshots/2.png" alt="screenshot" width="250"/>
+<img src="screenshots/3.png" alt="screenshot" width="250"/>  <img src="screenshots/4.png" alt="screenshot" width="250"/>  
+<img src="screenshots/5.png" alt="screenshot" width="250"/>
 
 #### License
 

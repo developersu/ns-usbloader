@@ -143,9 +143,4 @@ class HeuristicEs3 implements IHeuristicEs {
         }
         return builder.toString();
     }
-
-    @Override
-    public int getId(){
-        return 3;
-    }
 }
