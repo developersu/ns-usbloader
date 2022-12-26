@@ -42,7 +42,6 @@ public class NSLMain extends Application {
 
         Locale userLocale = AppPreferences.getInstance().getLocale();
         ResourceBundle rb = ResourceBundle.getBundle("locale", userLocale);
-        NSLMain.appVersion = ResourceBundle.getBundle("app").getString("_version");
 
         loader.setResources(rb);
         Parent root = loader.load();
@@ -84,6 +83,7 @@ public class NSLMain extends Application {
     }
 
     public static void main(String[] args) {
+        NSLMain.appVersion = ResourceBundle.getBundle("app").getString("_version");
         if (args.length == 0) {
             launch(args);
         }

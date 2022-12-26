@@ -22,7 +22,7 @@ With GUI and cookies. Works on Windows, macOS and Linux.
 
 Sometimes I add new posts about this project [on my blog page](https://developersu.blogspot.com/search/label/NS-USBloader).
 
-<img src="screenshots/1.png" alt="screenshot" width="250"/>  <img src="screenshots/2.png" alt="screenshot" width="250"/>
+<img src="screenshots/1.png" alt="screenshot" width="250"/>  <img src="screenshots/2.png" alt="screenshot" width="250"/>  
 <img src="screenshots/3.png" alt="screenshot" width="250"/>  <img src="screenshots/4.png" alt="screenshot" width="250"/>  
 <img src="screenshots/5.png" alt="screenshot" width="250"/>
 
@@ -59,7 +59,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Japanese by [kuragehime](https://github.com/kuragehimekurara1)
 * Ryukyuan languages by [kuragehime](https://github.com/kuragehimekurara1)
 
-* angelodalzotto makes packages in AUR
+* Angelo Elias Dalzotto makes packages in AUR
 
 ### System requirements
 
