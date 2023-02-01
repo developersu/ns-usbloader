@@ -39,20 +39,21 @@ import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
 import nsusbloader.Utilities.patches.es.EsPatchMaker;
+import nsusbloader.Utilities.patches.fs.FsPatchMaker;
 
 // TODO: CLI SUPPORT
 public class PatchesController implements Initializable {
     @FXML
     private VBox patchesToolPane;
     @FXML
-    private Button selFwFolderBtn, selProdKeysBtn, makeEsBtn;
+    private Button selFwFolderBtn, selProdKeysBtn, makeEsBtn, makeFsBtn;
     @FXML
     private Label shortNameFirmwareLbl, locationFirmwareLbl, saveToLbl, shortNameKeysLbl, locationKeysLbl, statusLbl;
     private Thread workThread;
 
     private String previouslyOpenedPath;
     private ResourceBundle resourceBundle;
-    private Region convertRegion;
+    private Region convertRegionEs;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -70,9 +71,10 @@ public class PatchesController implements Initializable {
         locationKeysLbl.textProperty().addListener((observableValue, currentText, updatedText) ->
                 shortNameKeysLbl.setText(updatedText.replaceAll(myRegexp, "")));
 
-        convertRegion = new Region();
-        convertRegion.getStyleClass().add("regionCake");
-        makeEsBtn.setGraphic(convertRegion);
+        convertRegionEs = new Region();
+        convertRegionEs.getStyleClass().add("regionCake");
+        makeEsBtn.setGraphic(convertRegionEs);
+        //makeFsBtn.setGraphic(convertRegionEs);
 
         AppPreferences preferences = AppPreferences.getInstance();
         String keysLocation = preferences.getKeysLocation();
@@ -85,6 +87,7 @@ public class PatchesController implements Initializable {
         saveToLbl.setText(preferences.getPatchesSaveToLocation());
         //makeEsBtn.disableProperty().bind(Bindings.isEmpty(locationFirmwareLbl.textProperty()));
         makeEsBtn.setOnAction(actionEvent -> makeEs());
+        makeFsBtn.setOnAction(actionEvent -> makeFs());
     }
 
     /**
@@ -174,6 +177,30 @@ public class PatchesController implements Initializable {
         workThread.setDaemon(true);
         workThread.start();
     }
+    private void makeFs(){
+        if (locationFirmwareLbl.getText().isEmpty() || locationKeysLbl.getText().isEmpty()){
+            ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"),
+                    resourceBundle.getString("tabPatches_ServiceWindowMessage"));
+            return;
+        }
+
+        if (workThread != null && workThread.isAlive())
+            return;
+        statusLbl.setText("");
+
+        if (MediatorControl.getInstance().getTransferActive()) {
+            ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"),
+                    resourceBundle.getString("windowBodyPleaseStopOtherProcessFirst"));
+            return;
+        }
+
+        FsPatchMaker fsPatchMaker = new FsPatchMaker(locationFirmwareLbl.getText(), locationKeysLbl.getText(),
+                saveToLbl.getText());
+        workThread = new Thread(fsPatchMaker);
+
+        workThread.setDaemon(true);
+        workThread.start();
+    }
     private void interruptProcessOfPatchMaking(){
         if (workThread == null || ! workThread.isAlive())
             return;
@@ -187,11 +214,11 @@ public class PatchesController implements Initializable {
             return;
         }
 
-        convertRegion.getStyleClass().clear();
+        convertRegionEs.getStyleClass().clear();
 
         if (isActive) {
             MediatorControl.getInstance().getContoller().logArea.clear();
-            convertRegion.getStyleClass().add("regionStop");
+            convertRegionEs.getStyleClass().add("regionStop");
 
             makeEsBtn.setOnAction(e-> interruptProcessOfPatchMaking());
             makeEsBtn.setText(resourceBundle.getString("btn_Stop"));
@@ -199,7 +226,7 @@ public class PatchesController implements Initializable {
             makeEsBtn.getStyleClass().add("buttonStop");
         }
         else {
-            convertRegion.getStyleClass().add("regionCake");
+            convertRegionEs.getStyleClass().add("regionCake");
 
             makeEsBtn.setOnAction(actionEvent -> makeEs());
             makeEsBtn.setText(resourceBundle.getString("tabPatches_Btn_MakeEs"));

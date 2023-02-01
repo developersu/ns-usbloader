@@ -1,5 +1,5 @@
 /*
-    Copyright 2018-2022 Dmitry Isaenko
+    Copyright 2018-2023 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
  */
-package nsusbloader.Utilities.patches.es.finders;
+package nsusbloader.Utilities.patches.fs.finders;
 
 import libKonogonka.Converter;
 import nsusbloader.Utilities.patches.AHeuristic;
@@ -25,19 +25,25 @@ import nsusbloader.Utilities.patches.SimplyFind;
 
 import java.util.List;
 
-class HeuristicEs3 extends AHeuristic {
-    private static final String PATTERN0 = "..FF97";
-    private static final String PATTERN1 = "......FF97"; // aka "E0230091..FF97";
+class HeuristicFsFAT2 extends AHeuristic {
+    private static final String PATTERN0 = "...94081C00121F05007181000054";
+    private static final String PATTERN1 = "..003688...1F";
 
     private final List<Integer> findings;
     private final byte[] where;
 
-    HeuristicEs3(long fwVersion, byte[] where){
+    HeuristicFsFAT2(long fwVersion, byte[] where){
         this.where = where;
         String pattern = getPattern(fwVersion);
         SimplyFind simplyfind = new SimplyFind(pattern, where);
         this.findings = simplyfind.getResults();
-
+        /*
+        System.out.println("\t\tFAT32 # 2 +++++++++++++++++++++++++++++++");
+        for (Integer find : findings) {
+            System.out.println(getDetails(find));
+            System.out.println("------------------------------------------------------------------");
+        }
+        /*                                                                                                  FIXME
         this.findings.removeIf(this::dropStep1);
         if(findings.size() < 2)
             return;
@@ -47,9 +53,11 @@ class HeuristicEs3 extends AHeuristic {
             return;
 
         this.findings.removeIf(this::dropStep3);
+
+ */
     }
     private String getPattern(long fwVersion){
-        if (fwVersion < 10400)
+        if (fwVersion < 15300) // & fwVersion >= 9300
             return PATTERN0;
         return PATTERN1;
     }
@@ -112,6 +120,25 @@ class HeuristicEs3 extends AHeuristic {
         return isFound();
     }
 
+    public String getDetails(Integer value){
+        StringBuilder builder = new StringBuilder();
+        int cbzOffsetInternal = value - 4;
+        int cbzExpression = Converter.getLEint(where, cbzOffsetInternal);
+        int conditionalJumpLocation = ((cbzExpression >> 5 & 0x7FFFF) * 4 + cbzOffsetInternal) & 0xfffff;
+
+        int secondExpressionsPairElement1 = Converter.getLEint(where, conditionalJumpLocation);
+        int secondExpressionsPairElement2 = Converter.getLEint(where, conditionalJumpLocation+4);
+
+        builder.append(BinToAsmPrinter.printSimplified(cbzExpression, cbzOffsetInternal));
+        builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, cbzOffsetInternal+4), cbzOffsetInternal+4));
+        builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, cbzOffsetInternal+8), cbzOffsetInternal+8));
+        builder.append("...\n");
+
+        builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement1, conditionalJumpLocation));
+        builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement2, conditionalJumpLocation+4));
+
+        return builder.toString();
+    }
 
     @Override
     public String getDetails(){
@@ -131,17 +158,6 @@ class HeuristicEs3 extends AHeuristic {
         builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement1, conditionalJumpLocation));
         builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement2, conditionalJumpLocation+4));
 
-        if (((secondExpressionsPairElement2 >> 26 & 0b111111) == 0x5)){
-            builder.append("...\n");
-            int conditionalJumpLocation2 = ((secondExpressionsPairElement2 & 0x3ffffff) * 4 + (conditionalJumpLocation+4)) & 0xfffff;
-
-            builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, conditionalJumpLocation2), conditionalJumpLocation2));
-            builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, conditionalJumpLocation2+4), conditionalJumpLocation2+4));
-
-        }
-        else {
-            builder.append("NO CONDITIONAL JUMP ON 2nd iteration (HeuristicEs3)");
-        }
         return builder.toString();
     }
 }

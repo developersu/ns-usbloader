@@ -1,5 +1,5 @@
 /*
-    Copyright 2018-2022 Dmitry Isaenko
+    Copyright 2018-2023 Dmitry Isaenko
      
     This file is part of NS-USBloader.
 
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
  */
-package nsusbloader.Utilities.patches.es;
+package nsusbloader.Utilities.patches.fs;
 
 import libKonogonka.Converter;
 import libKonogonka.fs.NCA.NCAProvider;
@@ -24,10 +24,10 @@ import libKonogonka.fs.NCA.NCAProvider;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-class EsNcaSearchTask implements Callable<NCAProvider> {
+class FsNcaSearchTask implements Callable<NCAProvider> {
     private final List<NCAProvider> ncaProviders;
 
-    EsNcaSearchTask(List<NCAProvider> ncaProviders){
+    FsNcaSearchTask(List<NCAProvider> ncaProviders){
         this.ncaProviders = ncaProviders;
     }
 
@@ -36,7 +36,7 @@ class EsNcaSearchTask implements Callable<NCAProvider> {
         try {
             for (NCAProvider ncaProvider : ncaProviders) {
                 String titleId = Converter.byteArrToHexStringAsLE(ncaProvider.getTitleId());
-                if (titleId.startsWith("0100000000000033") && ncaProvider.getContentType() == 0) {
+                if (titleId.equals("0100000000000819") || titleId.equals("010000000000081b")) { // eq. FAT || exFAT
                     return ncaProvider;
                 }
             }

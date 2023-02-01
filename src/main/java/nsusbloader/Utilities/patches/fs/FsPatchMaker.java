@@ -16,21 +16,20 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
  */
-package nsusbloader.Utilities.patches.es;
+package nsusbloader.Utilities.patches.fs;
 
 import libKonogonka.KeyChainHolder;
 import libKonogonka.fs.NCA.NCAProvider;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
-import nsusbloader.ModelControllers.Log;
-import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
+import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class EsPatchMaker extends CancellableRunnable {
+public class FsPatchMaker extends CancellableRunnable {
     private int THREADS_POOL_SIZE = 4;
     private final ILogPrinter logPrinter;
     private final String pathToFirmware;
@@ -43,10 +42,10 @@ public class EsPatchMaker extends CancellableRunnable {
     private List<String> ncaFilesList; // inside the folder
 
     private boolean oneLinerStatus = false;
-    
-    public EsPatchMaker(String pathToFirmware, String pathToKeysFile, String saveTo){
-        this.logPrinter = Log.getPrinter(EModule.PATCHES); //TODO: UNCOMMENT
-        /*
+
+    public FsPatchMaker(String pathToFirmware, String pathToKeysFile, String saveTo){
+        //this.logPrinter = Log.getPrinter(EModule.PATCHES); //TODO: UNCOMMENT
+
         this.logPrinter = new ILogPrinter() {
             @Override
             public void print(String message, EMsgType type) throws InterruptedException {}
@@ -61,7 +60,7 @@ public class EsPatchMaker extends CancellableRunnable {
             @Override
             public void close() {}
         };
-         */
+        // */
         this.pathToFirmware = pathToFirmware;
         this.pathToKeysFile = pathToKeysFile;
         this.saveTo = saveTo;
@@ -70,7 +69,7 @@ public class EsPatchMaker extends CancellableRunnable {
     @Override
     public void run() {
         try {
-            logPrinter.print("..:: Make ES Patches ::..", EMsgType.INFO);
+            logPrinter.print("..:: Make FS Patches ::..", EMsgType.INFO);
             receiveFirmware();
             buildKeyChainHolder();
             receiveNcaFileNamesList();
@@ -101,7 +100,8 @@ public class EsPatchMaker extends CancellableRunnable {
     }
     private void receiveNcaFileNamesList() throws Exception{
         logPrinter.print("Collecting NCA files", EMsgType.INFO);
-        String[] fileNamesArray = firmware.list((File directory, String file) -> ( ! file.endsWith(".cnmt.nca") && file.endsWith(".nca")));
+        String[] fileNamesArray = firmware.list(
+                (File directory, String file) -> ( ! file.endsWith(".cnmt.nca") && file.endsWith(".nca")));
         ncaFilesList = Arrays.asList(Objects.requireNonNull(fileNamesArray));
         if (ncaFilesList.size() == 0)
             throw new Exception("No NCA files found in firmware folder");
@@ -126,11 +126,13 @@ public class EsPatchMaker extends CancellableRunnable {
         try {
             logPrinter.print("Executing sub-tasks pool", EMsgType.INFO);
             List<Future<NCAProvider>> futuresResults = executorService.invokeAll(getSubTasksCollection());
+            int counter = 0;
             for (Future<NCAProvider> future : futuresResults){
                 NCAProvider ncaProvider = future.get();
                 if (ncaProvider != null) {
                     makePatches(ncaProvider);
-                    break;
+                    if (++counter > 1)
+                        break;
                 }
             }
             executorService.shutdown();
@@ -156,7 +158,8 @@ public class EsPatchMaker extends CancellableRunnable {
         logPrinter.print(String.format("File found: .."+File.separator+"%s"+File.separator+"%s",
                         ncaProvider.getFile().getParentFile().getName(), ncaProvider.getFile().getName())
                 , EMsgType.INFO);
-        new EsPatch(ncaProvider, saveTo, logPrinter);
+        //TODO : FIX; IMPLEMENT; DEPLOY ;)
+        new FsPatch(ncaProvider, saveTo, keyChainHolder, logPrinter);
         oneLinerStatus = true;
     }
     private List<Callable<NCAProvider>> getSubTasksCollection() throws Exception{
@@ -167,11 +170,11 @@ public class EsPatchMaker extends CancellableRunnable {
         Iterator<String> iterator = ncaFilesList.listIterator();
 
         for (int i = 1; i < THREADS_POOL_SIZE; i++){
-            Callable<NCAProvider> task = new EsNcaSearchTask(getNextSet(iterator, ncaPerThreadAmount));
+            Callable<NCAProvider> task = new FsNcaSearchTask(getNextSet(iterator, ncaPerThreadAmount));
             subTasks.add(task);
         }
 
-        Callable<NCAProvider> task = new EsNcaSearchTask(getNextSet(iterator,
+        Callable<NCAProvider> task = new FsNcaSearchTask(getNextSet(iterator,
                 ncaFilesList.size() % THREADS_POOL_SIZE == 0 ? ncaPerThreadAmount : ncaPerThreadAmount+1));
         subTasks.add(task);
         return subTasks;

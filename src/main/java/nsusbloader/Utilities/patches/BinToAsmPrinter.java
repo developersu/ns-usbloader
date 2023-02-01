@@ -16,10 +16,9 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
  */
-package nsusbloader.Utilities.patches.es;
+package nsusbloader.Utilities.patches;
 
 import libKonogonka.Converter;
-import nsusbloader.Main;
 import nsusbloader.NSLMain;
 
 public class BinToAsmPrinter {
@@ -123,6 +122,12 @@ public class BinToAsmPrinter {
                 }
             case 0xA2:
                 return printSUBSimplified(instructionExpression, offset);
+            case 0xE2:
+            case 0x1e2:
+                return printCMPSimplified(instructionExpression, offset);
+            case 0x24:
+            case 0x124:
+                return printANDSimplified(instructionExpression, offset);
         }
 
         switch (instructionExpression >> 24 & 0xff) {
@@ -145,6 +150,7 @@ public class BinToAsmPrinter {
             case 0x25:
                 return printBLSimplified(instructionExpression, offset);
         }
+        System.out.printf("0x%x\n", (instructionExpression >> 23 & 0xff));
         return  printUnknownSimplified(instructionExpression, offset);
     }
 
@@ -411,7 +417,7 @@ public class BinToAsmPrinter {
         int conditionalJumpLocation = ((instructionExpression >> 4 & 0b1111111111111111111) * 4 + offset) & 0xfffff;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   B.%s           " + ANSI_BLUE + "#0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
+                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   B.%s        " + ANSI_BLUE + "#0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
                 offset, Integer.reverseBytes(instructionExpression), instructionExpression,
                 getBConditionalMarker(instructionExpression & 0xf),
                 conditionalJumpLocation, (conditionalJumpLocation + 0x100));
@@ -437,8 +443,8 @@ public class BinToAsmPrinter {
 
     private static String printMOVRegisterSimplified(int instructionExpression, int offset){    //ADD (immediate)
         String sfHw = (instructionExpression >> 31 & 1) == 0 ? "W" : "X";
-        int Rm = instructionExpression >> 16 & 0xF;
-        int Rd = instructionExpression & 0xF;
+        int Rm = instructionExpression >> 16 & 0x1F;
+        int Rd = instructionExpression & 0x1F;
 
         return String.format(
                 "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   MOV (reg)   " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "%s%d" + ANSI_RESET + "\n",
@@ -480,11 +486,40 @@ public class BinToAsmPrinter {
                 wx, Rt, wx, Rn, imm12);
     }
 
+    private static String printCMPSimplified(int instructionExpression, int offset){
+        String sf = (instructionExpression >> 31 == 0) ? "W" : "X";
+        int Rn = instructionExpression >> 5 & 0x1F;
+        int conditionalJumpLocation = (instructionExpression >> 10) & 0xfff;
+        int LSL = (instructionExpression >> 22 & 0b1) == 1 ? 12 : 0;
 
+        return String.format(
+                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CMP         " + ANSI_GREEN + sf + "%d," +
+                        ANSI_BLUE + "0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ") " + ANSI_PURPLE + "LSL #%d" + ANSI_RESET + "\n",
+                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                Rn,
+                conditionalJumpLocation, (conditionalJumpLocation + 0x100),
+                LSL);
+    }
+
+    private static String printANDSimplified(int instructionExpression, int offset){
+        String sf = (instructionExpression >> 31 == 0) ? "W" : "X";
+        int Rn = instructionExpression & 0x1F;
+        int Rd = instructionExpression >> 5 & 0x1F;
+        int imm;
+        if (sf.equals("W"))
+            imm = instructionExpression >> 10 & 0xfff;
+        else
+            imm = instructionExpression >> 10 & 0x1fff;
+
+        return String.format(
+                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   AND         " + ANSI_GREEN + sf + "%d, " + ANSI_BLUE +
+                        sf + "%d" + ANSI_PURPLE + " # ??? 0b%s " + ANSI_RESET + "\n",
+                offset, Integer.reverseBytes(instructionExpression), instructionExpression, Rn, Rd, Converter.intToBinaryString(imm));
+    }
 
     private static String printUnknownSimplified(int instructionExpression, int offset){
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   ???          0b"+ANSI_RESET+ Converter.intToBinaryString(Integer.reverseBytes(instructionExpression)) +"\n",
+                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   ???          0b"+ANSI_RESET+ Converter.intToBinaryString(instructionExpression) +"\n",
                 offset, Integer.reverseBytes(instructionExpression), instructionExpression);
     }
 

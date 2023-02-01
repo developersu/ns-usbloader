@@ -19,12 +19,13 @@
 package nsusbloader.Utilities.patches.es.finders;
 
 import libKonogonka.Converter;
-import nsusbloader.Utilities.patches.es.BinToAsmPrinter;
-import nsusbloader.Utilities.patches.es.SimplyFind;
+import nsusbloader.Utilities.patches.AHeuristic;
+import nsusbloader.Utilities.patches.BinToAsmPrinter;
+import nsusbloader.Utilities.patches.SimplyFind;
 
 import java.util.List;
 
-class HeuristicEs1 implements IHeuristicEs {
+class HeuristicEs1 extends AHeuristic {
     private static final String PATTERN = "1F90013128.8052";
 
     private final List<Integer> findings;

@@ -22,11 +22,12 @@
 package nsusbloader.Utilities.patches.es;
 
 import libKonogonka.Converter;
-import libKonogonka.Tools.NCA.NCAProvider;
-import libKonogonka.Tools.NSO.NSO0Header;
-import libKonogonka.Tools.NSO.NSO0Provider;
+import libKonogonka.fs.NCA.NCAProvider;
+import libKonogonka.fs.NSO.NSO0Header;
+import libKonogonka.fs.NSO.NSO0Provider;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
+import nsusbloader.Utilities.patches.BinToAsmPrinter;
 import nsusbloader.Utilities.patches.es.finders.HeuristicEsWizard;
 
 import java.io.BufferedOutputStream;
@@ -35,6 +36,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class EsPatch {
@@ -113,7 +115,7 @@ public class EsPatch {
         handyEsPatch.put(getFooter());
 
         try (BufferedOutputStream stream = new BufferedOutputStream(
-                Files.newOutputStream(new File(patchFileLocation).toPath()))){
+                Files.newOutputStream(Paths.get(patchFileLocation)))){
             stream.write(handyEsPatch.array());
         }
         logPrinter.print("Patch created at "+patchFileLocation, EMsgType.PASS);

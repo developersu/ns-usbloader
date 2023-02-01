@@ -1,5 +1,5 @@
 /*
-    Copyright 2018-2022 Dmitry Isaenko
+    Copyright 2018-2023 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -16,28 +16,45 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
  */
-package nsusbloader.Utilities.patches.es.finders;
+package nsusbloader.Utilities.patches.fs.finders;
 
 import libKonogonka.Converter;
 import nsusbloader.Utilities.patches.AHeuristic;
 import nsusbloader.Utilities.patches.BinToAsmPrinter;
 import nsusbloader.Utilities.patches.SimplyFind;
 
+import java.util.ArrayList;
 import java.util.List;
 
-class HeuristicEs3 extends AHeuristic {
-    private static final String PATTERN0 = "..FF97";
-    private static final String PATTERN1 = "......FF97"; // aka "E0230091..FF97";
-
+class HeuristicFsFAT1 extends AHeuristic {
+    private static final String PATTERN0 = ".1e42b91fc14271";
+    private static final String PATTERN1 = "...9408...1F05.....54"; // ...94 081C0012 1F050071 4101
+/*
+    710006eba0  c0  02  40  f9     ldr       x0 , [ x22 ]
+    710006eba4  5c  c9  02  94     bl        FUN_7100121114                             undefined FUN_7100121114()
+    710006eba8  08  1c  00  12     and       w8 , w0 , # 0xff
+ */
     private final List<Integer> findings;
     private final byte[] where;
 
-    HeuristicEs3(long fwVersion, byte[] where){
+    HeuristicFsFAT1(long fwVersion, byte[] where){
         this.where = where;
         String pattern = getPattern(fwVersion);
         SimplyFind simplyfind = new SimplyFind(pattern, where);
-        this.findings = simplyfind.getResults();
+        List<Integer> temporary = simplyfind.getResults();
+        if (fwVersion >= 15300){
+            this.findings = new ArrayList<>();
+            temporary.forEach(var -> findings.add(var + 4));
+        }
+        else
+            findings = temporary;
 
+        System.out.println("\t\tFAT32 # 1 +++++++++++++++++++++++++++++++");
+        for (Integer find : findings) {
+            System.out.println(getDetails(find));
+            System.out.println("------------------------------------------------------------------");
+        }
+/*                                                                                                  FIXME
         this.findings.removeIf(this::dropStep1);
         if(findings.size() < 2)
             return;
@@ -47,9 +64,10 @@ class HeuristicEs3 extends AHeuristic {
             return;
 
         this.findings.removeIf(this::dropStep3);
+ */
     }
     private String getPattern(long fwVersion){
-        if (fwVersion < 10400)
+        if (fwVersion < 15300) // & fwVersion >= 9300
             return PATTERN0;
         return PATTERN1;
     }
@@ -112,36 +130,47 @@ class HeuristicEs3 extends AHeuristic {
         return isFound();
     }
 
-
-    @Override
-    public String getDetails(){
-        StringBuilder builder = new StringBuilder();
-        int cbzOffsetInternal = findings.get(0) - 4;
-        int cbzExpression = Converter.getLEint(where, cbzOffsetInternal);
-        int conditionalJumpLocation = ((cbzExpression >> 5 & 0x7FFFF) * 4 + cbzOffsetInternal) & 0xfffff;
+    public String getDetails(Integer value){
+        int firstOffsetInternal = value - 4;
+        int firstExpression = Converter.getLEint(where, firstOffsetInternal);
+        int conditionalJumpLocation = ((firstExpression >> 5 & 0x7FFFF) * 4 + firstOffsetInternal) & 0xfffff;
 
         int secondExpressionsPairElement1 = Converter.getLEint(where, conditionalJumpLocation);
         int secondExpressionsPairElement2 = Converter.getLEint(where, conditionalJumpLocation+4);
 
-        builder.append(BinToAsmPrinter.printSimplified(cbzExpression, cbzOffsetInternal));
-        builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, cbzOffsetInternal+4), cbzOffsetInternal+4));
-        builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, cbzOffsetInternal+8), cbzOffsetInternal+8));
+        StringBuilder builder = new StringBuilder();
+        //builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal-4*11), firstOffsetInternal-4*11));
+        //builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal-4*10), firstOffsetInternal-4*10));
+        //builder.append("^ ^ ^ ...\n");
+        builder.append(BinToAsmPrinter.printSimplified(firstExpression, firstOffsetInternal));
+        builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal+4), firstOffsetInternal+4));
+        builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal+8), firstOffsetInternal+8));
+        builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal+12), firstOffsetInternal+12));
         builder.append("...\n");
-
         builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement1, conditionalJumpLocation));
         builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement2, conditionalJumpLocation+4));
 
-        if (((secondExpressionsPairElement2 >> 26 & 0b111111) == 0x5)){
-            builder.append("...\n");
-            int conditionalJumpLocation2 = ((secondExpressionsPairElement2 & 0x3ffffff) * 4 + (conditionalJumpLocation+4)) & 0xfffff;
-
-            builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, conditionalJumpLocation2), conditionalJumpLocation2));
-            builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, conditionalJumpLocation2+4), conditionalJumpLocation2+4));
-
-        }
-        else {
-            builder.append("NO CONDITIONAL JUMP ON 2nd iteration (HeuristicEs3)");
-        }
         return builder.toString();
+    }
+    @Override
+    public String getDetails(){
+        int firstOffsetInternal = findings.get(0) - 4;
+        int firstExpression = Converter.getLEint(where, firstOffsetInternal);
+        int conditionalJumpLocation = ((firstExpression >> 5 & 0x7FFFF) * 4 + firstOffsetInternal) & 0xfffff;
+
+        int secondExpressionsPairElement1 = Converter.getLEint(where, conditionalJumpLocation);
+        int secondExpressionsPairElement2 = Converter.getLEint(where, conditionalJumpLocation+4);
+
+        return BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal - 4 * 11), firstOffsetInternal - 4 * 11) +
+                BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal - 4 * 10), firstOffsetInternal - 4 * 10) +
+                "^ ^ ^ ...\n" +
+                BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal - 4 * 2), firstOffsetInternal - 4 * 2) +
+                "^ ^ ^ ...\n" +
+                BinToAsmPrinter.printSimplified(firstExpression, firstOffsetInternal) +
+                BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal + 4), firstOffsetInternal + 4) +
+                BinToAsmPrinter.printSimplified(Converter.getLEint(where, firstOffsetInternal + 8), firstOffsetInternal + 8) +
+                "...\n" +
+                BinToAsmPrinter.printSimplified(secondExpressionsPairElement1, conditionalJumpLocation) +
+                BinToAsmPrinter.printSimplified(secondExpressionsPairElement2, conditionalJumpLocation + 4);
     }
 }
