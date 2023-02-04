@@ -31,7 +31,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class EsPatchMaker extends CancellableRunnable {
-    private int THREADS_POOL_SIZE = 4;
+    private int THREADS_POOL_SIZE;
     private final ILogPrinter logPrinter;
     private final String pathToFirmware;
     private final String pathToKeysFile;
@@ -45,20 +45,14 @@ public class EsPatchMaker extends CancellableRunnable {
     private boolean oneLinerStatus = false;
     
     public EsPatchMaker(String pathToFirmware, String pathToKeysFile, String saveTo){
-        this.logPrinter = Log.getPrinter(EModule.PATCHES); //TODO: UNCOMMENT
+        this.logPrinter = Log.getPrinter(EModule.PATCHES);
         /*
         this.logPrinter = new ILogPrinter() {
-            @Override
             public void print(String message, EMsgType type) throws InterruptedException {}
-            @Override
             public void updateProgress(Double value) throws InterruptedException {}
-            @Override
             public void update(HashMap<String, File> nspMap, EFileStatus status) {}
-            @Override
             public void update(File file, EFileStatus status) {}
-            @Override
             public void updateOneLinerStatus(boolean status) {}
-            @Override
             public void close() {}
         };
          */
@@ -74,7 +68,7 @@ public class EsPatchMaker extends CancellableRunnable {
             receiveFirmware();
             buildKeyChainHolder();
             receiveNcaFileNamesList();
-            adjustThreadsPoolSize();
+            specifyThreadsPoolSize();
             createPool();
             executePool();
         }
@@ -106,9 +100,9 @@ public class EsPatchMaker extends CancellableRunnable {
         if (ncaFilesList.size() == 0)
             throw new Exception("No NCA files found in firmware folder");
     }
-    private void adjustThreadsPoolSize(){
-        if (ncaFilesList.size() < 4)
-            THREADS_POOL_SIZE = ncaFilesList.size();
+    private void specifyThreadsPoolSize(){
+        THREADS_POOL_SIZE = Math.max(Runtime.getRuntime().availableProcessors()+1, 4);
+        THREADS_POOL_SIZE = Math.min(THREADS_POOL_SIZE, ncaFilesList.size());
     }
 
     private void createPool() throws Exception{
@@ -170,9 +164,8 @@ public class EsPatchMaker extends CancellableRunnable {
             Callable<NCAProvider> task = new EsNcaSearchTask(getNextSet(iterator, ncaPerThreadAmount));
             subTasks.add(task);
         }
-
-        Callable<NCAProvider> task = new EsNcaSearchTask(getNextSet(iterator,
-                ncaFilesList.size() % THREADS_POOL_SIZE == 0 ? ncaPerThreadAmount : ncaPerThreadAmount+1));
+        int leftovers = ncaFilesList.size() % THREADS_POOL_SIZE;
+        Callable<NCAProvider> task = new EsNcaSearchTask(getNextSet(iterator, ncaPerThreadAmount+leftovers));
         subTasks.add(task);
         return subTasks;
     }

@@ -112,17 +112,15 @@ class HeuristicEs3 extends AHeuristic {
         return isFound();
     }
 
-
     @Override
     public String getDetails(){
-        StringBuilder builder = new StringBuilder();
         int cbzOffsetInternal = findings.get(0) - 4;
         int cbzExpression = Converter.getLEint(where, cbzOffsetInternal);
         int conditionalJumpLocation = ((cbzExpression >> 5 & 0x7FFFF) * 4 + cbzOffsetInternal) & 0xfffff;
 
         int secondExpressionsPairElement1 = Converter.getLEint(where, conditionalJumpLocation);
         int secondExpressionsPairElement2 = Converter.getLEint(where, conditionalJumpLocation+4);
-
+        StringBuilder builder = new StringBuilder();
         builder.append(BinToAsmPrinter.printSimplified(cbzExpression, cbzOffsetInternal));
         builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, cbzOffsetInternal+4), cbzOffsetInternal+4));
         builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, cbzOffsetInternal+8), cbzOffsetInternal+8));
@@ -137,7 +135,6 @@ class HeuristicEs3 extends AHeuristic {
 
             builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, conditionalJumpLocation2), conditionalJumpLocation2));
             builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, conditionalJumpLocation2+4), conditionalJumpLocation2+4));
-
         }
         else {
             builder.append("NO CONDITIONAL JUMP ON 2nd iteration (HeuristicEs3)");

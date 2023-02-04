@@ -21,10 +21,11 @@ package nsusbloader.Utilities.patches.fs;
 import libKonogonka.Converter;
 import libKonogonka.fs.NCA.NCAProvider;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-class FsNcaSearchTask implements Callable<NCAProvider> {
+class FsNcaSearchTask implements Callable<List<NCAProvider>> {
     private final List<NCAProvider> ncaProviders;
 
     FsNcaSearchTask(List<NCAProvider> ncaProviders){
@@ -32,19 +33,18 @@ class FsNcaSearchTask implements Callable<NCAProvider> {
     }
 
     @Override
-    public NCAProvider call() {
+    public List<NCAProvider> call() {
+        List<NCAProvider> result = new ArrayList<>();
         try {
             for (NCAProvider ncaProvider : ncaProviders) {
                 String titleId = Converter.byteArrToHexStringAsLE(ncaProvider.getTitleId());
-                if (titleId.equals("0100000000000819") || titleId.equals("010000000000081b")) { // eq. FAT || exFAT
-                    return ncaProvider;
-                }
+                if (titleId.equals("0100000000000819") || titleId.equals("010000000000081b")) // eq. FAT32 || exFAT
+                    result.add(ncaProvider);
             }
-            return null;
         }
         catch (Exception e){
             e.printStackTrace();
-            return null;
         }
+        return result;
     }
 }

@@ -22,15 +22,16 @@ import libKonogonka.KeyChainHolder;
 import libKonogonka.fs.NCA.NCAProvider;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
+import nsusbloader.ModelControllers.Log;
+import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
-import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 
 public class FsPatchMaker extends CancellableRunnable {
-    private int THREADS_POOL_SIZE = 4;
+    private int THREADS_POOL_SIZE;
     private final ILogPrinter logPrinter;
     private final String pathToFirmware;
     private final String pathToKeysFile;
@@ -44,23 +45,17 @@ public class FsPatchMaker extends CancellableRunnable {
     private boolean oneLinerStatus = false;
 
     public FsPatchMaker(String pathToFirmware, String pathToKeysFile, String saveTo){
-        //this.logPrinter = Log.getPrinter(EModule.PATCHES); //TODO: UNCOMMENT
-
+        this.logPrinter = Log.getPrinter(EModule.PATCHES);
+        /*
         this.logPrinter = new ILogPrinter() {
-            @Override
             public void print(String message, EMsgType type) throws InterruptedException {}
-            @Override
             public void updateProgress(Double value) throws InterruptedException {}
-            @Override
             public void update(HashMap<String, File> nspMap, EFileStatus status) {}
-            @Override
             public void update(File file, EFileStatus status) {}
-            @Override
             public void updateOneLinerStatus(boolean status) {}
-            @Override
             public void close() {}
         };
-        // */
+         */
         this.pathToFirmware = pathToFirmware;
         this.pathToKeysFile = pathToKeysFile;
         this.saveTo = saveTo;
@@ -73,7 +68,7 @@ public class FsPatchMaker extends CancellableRunnable {
             receiveFirmware();
             buildKeyChainHolder();
             receiveNcaFileNamesList();
-            adjustThreadsPoolSize();
+            specifyThreadsPoolSize();
             createPool();
             executePool();
         }
@@ -106,9 +101,9 @@ public class FsPatchMaker extends CancellableRunnable {
         if (ncaFilesList.size() == 0)
             throw new Exception("No NCA files found in firmware folder");
     }
-    private void adjustThreadsPoolSize(){
-        if (ncaFilesList.size() < 4)
-            THREADS_POOL_SIZE = ncaFilesList.size();
+    private void specifyThreadsPoolSize(){
+        THREADS_POOL_SIZE = Math.max(Runtime.getRuntime().availableProcessors()+1, 4);
+        THREADS_POOL_SIZE = Math.min(THREADS_POOL_SIZE, ncaFilesList.size());
     }
 
     private void createPool() throws Exception{
@@ -125,11 +120,11 @@ public class FsPatchMaker extends CancellableRunnable {
     private void executePool() throws Exception{ //TODO: FIX. Exceptions thrown only by logPrinter
         try {
             logPrinter.print("Executing sub-tasks pool", EMsgType.INFO);
-            List<Future<NCAProvider>> futuresResults = executorService.invokeAll(getSubTasksCollection());
+            List<Future<List<NCAProvider>>> futuresResults = executorService.invokeAll(getSubTasksCollection());
             int counter = 0;
-            for (Future<NCAProvider> future : futuresResults){
-                NCAProvider ncaProvider = future.get();
-                if (ncaProvider != null) {
+            for (Future<List<NCAProvider>> future : futuresResults){
+                List<NCAProvider> ncaProviders = future.get();
+                for (NCAProvider ncaProvider : ncaProviders) {
                     makePatches(ncaProvider);
                     if (++counter > 1)
                         break;
@@ -155,27 +150,25 @@ public class FsPatchMaker extends CancellableRunnable {
     }
 
     private void makePatches(NCAProvider ncaProvider) throws Exception{
+        final File foundFile = ncaProvider.getFile();
         logPrinter.print(String.format("File found: .."+File.separator+"%s"+File.separator+"%s",
-                        ncaProvider.getFile().getParentFile().getName(), ncaProvider.getFile().getName())
-                , EMsgType.INFO);
-        //TODO : FIX; IMPLEMENT; DEPLOY ;)
+                foundFile.getParentFile().getName(), foundFile.getName()), EMsgType.INFO);
         new FsPatch(ncaProvider, saveTo, keyChainHolder, logPrinter);
         oneLinerStatus = true;
     }
-    private List<Callable<NCAProvider>> getSubTasksCollection() throws Exception{
+    private List<Callable<List<NCAProvider>>> getSubTasksCollection() throws Exception{
         logPrinter.print("Forming sub-tasks collection", EMsgType.INFO);
-        List<Callable<NCAProvider>> subTasks = new ArrayList<>();
+        List<Callable<List<NCAProvider>>> subTasks = new ArrayList<>();
 
         int ncaPerThreadAmount = ncaFilesList.size() / THREADS_POOL_SIZE;
         Iterator<String> iterator = ncaFilesList.listIterator();
 
         for (int i = 1; i < THREADS_POOL_SIZE; i++){
-            Callable<NCAProvider> task = new FsNcaSearchTask(getNextSet(iterator, ncaPerThreadAmount));
+            Callable<List<NCAProvider>> task = new FsNcaSearchTask(getNextSet(iterator, ncaPerThreadAmount));
             subTasks.add(task);
         }
-
-        Callable<NCAProvider> task = new FsNcaSearchTask(getNextSet(iterator,
-                ncaFilesList.size() % THREADS_POOL_SIZE == 0 ? ncaPerThreadAmount : ncaPerThreadAmount+1));
+        int leftovers = ncaFilesList.size() % THREADS_POOL_SIZE;
+        Callable<List<NCAProvider>> task = new FsNcaSearchTask(getNextSet(iterator, ncaPerThreadAmount+leftovers));
         subTasks.add(task);
         return subTasks;
     }

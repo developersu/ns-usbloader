@@ -14,7 +14,7 @@
 <?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.text.Font?>
 
-<ScrollPane fitToWidth="true" onDragDropped="#handleDrop" onDragOver="#handleDragOver" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.PatchesController">
+<ScrollPane fitToWidth="true" onDragDropped="#handleDrop" onDragOver="#handleDragOver" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.PatchesController">
 <VBox fx:id="patchesToolPane" spacing="15.0">
    <Pane minHeight="-Infinity" prefHeight="10.0" style="-fx-background-color: linear-gradient(from 41px 34px to 50px 50px, reflect,  #2cd882 40%, transparent  45%);" />
    <HBox alignment="CENTER">

@@ -1,5 +1,5 @@
 /*
-    Copyright 2018-2022 Dmitry Isaenko
+    Copyright 2018-2023 Dmitry Isaenko
      
     This file is part of NS-USBloader.
 
@@ -25,42 +25,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class HeuristicFsWizard {
-    /*
     private final List<AHeuristic> all;
     private final List<AHeuristic> found;
     private final List<AHeuristic> wantLessEntropy;
-     */
-    private final boolean isFat;
-    private List<AHeuristic> all;
-    private List<AHeuristic> found;
-    private List<AHeuristic> wantLessEntropy;
 
     private final StringBuilder errorsAndNotes;
 
     private int offset1 = -1;
     private int offset2 = -1;
 
-    public HeuristicFsWizard(long fwVersion, byte[] where, boolean isFat) throws Exception{
-        this.isFat = isFat;
+    public HeuristicFsWizard(byte[] where) throws Exception{
         this.errorsAndNotes = new StringBuilder();
 
-        if (isFat){
-            this.all = Arrays.asList(
-                    new HeuristicFsFAT1(fwVersion, where),
-                    new HeuristicFsFAT2(fwVersion, where)
-            );
-        }
-        else {
-            System.out.println("TODO: IMPLEMENT FOR EXFAT");
-            return;
-            /*
-            this.all = Arrays.asList(
-                    new HeuristicFsExFAT1(fwVersion, where),
-                    new HeuristicFsExFAT2(fwVersion, where)
-            );
-             */
-        }
-/*
+        this.all = Arrays.asList(
+                new HeuristicFs1(where),
+                new HeuristicFs2(where)
+        );
+
         this.found = all.stream()
                 .filter(AHeuristic::isFound)
                 .collect(Collectors.toList());
@@ -71,12 +52,11 @@ public class HeuristicFsWizard {
         this.wantLessEntropy = all.stream()
                 .filter(AHeuristic::wantLessEntropy)
                 .collect(Collectors.toList());
-/*                                                                                                                      FIXME
+
         shareOffsetsWithEachOther();
 
         assignOffset1();
         assignOffset2();
-         */
     }
 
     private void shareOffsetsWithEachOther(){
@@ -119,10 +99,6 @@ public class HeuristicFsWizard {
 
     public String getDebug(){
         StringBuilder builder = new StringBuilder();
-        if (isFat)
-            builder.append("\t\t--[  FAT32  ]--\n");
-        else
-            builder.append("\t\t--[  ExFAT  ]--\n");
         if (all.get(0).isFound()){
             builder.append("\t\t-=== 1 ===-\n");
             builder.append(all.get(0).getDetails());

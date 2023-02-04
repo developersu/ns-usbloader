@@ -59,7 +59,7 @@ public class BinToAsmPrinter {
                 return printMOV(instructionExpression);
             case 0x62:
                 if (((instructionExpression & 0x1f) == 0x1f)){
-                    return printCMN(instructionExpression, offset);
+                    return printCMN(instructionExpression);
                 }
         }
 
@@ -123,10 +123,10 @@ public class BinToAsmPrinter {
             case 0xA2:
                 return printSUBSimplified(instructionExpression, offset);
             case 0xE2:
-            case 0x1e2:
+            //case 0x1e2:
                 return printCMPSimplified(instructionExpression, offset);
             case 0x24:
-            case 0x124:
+            //case 0x124:
                 return printANDSimplified(instructionExpression, offset);
         }
 
@@ -144,13 +144,15 @@ public class BinToAsmPrinter {
                 return printBConditionalSimplified(instructionExpression, offset);
         }
 
-        switch ((instructionExpression >> 26 & 0b111111)) {
+        switch (instructionExpression >> 26 & 0b111111) {
             case 0x5:
                 return printBSimplified(instructionExpression, offset);
             case 0x25:
                 return printBLSimplified(instructionExpression, offset);
         }
-        System.out.printf("0x%x\n", (instructionExpression >> 23 & 0xff));
+
+        if ((instructionExpression >> 10 & 0x3FFFFF) == 0x3597c0 && ((instructionExpression & 0x1F) == 0))
+            return printRetSimplified(instructionExpression, offset);
         return  printUnknownSimplified(instructionExpression, offset);
     }
 
@@ -183,7 +185,7 @@ public class BinToAsmPrinter {
                 conditionalJumpLocation, (conditionalJumpLocation + 0x100));
     }
 
-    private static String printCMN(int instructionExpression, int offset){
+    private static String printCMN(int instructionExpression){
         int Rn = instructionExpression >> 5 & 0x1F;
         int imm = instructionExpression >> 10 & 0xFFF;
 
@@ -271,7 +273,6 @@ public class BinToAsmPrinter {
         int Rt = instructionExpression & 0b11111;
         int label = (offset + (instructionExpression >> 5 & 0x3fff) * 4) & 0xfffff;
 
-        //System.out.printf("\nInstruction: %x\n", instructionExpression);
         return String.format(ANSI_YELLOW + "sf == 0 && hw == 0x ? <Wt> else <Xt>\n" +
                         "TBZ <?t>,#<imm>, <label>   |.....TBZ signature.......|\n" +
                         ANSI_CYAN+"                            b5 0  1  1    0  1  1  0   |b40.............|imm14.........................................||Rt.............|" + ANSI_RESET + "\n" +
@@ -382,8 +383,6 @@ public class BinToAsmPrinter {
                 conditionalJumpLocationPatch, (conditionalJumpLocationPatch + 0x100));
     }
 
-
-
     private static String printMOVSimplified(int instructionExpression, int offset){
         int imm16 = instructionExpression >> 5 & 0xFFFF;
         int sfHw = (instructionExpression >> 22 & 1);
@@ -404,9 +403,8 @@ public class BinToAsmPrinter {
         int xwSelector = (instructionExpression >> 31 & 1);
         int imm = instructionExpression >> 18 & 0b11111;
         int Rt = instructionExpression & 0b11111;
-        int label = (offset + (instructionExpression >> 5 & 0x3fff) * 4) & 0xfffff;
+        int label = offset + (instructionExpression >> 5 & 0x3fff) * 4;
 
-        //System.out.printf("\nInstruction: %x\n", instructionExpression);
         return String.format(
                 "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   TBZ         " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ", " + ANSI_PURPLE + "%x" + ANSI_RESET + "\n",
                 offset, Integer.reverseBytes(instructionExpression), instructionExpression,
@@ -439,7 +437,6 @@ public class BinToAsmPrinter {
                 offset, Integer.reverseBytes(instructionExpression), instructionExpression,
                 wx, Rt, wx, Rn, imm12);
     }
-
 
     private static String printMOVRegisterSimplified(int instructionExpression, int offset){    //ADD (immediate)
         String sfHw = (instructionExpression >> 31 & 1) == 0 ? "W" : "X";
@@ -515,6 +512,14 @@ public class BinToAsmPrinter {
                 "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   AND         " + ANSI_GREEN + sf + "%d, " + ANSI_BLUE +
                         sf + "%d" + ANSI_PURPLE + " # ??? 0b%s " + ANSI_RESET + "\n",
                 offset, Integer.reverseBytes(instructionExpression), instructionExpression, Rn, Rd, Converter.intToBinaryString(imm));
+    }
+
+    private static String printRetSimplified(int instructionExpression, int offset){
+        int Xn = (instructionExpression >> 5) & 0x1F;
+
+        return String.format(
+                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   RET        " + ANSI_GREEN + " X%d" + ANSI_RESET + "\n",
+                offset, Integer.reverseBytes(instructionExpression), instructionExpression, Xn == 0 ? 30 : Xn);
     }
 
     private static String printUnknownSimplified(int instructionExpression, int offset){

@@ -132,7 +132,6 @@ class HeuristicEs2 extends AHeuristic {
 
     @Override
     public String getDetails(){
-        StringBuilder builder = new StringBuilder();
         int secondExpressionOffset = findings.get(0);
 
         int firstExpression = Converter.getLEint(where, secondExpressionOffset-4);
@@ -149,16 +148,13 @@ class HeuristicEs2 extends AHeuristic {
         int secondExpressionsPairElement3 = Converter.getLEint(where, conditionalJumpLocation + 8);
         int secondExpressionsPairElement4 = Converter.getLEint(where, conditionalJumpLocation + 12);
 
-        builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, secondExpressionOffset-4), secondExpressionOffset-4));
-        builder.append(BinToAsmPrinter.printSimplified(secondExpression, secondExpressionOffset));
-        builder.append(BinToAsmPrinter.printSimplified(Converter.getLEint(where, secondExpressionOffset+4), secondExpressionOffset+4));
-        builder.append("...\n");
-
-        builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement1, conditionalJumpLocation));
-        builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement2, conditionalJumpLocation + 4));
-        builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement3, conditionalJumpLocation + 8));
-        builder.append(BinToAsmPrinter.printSimplified(secondExpressionsPairElement4, conditionalJumpLocation + 12));
-
-        return builder.toString();
+        return BinToAsmPrinter.printSimplified(Converter.getLEint(where, secondExpressionOffset - 4), secondExpressionOffset - 4) +
+                BinToAsmPrinter.printSimplified(secondExpression, secondExpressionOffset) +
+                BinToAsmPrinter.printSimplified(Converter.getLEint(where, secondExpressionOffset + 4), secondExpressionOffset + 4) +
+                "...\n" +
+                BinToAsmPrinter.printSimplified(secondExpressionsPairElement1, conditionalJumpLocation) +
+                BinToAsmPrinter.printSimplified(secondExpressionsPairElement2, conditionalJumpLocation + 4) +
+                BinToAsmPrinter.printSimplified(secondExpressionsPairElement3, conditionalJumpLocation + 8) +
+                BinToAsmPrinter.printSimplified(secondExpressionsPairElement4, conditionalJumpLocation + 12);
     }
 }

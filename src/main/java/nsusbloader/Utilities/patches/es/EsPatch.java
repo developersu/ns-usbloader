@@ -40,6 +40,9 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class EsPatch {
+    private static final byte[] HEADER = "PATCH".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[] FOOTER = "EOF".getBytes(StandardCharsets.US_ASCII);
+
     private final NCAProvider ncaProvider;
     private final String saveToLocation;
     private final ILogPrinter logPrinter;
@@ -66,10 +69,10 @@ public class EsPatch {
         logPrinter.print("                  == Debug information ==\n"+wizard.getDebug(), EMsgType.NULL);
     }
     private void getPlainFirmwareVersion() throws Exception{
-        fwVersion = Long.parseLong(""+ncaProvider.getSdkVersion()[3]+ncaProvider.getSdkVersion()[2]
-                +ncaProvider.getSdkVersion()[1] +ncaProvider.getSdkVersion()[0]);
-        logPrinter.print("Internal firmware version: "+ncaProvider.getSdkVersion()[3] +"."+ncaProvider.getSdkVersion()[2] +"."+ncaProvider.getSdkVersion()[1] +"."+ncaProvider.getSdkVersion()[0], EMsgType.INFO);
-        if (fwVersion < 9300)
+        final byte[] byteSdkVersion = ncaProvider.getSdkVersion();
+        fwVersion = Long.parseLong(""+byteSdkVersion[3]+byteSdkVersion[2]+byteSdkVersion[1]+byteSdkVersion[0]);
+        logPrinter.print("Internal firmware version: "+byteSdkVersion[3] +"."+byteSdkVersion[2] +"."+byteSdkVersion[1] +"."+byteSdkVersion[0], EMsgType.INFO);
+        if (byteSdkVersion[3] < 9 || fwVersion < 9300)
             logPrinter.print("WARNING! FIRMWARES VERSIONS BEFORE 9.0.0 ARE NOT SUPPORTED! USING PRODUCED ES PATCHES (IF ANY) COULD BREAK SOMETHING! IT'S NEVER BEEN TESTED!", EMsgType.WARNING);
     }
     private void getBuildId(NSO0Provider nso0Provider) throws Exception{
@@ -99,7 +102,7 @@ public class EsPatch {
         int offset3 = wizard.getOffset3();
 
         ByteBuffer handyEsPatch = ByteBuffer.allocate(0x23).order(ByteOrder.LITTLE_ENDIAN);
-        handyEsPatch.put(getHeader());
+        handyEsPatch.put(HEADER);
         if (offset1 > 0) {
             logPrinter.print("Patch component 1 will be used", EMsgType.PASS);
             handyEsPatch.put(getPatch1(offset1));
@@ -112,19 +115,13 @@ public class EsPatch {
             logPrinter.print("Patch component 3 will be used", EMsgType.PASS);
             handyEsPatch.put(getPatch3(offset3));
         }
-        handyEsPatch.put(getFooter());
+        handyEsPatch.put(FOOTER);
 
         try (BufferedOutputStream stream = new BufferedOutputStream(
                 Files.newOutputStream(Paths.get(patchFileLocation)))){
             stream.write(handyEsPatch.array());
         }
         logPrinter.print("Patch created at "+patchFileLocation, EMsgType.PASS);
-    }
-    private byte[] getHeader(){
-        return "PATCH".getBytes(StandardCharsets.US_ASCII);
-    }
-    private byte[] getFooter(){
-        return "EOF".getBytes(StandardCharsets.US_ASCII);
     }
 
     // WE EXPECT TO SEE CBZ (for patch 1) INSTRUCTION RIGHT BEFORE FOUND SEQUENCE (requiredInstructionOffsetInternal)
@@ -147,15 +144,15 @@ public class EsPatch {
         return Arrays.copyOfRange(prePatch.array(), 1, 10);
     }
     private byte[] getPatch2(int offset) throws Exception{
-        final int NopExpression = 0x1F2003D5; // reversed
+        final int NopInstruction = 0x1F2003D5; // reversed
         int offsetReal = offset - 4 + 0x100;
 
-        logPrinter.print(BinToAsmPrinter.printSimplified(Integer.reverseBytes(NopExpression),  offset - 4), EMsgType.NULL);
+        logPrinter.print(BinToAsmPrinter.printSimplified(Integer.reverseBytes(NopInstruction),  offset - 4), EMsgType.NULL);
 
         ByteBuffer prePatch = ByteBuffer.allocate(10).order(ByteOrder.BIG_ENDIAN)
                 .putInt(offsetReal)
                 .putShort((short) 4)
-                .putInt(NopExpression);
+                .putInt(NopInstruction);
 
         return Arrays.copyOfRange(prePatch.array(), 1, 10);
     }

@@ -18,6 +18,7 @@
  */
 package nsusbloader.Controllers;
 
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.input.DragEvent;
@@ -74,7 +75,10 @@ public class PatchesController implements Initializable {
         convertRegionEs = new Region();
         convertRegionEs.getStyleClass().add("regionCake");
         makeEsBtn.setGraphic(convertRegionEs);
-        //makeFsBtn.setGraphic(convertRegionEs);
+
+        Region cakeRegionFs = new Region();
+        cakeRegionFs.getStyleClass().add("regionCake");
+        makeFsBtn.setGraphic(cakeRegionFs);
 
         AppPreferences preferences = AppPreferences.getInstance();
         String keysLocation = preferences.getKeysLocation();
@@ -85,8 +89,10 @@ public class PatchesController implements Initializable {
         }
 
         saveToLbl.setText(preferences.getPatchesSaveToLocation());
-        //makeEsBtn.disableProperty().bind(Bindings.isEmpty(locationFirmwareLbl.textProperty()));
+        makeEsBtn.disableProperty().bind(Bindings.isEmpty(locationFirmwareLbl.textProperty()));
         makeEsBtn.setOnAction(actionEvent -> makeEs());
+
+        makeFsBtn.disableProperty().bind(Bindings.isEmpty(locationFirmwareLbl.textProperty()));
         makeFsBtn.setOnAction(actionEvent -> makeFs());
     }
 
@@ -215,6 +221,7 @@ public class PatchesController implements Initializable {
         }
 
         convertRegionEs.getStyleClass().clear();
+        makeFsBtn.setVisible(! isActive);
 
         if (isActive) {
             MediatorControl.getInstance().getContoller().logArea.clear();

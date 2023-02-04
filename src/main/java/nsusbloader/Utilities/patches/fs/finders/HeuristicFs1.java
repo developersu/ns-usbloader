@@ -1,5 +1,5 @@
 /*
-    Copyright 2018-2022 Dmitry Isaenko
+    Copyright 2018-2023 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -16,55 +16,42 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
  */
-package nsusbloader.Utilities.patches.es.finders;
+package nsusbloader.Utilities.patches.fs.finders;
 
 import libKonogonka.Converter;
 import nsusbloader.Utilities.patches.AHeuristic;
 import nsusbloader.Utilities.patches.BinToAsmPrinter;
 import nsusbloader.Utilities.patches.SimplyFind;
 
+import java.util.ArrayList;
 import java.util.List;
 
-class HeuristicEs1 extends AHeuristic {
-    private static final String PATTERN = "1F90013128.8052";
+class HeuristicFs1 extends AHeuristic {
+    private static final String PATTERN = "..0036....1F..71..0054..4839"; // TBZ
 
-    private final List<Integer> findings;
     private final byte[] where;
+    private final List<Integer> findings;
 
-    HeuristicEs1(byte[] where){
+    HeuristicFs1(byte[] where) {
         this.where = where;
+        this.findings = new ArrayList<>();
         SimplyFind simplyfind = new SimplyFind(PATTERN, where);
-        this.findings = simplyfind.getResults();
-
-        this.findings.removeIf(this::dropStep1);
-        if(findings.size() < 2)
-            return;
-
-        this.findings.removeIf(this::dropStep2);
-    }
-
-    // Check ranges
-    private boolean dropStep1(int offsetOfPatternFound){
-        return ((offsetOfPatternFound < 0x10000 || offsetOfPatternFound > 0xffffc));
-    }
-    // Remove non-CBZ
-    private boolean dropStep2(int offsetOfPatternFound){
-        return ((where[offsetOfPatternFound - 1] & (byte) 0b01111111) != 0x34);
+        simplyfind.getResults().forEach(var -> findings.add(var + 4));
     }
 
     @Override
-    public boolean isFound(){
+    public boolean isFound() {
         return findings.size() == 1;
     }
 
     @Override
-    public boolean wantLessEntropy(){
+    public boolean wantLessEntropy() {
         return findings.size() > 1;
     }
 
     @Override
-    public int getOffset() throws Exception{
-        if(findings.isEmpty())
+    public int getOffset() throws Exception {
+        if (findings.isEmpty())
             throw new Exception("Nothing found");
         if (findings.size() > 1)
             throw new Exception("Too many offsets");
@@ -75,26 +62,26 @@ class HeuristicEs1 extends AHeuristic {
     public boolean setOffsetsNearby(int offsetNearby) {
         findings.removeIf(offset -> {
             if (offset > offsetNearby)
-                return ! (offset < offsetNearby - 0xffff);
-            return ! (offset > offsetNearby - 0xffff);
+                return !(offset < offsetNearby - 0xffff);
+            return !(offset > offsetNearby - 0xffff);
         });
         return isFound();
     }
 
     @Override
-    public String getDetails(){
-        int cbzOffsetInternal = findings.get(0) - 4;
-        int instructionExpression = Converter.getLEint(where, cbzOffsetInternal);
-        int conditionalJumpLocation = ((instructionExpression >> 5 & 0x7FFFF) * 4 + cbzOffsetInternal) & 0xfffff;
+    public String getDetails() {
+        int offsetInternal = findings.get(0) - 4;
+        int firstExpression = Converter.getLEint(where, offsetInternal);
+        int conditionalJumpLocation = offsetInternal + (firstExpression >> 5 & 0x3fff) * 4;
 
         int secondExpressionsPairElement1 = Converter.getLEint(where, conditionalJumpLocation);
-        int secondExpressionsPairElement2 = Converter.getLEint(where, conditionalJumpLocation+4);
+        int secondExpressionsPairElement2 = Converter.getLEint(where, conditionalJumpLocation + 4);
 
-        return BinToAsmPrinter.printSimplified(instructionExpression, cbzOffsetInternal) +
-                BinToAsmPrinter.printSimplified(Converter.getLEint(where, cbzOffsetInternal + 4),
-                        cbzOffsetInternal + 4) +
-                BinToAsmPrinter.printSimplified(Converter.getLEint(where, cbzOffsetInternal + 8),
-                        cbzOffsetInternal + 8) +
+        return BinToAsmPrinter.printSimplified(firstExpression, offsetInternal) +
+                BinToAsmPrinter.printSimplified(Converter.getLEint(where, offsetInternal + 4), offsetInternal + 4) +
+                BinToAsmPrinter.printSimplified(Converter.getLEint(where, offsetInternal + 8), offsetInternal + 8) +
+                BinToAsmPrinter.printSimplified(Converter.getLEint(where, offsetInternal + 12), offsetInternal + 12) +
+                BinToAsmPrinter.printSimplified(Converter.getLEint(where, offsetInternal + 16), offsetInternal + 16) +
                 "...\n" +
                 BinToAsmPrinter.printSimplified(secondExpressionsPairElement1, conditionalJumpLocation) +
                 BinToAsmPrinter.printSimplified(secondExpressionsPairElement2, conditionalJumpLocation + 4);
