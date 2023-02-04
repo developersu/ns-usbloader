@@ -117,10 +117,15 @@ public class EsPatch {
         }
         handyEsPatch.put(FOOTER);
 
+        byte[] esPatch = new byte[handyEsPatch.position()];
+        handyEsPatch.rewind();
+        handyEsPatch.get(esPatch);
+
         try (BufferedOutputStream stream = new BufferedOutputStream(
                 Files.newOutputStream(Paths.get(patchFileLocation)))){
-            stream.write(handyEsPatch.array());
+            stream.write(esPatch);
         }
+
         logPrinter.print("Patch created at "+patchFileLocation, EMsgType.PASS);
     }
 

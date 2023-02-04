@@ -66,7 +66,7 @@ public class GamesController implements Initializable {
     public NSTableViewController tableFilesListController;            // Accessible from Mediator (for drag-n-drop support)
 
     @FXML
-    private Button selectNspBtn, selectSplitNspBtn, uploadStopBtn;
+    private Button selectNspBtn, selectSplitBtn, uploadStopBtn;
     private String previouslyOpenedPath;
     private Region btnUpStopImage, btnSelectImage;
     private ResourceBundle resourceBundle;
@@ -141,8 +141,8 @@ public class GamesController implements Initializable {
         this.btnSelectImage = new Region();
         setFilesSelectorButtonBehaviour(preferences.getDirectoriesChooserForRoms());
 
-        selectSplitNspBtn.setOnAction(e-> selectSplitBtnAction());
-        selectSplitNspBtn.getStyleClass().add("buttonSelect");
+        selectSplitBtn.setOnAction(e-> selectSplitBtnAction());
+        selectSplitBtn.getStyleClass().add("buttonSelect");
 
         uploadStopBtn.setOnAction(e-> uploadBtnAction());
         uploadStopBtn.setDisable(isTinfoil());
@@ -326,7 +326,7 @@ public class GamesController implements Initializable {
     }
     
     /**
-     * Functionality for selecting Split NSP button.
+     * Functionality for selecting Split-file button.
      * */
     private void selectSplitBtnAction(){
         File splitFile;
@@ -338,10 +338,27 @@ public class GamesController implements Initializable {
 
         splitFile = dirChooser.showDialog(usbNetPane.getScene().getWindow());
 
-        if (splitFile != null && splitFile.getName().toLowerCase().endsWith(".nsp")) {
+        if (splitFile == null)
+            return;
+
+        int fileNameLen = splitFile.getName().length();
+        String fileExtension = splitFile.getName().toLowerCase().substring(fileNameLen-4, fileNameLen);
+
+        if (fileExtension.equals(".nsp")){
             tableFilesListController.setFile(splitFile);
             uploadStopBtn.setDisable(false);    // Is it useful?
             previouslyOpenedPath = splitFile.getParent();
+        }
+
+        if (isTinfoil() && isXciNszXczSupport()){
+            switch(fileExtension){
+                case ".xci":
+                case ".nsz":
+                case ".xcz":
+                    tableFilesListController.setFile(splitFile);
+                    uploadStopBtn.setDisable(false);    // Is it useful?
+                    previouslyOpenedPath = splitFile.getParent();
+            }
         }
     }
     /**
@@ -456,7 +473,7 @@ public class GamesController implements Initializable {
         }
 
         selectNspBtn.setDisable(isActive);
-        selectSplitNspBtn.setDisable(isActive);
+        selectSplitBtn.setDisable(isActive);
         btnUpStopImage.getStyleClass().clear();
 
         if (isActive) {
@@ -506,12 +523,12 @@ public class GamesController implements Initializable {
         if (isDirectoryChooser){
             selectNspBtn.setOnAction(e -> selectFoldersBtnAction());
             btnSelectImage.getStyleClass().add("regionScanFolders");
-            selectSplitNspBtn.setVisible(false);
+            selectSplitBtn.setVisible(false);
         }
         else {
             selectNspBtn.setOnAction(e -> selectFilesBtnAction());
             btnSelectImage.getStyleClass().add("regionSelectFiles");
-            selectSplitNspBtn.setVisible(true);
+            selectSplitBtn.setVisible(true);
         }
         selectNspBtn.setGraphic(btnSelectImage);
     }
