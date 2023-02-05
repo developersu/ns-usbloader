@@ -8,13 +8,13 @@
     <name>NS-USBloader</name>
 
     <artifactId>ns-usbloader</artifactId>
-    <version>6.2</version>
+    <version>7.0</version>
 
     <url>https://redrise.ru</url>
     <description>
         NS multi tool
     </description>
-    <inceptionYear>2019</inceptionYear>
+    <inceptionYear>2019.0.2.1</inceptionYear>
     <organization>
         <name>Dmitry Isaenko</name>
         <url>https://developersu.blogspot.com/</url>
@@ -61,28 +61,28 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
@@ -90,28 +90,28 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
@@ -119,28 +119,28 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
@@ -148,28 +148,28 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>mac-aarch64</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>mac-aarch64</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>mac-aarch64</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>19</version>
+            <version>19.0.2.1</version>
             <classifier>mac-aarch64</classifier>
             <scope>compile</scope>
         </dependency>
@@ -309,7 +309,7 @@
                                 <fileVersion>1.0.0.0</fileVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
                                 <fileDescription>NS multi tool</fileDescription>
-                                <copyright>GNU General Public License v3, 2019 ${project.organization.name}, Russia.</copyright>
+                                <copyright>GNU General Public License v3, 2019.0.2.1 ${project.organization.name}, Russia.</copyright>
                                 <productVersion>1.0.0.0</productVersion>
                                 <txtProductVersion>${project.version}</txtProductVersion>
                                 <companyName>${project.organization.name}</companyName>

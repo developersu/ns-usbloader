@@ -76,7 +76,7 @@ public class FsPatch {
         findAllOffsets();
         mkDirs();
         writeFile();
-        new IniMaker(logPrinter,
+        new FsIniMaker(logPrinter,
                 saveToLocation,
                 _textSection,
                 wizard.getOffset1(),

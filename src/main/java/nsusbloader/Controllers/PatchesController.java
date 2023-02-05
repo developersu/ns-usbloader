@@ -41,15 +41,17 @@ import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
 import nsusbloader.Utilities.patches.es.EsPatchMaker;
 import nsusbloader.Utilities.patches.fs.FsPatchMaker;
+import nsusbloader.Utilities.patches.loader.LoaderPatchMaker;
 
 // TODO: CLI SUPPORT
 public class PatchesController implements Initializable {
     @FXML
     private VBox patchesToolPane;
     @FXML
-    private Button selFwFolderBtn, selProdKeysBtn, makeEsBtn, makeFsBtn;
+    private Button makeEsBtn, makeFsBtn, makeLoaderBtn;
     @FXML
-    private Label shortNameFirmwareLbl, locationFirmwareLbl, saveToLbl, shortNameKeysLbl, locationKeysLbl, statusLbl;
+    private Label shortNameFirmwareLbl, locationFirmwareLbl, saveToLbl, shortNameKeysLbl, locationKeysLbl, statusLbl,
+        locationAtmosphereLbl, shortNameAtmoLbl;
     private Thread workThread;
 
     private String previouslyOpenedPath;
@@ -72,13 +74,14 @@ public class PatchesController implements Initializable {
         locationKeysLbl.textProperty().addListener((observableValue, currentText, updatedText) ->
                 shortNameKeysLbl.setText(updatedText.replaceAll(myRegexp, "")));
 
-        convertRegionEs = new Region();
-        convertRegionEs.getStyleClass().add("regionCake");
+        locationAtmosphereLbl.textProperty().addListener((observableValue, currentText, updatedText) ->
+                shortNameAtmoLbl.setText(updatedText.replaceAll(myRegexp, "")));
+
+        convertRegionEs = createCakeRegion();
         makeEsBtn.setGraphic(convertRegionEs);
 
-        Region cakeRegionFs = new Region();
-        cakeRegionFs.getStyleClass().add("regionCake");
-        makeFsBtn.setGraphic(cakeRegionFs);
+        makeFsBtn.setGraphic(createCakeRegion());
+        makeLoaderBtn.setGraphic(createCakeRegion());
 
         AppPreferences preferences = AppPreferences.getInstance();
         String keysLocation = preferences.getKeysLocation();
@@ -89,11 +92,23 @@ public class PatchesController implements Initializable {
         }
 
         saveToLbl.setText(preferences.getPatchesSaveToLocation());
-        makeEsBtn.disableProperty().bind(Bindings.isEmpty(locationFirmwareLbl.textProperty()));
+        makeEsBtn.disableProperty().bind(Bindings.or(
+                Bindings.isEmpty(locationFirmwareLbl.textProperty()),
+                Bindings.isEmpty(locationKeysLbl.textProperty())));
         makeEsBtn.setOnAction(actionEvent -> makeEs());
 
-        makeFsBtn.disableProperty().bind(Bindings.isEmpty(locationFirmwareLbl.textProperty()));
+        makeFsBtn.disableProperty().bind(Bindings.or(
+                Bindings.isEmpty(locationFirmwareLbl.textProperty()),
+                Bindings.isEmpty(locationKeysLbl.textProperty())));
         makeFsBtn.setOnAction(actionEvent -> makeFs());
+
+        makeLoaderBtn.disableProperty().bind(Bindings.isEmpty(locationAtmosphereLbl.textProperty()));
+        makeLoaderBtn.setOnAction(actionEvent -> makeLoader());
+    }
+    private Region createCakeRegion(){
+        Region cakeRegion = new Region();
+        cakeRegion.getStyleClass().add("regionCake");
+        return cakeRegion;
     }
 
     /**
@@ -135,6 +150,18 @@ public class PatchesController implements Initializable {
         if (firmware == null)
             return;
         locationFirmwareLbl.setText(firmware.getAbsolutePath());
+        previouslyOpenedPath = firmware.getParent();
+    }
+    @FXML
+    private void selectAtmosphereFolder(){
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle(resourceBundle.getString("tabPatches_Lbl_Atmo"));
+        directoryChooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
+        File firmware = directoryChooser.showDialog(patchesToolPane.getScene().getWindow());
+        if (firmware == null)
+            return;
+        locationAtmosphereLbl.setText(firmware.getAbsolutePath());
+        previouslyOpenedPath = firmware.getParent();
     }
     @FXML
     private void selectSaveTo(){
@@ -153,16 +180,17 @@ public class PatchesController implements Initializable {
         fileChooser.setInitialDirectory(new File(FilesHelper.getRealFolder(previouslyOpenedPath)));
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("keys", "*.dat", "*.keys"));
         File keys = fileChooser.showOpenDialog(patchesToolPane.getScene().getWindow());
+        if (keys == null || ! keys.exists())
+            return;
 
-        if (keys != null && keys.exists()) {
-            locationKeysLbl.setText(keys.getAbsolutePath());
-        }
+        locationKeysLbl.setText(keys.getAbsolutePath());
+        previouslyOpenedPath = keys.getParent();
     }
 
     private void makeEs(){
         if (locationFirmwareLbl.getText().isEmpty() || locationKeysLbl.getText().isEmpty()){
             ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"),
-                    resourceBundle.getString("tabPatches_ServiceWindowMessage"));
+                    resourceBundle.getString("tabPatches_ServiceWindowMessageEsFs"));
             return;
         }
 
@@ -186,7 +214,7 @@ public class PatchesController implements Initializable {
     private void makeFs(){
         if (locationFirmwareLbl.getText().isEmpty() || locationKeysLbl.getText().isEmpty()){
             ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"),
-                    resourceBundle.getString("tabPatches_ServiceWindowMessage"));
+                    resourceBundle.getString("tabPatches_ServiceWindowMessageEsFs"));
             return;
         }
 
@@ -207,6 +235,29 @@ public class PatchesController implements Initializable {
         workThread.setDaemon(true);
         workThread.start();
     }
+    private void makeLoader(){
+        if (locationAtmosphereLbl.getText().isEmpty()){
+            ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"),
+                    resourceBundle.getString("tabPatches_ServiceWindowMessageLoader"));
+            return;
+        }
+
+        if (workThread != null && workThread.isAlive())
+            return;
+        statusLbl.setText("");
+
+        if (MediatorControl.getInstance().getTransferActive()) {
+            ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"),
+                    resourceBundle.getString("windowBodyPleaseStopOtherProcessFirst"));
+            return;
+        }
+
+        LoaderPatchMaker loaderPatchMaker = new LoaderPatchMaker(locationAtmosphereLbl.getText(), saveToLbl.getText());
+        workThread = new Thread(loaderPatchMaker);
+
+        workThread.setDaemon(true);
+        workThread.start();
+    }
     private void interruptProcessOfPatchMaking(){
         if (workThread == null || ! workThread.isAlive())
             return;
@@ -222,6 +273,7 @@ public class PatchesController implements Initializable {
 
         convertRegionEs.getStyleClass().clear();
         makeFsBtn.setVisible(! isActive);
+        makeLoaderBtn.setVisible(! isActive);
 
         if (isActive) {
             MediatorControl.getInstance().getContoller().logArea.clear();
@@ -231,15 +283,14 @@ public class PatchesController implements Initializable {
             makeEsBtn.setText(resourceBundle.getString("btn_Stop"));
             makeEsBtn.getStyleClass().remove("buttonUp");
             makeEsBtn.getStyleClass().add("buttonStop");
+            return;
         }
-        else {
-            convertRegionEs.getStyleClass().add("regionCake");
+        convertRegionEs.getStyleClass().add("regionCake");
 
-            makeEsBtn.setOnAction(actionEvent -> makeEs());
-            makeEsBtn.setText(resourceBundle.getString("tabPatches_Btn_MakeEs"));
-            makeEsBtn.getStyleClass().remove("buttonStop");
-            makeEsBtn.getStyleClass().add("buttonUp");
-        }
+        makeEsBtn.setOnAction(actionEvent -> makeEs());
+        makeEsBtn.setText(resourceBundle.getString("tabPatches_Btn_MakeEs"));
+        makeEsBtn.getStyleClass().remove("buttonStop");
+        makeEsBtn.getStyleClass().add("buttonUp");
     }
 
     public void setOneLineStatus(boolean statusSuccess){

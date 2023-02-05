@@ -31,7 +31,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 
-public class IniMaker {
+public class FsIniMaker {
     private static final String FILE_HEADER_TEXT = "# UTF-8\n" +
             "# A KIP section is [kip1_name:sha256_hex_8bytes]\n" +
             "# A patchset is .patch_name=kip_section_dec:offset_hex_0x:length_hex_0x:src_data_hex,dst_data_hex\n" +
@@ -48,14 +48,14 @@ public class IniMaker {
     private String patchSet1;
     private String patchSet2;
 
-    IniMaker(ILogPrinter logPrinter,
-             String saveToLocation,
-             byte[] _textSection,
-             int wizardOffset1,
-             int wizardOffset2,
-             byte[] sdkVersion,
-             String patchName,
-             boolean filesystemTypeFat32) throws Exception{
+    public FsIniMaker(ILogPrinter logPrinter,
+                      String saveToLocation,
+                      byte[] _textSection,
+                      int wizardOffset1,
+                      int wizardOffset2,
+                      byte[] sdkVersion,
+                      String patchName,
+                      boolean filesystemTypeFat32) throws Exception{
         this.logPrinter = logPrinter;
         this.saveToLocation = saveToLocation;
         this.offset1 = wizardOffset1 - 4;

@@ -111,7 +111,7 @@ public class BinToAsmPrinter {
                 return printImTooLazy("LDP", instructionExpression, offset);
         }
 
-        switch ((instructionExpression >> 23 & 0xff)){
+        switch ((instructionExpression >> 23 & 0x1ff)){
             case 0xA5:
                 return printMOVSimplified(instructionExpression, offset);
             case 0x22:
@@ -123,10 +123,10 @@ public class BinToAsmPrinter {
             case 0xA2:
                 return printSUBSimplified(instructionExpression, offset);
             case 0xE2:
-            //case 0x1e2:
+            case 0x1e2:
                 return printCMPSimplified(instructionExpression, offset);
             case 0x24:
-            //case 0x124:
+            case 0x124:
                 return printANDSimplified(instructionExpression, offset);
         }
 
@@ -142,6 +142,10 @@ public class BinToAsmPrinter {
                 return printTBZSimplified(instructionExpression, offset);
             case 0x54:
                 return printBConditionalSimplified(instructionExpression, offset);
+            case 0xeb:
+            case 0x6b:
+                if ((instructionExpression & 0x1f) == 0b11111)
+                    return printCMPShiftedRegisterSimplified(instructionExpression, offset);
         }
 
         switch (instructionExpression >> 26 & 0b111111) {
@@ -496,6 +500,37 @@ public class BinToAsmPrinter {
                 Rn,
                 conditionalJumpLocation, (conditionalJumpLocation + 0x100),
                 LSL);
+    }
+
+    private static String printCMPShiftedRegisterSimplified(int instructionExpression, int offset){
+        String sf = (instructionExpression >> 31 == 0) ? "W" : "X";
+        int Rn = instructionExpression >> 5 & 0x1F;
+        int Rm = instructionExpression >> 16 & 0x1F;
+        int imm6 = instructionExpression >> 10 & 0x3f;
+        int LSL = (instructionExpression >> 22 & 0b11);
+        String LSLStr;
+        switch (LSL){
+            case 0b00:
+                LSLStr = "LSL";
+                break;
+            case 0b01:
+                LSLStr = "LSR";
+                break;
+            case 0b10:
+                LSLStr = "ASR";
+                break;
+            case 0b11:
+                LSLStr = "RESERVED";
+                break;
+            default:
+                LSLStr = "?";
+        }
+
+        return String.format(
+                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CMP (sr)    " + ANSI_GREEN + sf + "%d," +
+                        ANSI_BLUE + sf + "%d " + ANSI_BLUE + LSLStr + ANSI_PURPLE + " %d" + ANSI_RESET + "\n",
+                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                Rn, Rm, imm6);
     }
 
     private static String printANDSimplified(int instructionExpression, int offset){

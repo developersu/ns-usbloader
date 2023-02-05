@@ -55,7 +55,7 @@ public class SettingsBlockTinfoilController implements Initializable {
 
         final AppPreferences preferences = AppPreferences.getInstance();
 
-        networkExpertSettingsVBox.disableProperty().bind(networkExpertModeCB.selectedProperty().not());
+        networkExpertSettingsVBox.visibleProperty().bind(networkExpertModeCB.selectedProperty());
 
         pcIpTF.disableProperty().bind(autoDetectIpCB.selectedProperty());
         pcPortTF.disableProperty().bind(randomlySelectPortCB.selectedProperty());

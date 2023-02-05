@@ -48,7 +48,7 @@
                      <Label minHeight="-Infinity" minWidth="-Infinity" text="%tabPatches_Lbl_Firmware" wrapText="true" />
                         <Label fx:id="shortNameFirmwareLbl" textOverrun="LEADING_WORD_ELLIPSIS" />
                         <Pane HBox.hgrow="ALWAYS" />
-                     <Button fx:id="selFwFolderBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectFirmware" styleClass="buttonSelect" text="%tabSplMrg_Btn_SelectFolder" wrapText="true">
+                     <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectFirmware" styleClass="buttonSelect" text="%tabSplMrg_Btn_SelectFolder" wrapText="true">
                         <graphic>
                            <SVGPath content="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z" fill="#289de8" />
                         </graphic>
@@ -56,6 +56,23 @@
                   </children>
                </HBox>
                   <Label fx:id="locationFirmwareLbl" disable="true" textOverrun="LEADING_WORD_ELLIPSIS">
+                     <font>
+                        <Font name="System Italic" size="13.0" />
+                     </font>
+                  </Label>
+                  <HBox alignment="CENTER_LEFT" spacing="5.0">
+                     <children>
+                        <Label minHeight="-Infinity" minWidth="-Infinity" text="%tabPatches_Lbl_Atmo" wrapText="true" />
+                        <Label fx:id="shortNameAtmoLbl" textOverrun="LEADING_WORD_ELLIPSIS" />
+                        <Pane HBox.hgrow="ALWAYS" />
+                        <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectAtmosphereFolder" styleClass="buttonSelect" text="%tabSplMrg_Btn_SelectFolder" wrapText="true">
+                           <graphic>
+                              <SVGPath content="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z" fill="#289de8" />
+                           </graphic>
+                        </Button>
+                     </children>
+                  </HBox>
+                  <Label fx:id="locationAtmosphereLbl" disable="true" textOverrun="LEADING_WORD_ELLIPSIS">
                      <font>
                         <Font name="System Italic" size="13.0" />
                      </font>
@@ -70,7 +87,7 @@
                         <Label minHeight="-Infinity" minWidth="-Infinity" text="%tabPatches_Lbl_Keys" wrapText="true" />
                         <Label fx:id="shortNameKeysLbl" />
                         <Pane HBox.hgrow="ALWAYS" />
-                        <Button fx:id="selProdKeysBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectProdKeys" styleClass="buttonSelect" text="%btn_Select">
+                        <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectProdKeys" styleClass="buttonSelect" text="%btn_Select">
                            <graphic>
                               <SVGPath content="M22,18V22H18V19H15V16H12L9.74,13.74C9.19,13.91 8.61,14 8,14A6,6 0 0,1 2,8A6,6 0 0,1 8,2A6,6 0 0,1 14,8C14,8.61 13.91,9.19 13.74,9.74L22,18M7,5A2,2 0 0,0 5,7A2,2 0 0,0 7,9A2,2 0 0,0 9,7A2,2 0 0,0 7,5Z" fill="#289de8" />
                            </graphic>
@@ -90,7 +107,7 @@
                         <Label minHeight="-Infinity" minWidth="-Infinity" text="%tabSplMrg_Lbl_SaveToLocation" wrapText="true" />
                         <Label fx:id="saveToLbl" />
                         <Pane HBox.hgrow="ALWAYS" />
-                        <Button fx:id="selProdKeysBtn1" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectSaveTo" styleClass="buttonSelect" text="%btn_Select">
+                        <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectSaveTo" styleClass="buttonSelect" text="%btn_Select">
                            <graphic>
                               <SVGPath content="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z" fill="#289de8" />
                            </graphic>
@@ -114,6 +131,7 @@
       <children>
          <Button fx:id="makeEsBtn" contentDisplay="TOP" mnemonicParsing="false" styleClass="buttonUp" text="%tabPatches_Btn_MakeEs" />
             <Button fx:id="makeFsBtn" contentDisplay="TOP" mnemonicParsing="false" styleClass="buttonUp" text="%tabPatches_Btn_MakeFs" />
+            <Button fx:id="makeLoaderBtn" contentDisplay="TOP" mnemonicParsing="false" styleClass="buttonUp" text="%tabPatches_Btn_MakeAtmo" />
       </children>
    </HBox>
    <padding>
