@@ -35,6 +35,7 @@ import nsusbloader.Utilities.patches.BinToAsmPrinter;
 import nsusbloader.Utilities.patches.fs.finders.HeuristicFsWizard;
 
 import java.io.*;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -87,6 +88,13 @@ public class FsPatch {
         logPrinter.print("                  == Debug information ==\n"+wizard.getDebug(), EMsgType.NULL);
     }
     private KIP1Provider getKIP1Provider() throws Exception{
+        System.out.println("ncaProvider "+ncaProvider);
+        System.out.println("CONTENT "+ncaProvider.getNCAContentProvider(0));
+        System.out.println("CONTENT "+ncaProvider.getNCAContentProvider(1));
+        System.out.println("CONTENT "+ncaProvider.getNCAContentProvider(2));
+        System.out.println("CONTENT "+ncaProvider.getNCAContentProvider(3));
+
+
         RomFsProvider romFsProvider = ncaProvider.getNCAContentProvider(0).getRomfs();
 
         FileSystemEntry package2FsEntry = romFsProvider.getRootEntry().getContent()
@@ -175,7 +183,7 @@ public class FsPatch {
         handyFsPatch.put(FOOTER);
 
         byte[] fsPatch = new byte[handyFsPatch.position()];
-        handyFsPatch.rewind();
+        ((Buffer) handyFsPatch).rewind();
         handyFsPatch.get(fsPatch);
 
         try (BufferedOutputStream stream = new BufferedOutputStream(
