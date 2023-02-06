@@ -88,8 +88,6 @@ public class AppPreferences {
     public String getHostIp(){ return preferences.get("HOSTIP", "0.0.0.0").replaceAll("(\\s)|(\t)", "");}   // who the hell said 'paranoid'?
     public void setHostIp(String ip){preferences.put("HOSTIP", ip);}
 
-    public void give(){preferences.putBoolean("man", true);}
-    public boolean take(){return preferences.getBoolean("man", false);}
     public String getHostPort(){
         String value = preferences.get("HOSTPORT", "6042");
         if (!value.matches("^[0-9]{1,5}$"))

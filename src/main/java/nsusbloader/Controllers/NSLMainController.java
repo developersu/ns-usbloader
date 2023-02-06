@@ -73,7 +73,7 @@ public class NSLMainController implements Initializable {
         if (AppPreferences.getInstance().getAutoCheckUpdates()){
             checkForUpdates();
         }
-        if (! AppPreferences.getInstance().take()) mainTabPane.getTabs().remove(3);
+
         openLastOpenedTab();
     }
     private void checkForUpdates(){

@@ -40,6 +40,14 @@
         </developer>
     </developers>
 
+    <repositories>
+        <repository>
+            <id>redrise</id>
+            <name>redrise.ru repository</name>
+            <url>http://repo.redrise.ru/releases</url>
+        </repository>
+    </repositories>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
@@ -199,11 +207,11 @@
             <version>5.9.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- picked from local repo -->
+        <!-- redrise repository -->
         <dependency>
             <groupId>ru.redrise</groupId>
             <artifactId>libKonogonka</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
