@@ -35,7 +35,7 @@ steps:
     - name: builds
       path: /builds
     - name: jdk
-      path: /misc/windows/NSIS/jdk
+      path: /drone/src/misc/windows/NSIS/jdk
 
   - name: emerge-legacy-artifact
     image: maven:3-openjdk-17
@@ -61,7 +61,7 @@ steps:
     - name: builds
       path: /builds
     - name: jdk
-      path: /misc/windows/NSIS/jdk
+      path: /drone/src/misc/windows/NSIS/jdk
 
 volumes:
   - name: m2
