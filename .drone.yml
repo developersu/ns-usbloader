@@ -26,9 +26,11 @@ steps:
     commands:
     - cp target/NS-USBloader.exe misc/windows/NSIS/
     - misc/windows/update_version.sh
-    - makensis -V4 misc/windows/NSIS/installer.nsi
+    - cd misc/windows/NSIS
+    - makensis -V4 ./installer.nsi
     - cp Installer-*.exe /builds/ns-usbloader/
-    - rm misc/windows/NSIS/NS-USBloader.exe
+    - rm ./NS-USBloader.exe
+    - cd ../../../
     volumes:
     - name: builds
       path: /builds
@@ -52,7 +54,8 @@ steps:
     commands:
     - cp target/NS-USBloader.exe misc/windows/NSIS/
     - misc/windows/update_version.sh legacy
-    - makensis -V4 misc/windows/NSIS/installer.nsi
+    - cd misc/windows/NSIS
+    - makensis -V4 ./installer.nsi
     - cp Installer-*.exe /builds/ns-usbloader/
     volumes:
     - name: builds
