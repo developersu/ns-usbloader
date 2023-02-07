@@ -32,6 +32,7 @@ import nsusbloader.Utilities.patches.es.finders.HeuristicEsWizard;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -118,7 +119,7 @@ public class EsPatch {
         handyEsPatch.put(FOOTER);
 
         byte[] esPatch = new byte[handyEsPatch.position()];
-        handyEsPatch.rewind();
+        ((Buffer) handyEsPatch).rewind();
         handyEsPatch.get(esPatch);
 
         try (BufferedOutputStream stream = new BufferedOutputStream(

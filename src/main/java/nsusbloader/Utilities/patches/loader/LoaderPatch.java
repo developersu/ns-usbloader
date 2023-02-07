@@ -30,6 +30,7 @@ import nsusbloader.Utilities.patches.SimplyFind;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -110,7 +111,7 @@ public class LoaderPatch {
 
     private void writeFile() throws Exception{
         String patchFileLocation = saveToLocation + File.separator +
-                "atmosphere" + File.separator + "kip_patches" + File.separator + "fs_patches" + File.separator + patchName;
+                "atmosphere" + File.separator + "kip_patches" + File.separator + "loader_patches" + File.separator + patchName;
 
         ByteBuffer handyFsPatch = ByteBuffer.allocate(0x100).order(ByteOrder.LITTLE_ENDIAN);
         handyFsPatch.put(HEADER);
@@ -118,7 +119,7 @@ public class LoaderPatch {
         handyFsPatch.put(FOOTER);
 
         byte[] fsPatch = new byte[handyFsPatch.position()];
-        handyFsPatch.rewind();
+        ((Buffer) handyFsPatch).rewind();
         handyFsPatch.get(fsPatch);
 
         try (BufferedOutputStream stream = new BufferedOutputStream(
