@@ -1,4 +1,3 @@
 sed -z -i -e 's/<groupId>org.usb4java<\/groupId>\n\s*<artifactId>usb4java<\/artifactId>\s*<version>1.3.0<\/version>/<groupId>org.usb4java<\/groupId>\n<artifactId>usb4java<\/artifactId>\n<version>1.2.0<\/version>/g' pom.xml
 sed -z -i -e 's/<finalName>${project.artifactId}-${project.version}-${maven.build.timestamp}<\/finalName>/<finalName>${project.artifactId}-${project.version}-legacy-${maven.build.timestamp}<\/finalName>/g' pom.xml
-sed -z -i -e 's/<outfile>target\/NS-USBloader-${project.version}-${maven.build.timestamp}.exe<\/outfile>/<outfile>target\/NS-USBloader-${project.version}-legacy-${maven.build.timestamp}.exe<\/outfile>/g' pom.xml
 sed -z -i -e 's/<jar>target\/${project.artifactId}-${project.version}-${maven.build.timestamp}.jar<\/jar>/<jar>target\/${project.artifactId}-${project.version}-legacy-${maven.build.timestamp}.jar<\/jar>/g' pom.xml

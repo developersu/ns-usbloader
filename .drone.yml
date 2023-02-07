@@ -17,10 +17,23 @@ steps:
     commands:
     - mkdir -p /builds/ns-usbloader
     - cp target/ns-usbloader-*jar /builds/ns-usbloader/
-    - cp target/NS-USBloader-*exe /builds/ns-usbloader/
     volumes:
     - name: builds
       path: /builds
+
+  - name: make-win-installer
+    image: wheatstalk/makensis:3
+    commands:
+    - cp target/NS-USBloader.exe misc/windows/NSIS/
+    - misc/windows/update_version.sh
+    - /entrypoint.sh misc/windows/NSIS/installer.nsi
+    - cp Installer-*.exe /builds/ns-usbloader/
+    - rm misc/windows/NSIS/NS-USBloader.exe
+    volumes:
+    - name: builds
+      path: /builds
+    - name: jdk
+      path: /misc/windows/NSIS/jdk
 
   - name: emerge-legacy-artifact
     image: maven:3-openjdk-17
@@ -28,12 +41,24 @@ steps:
     - . ./.make_legacy
     - mvn -B -DskipTests clean package
     - cp target/ns-usbloader-*jar /builds/ns-usbloader/
-    - cp target/NS-USBloader-*exe /builds/ns-usbloader/
     volumes:
     - name: m2
       path: /root/.m2
     - name: builds
       path: /builds
+
+  - name: make-legacy-win-installer
+    image: wheatstalk/makensis:3
+    commands:
+    - cp target/NS-USBloader.exe misc/windows/NSIS/
+    - misc/windows/update_version.sh legacy
+    - /entrypoint.sh misc/windows/NSIS/installer.nsi
+    - cp Installer-*.exe /builds/ns-usbloader/
+    volumes:
+    - name: builds
+      path: /builds
+    - name: jdk
+      path: /misc/windows/NSIS/jdk
 
 volumes:
   - name: m2
@@ -42,3 +67,6 @@ volumes:
   - name: builds
     host:
       path: /home/www/builds
+  - name: jdk
+    host:
+      path: /home/docker/drone/files/assembly/openjdk-19.0.2
