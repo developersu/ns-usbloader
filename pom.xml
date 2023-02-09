@@ -67,6 +67,13 @@
         <!-- openJFX Linux -->
         <dependency>
             <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>linux</classifier>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
             <classifier>linux</classifier>
@@ -80,6 +87,13 @@
             <scope>compile</scope>
         </dependency>
         <!-- openJFX Windows -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>win</classifier>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -97,6 +111,13 @@
         <!-- openJFX MAC -->
         <dependency>
             <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>mac</classifier>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
             <classifier>mac</classifier>
@@ -110,6 +131,13 @@
             <scope>compile</scope>
         </dependency>
         <!-- openJFX MAC aarch64 -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>mac-aarch64</classifier>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -172,7 +200,7 @@
         </resources>
 
         <plugins>
-            <!--OpenJFX for Java9+ -->
+            <!--OpenJFX for Java9+
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -181,6 +209,7 @@
                     <mainClass>nsusbloader.NSLMain</mainClass>
                 </configuration>
             </plugin>
+            -->
             <!-- Junit5 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -206,11 +235,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.1.2</version>
+                <!--
                 <configuration>
                     <manifestEntries>
                         <Automatic-Module-Name>nsusbloader</Automatic-Module-Name>
                     </manifestEntries>
                 </configuration>
+                -->
                 <executions>
                     <execution>
                         <id>default-jar</id>
