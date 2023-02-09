@@ -19,6 +19,7 @@
 package nsusbloader.Utilities.patches.fs.finders;
 
 import libKonogonka.Converter;
+import nsusbloader.AppPreferences;
 import nsusbloader.Utilities.patches.AHeuristic;
 import nsusbloader.Utilities.patches.BinToAsmPrinter;
 import nsusbloader.Utilities.patches.SimplyFind;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 class HeuristicFs1 extends AHeuristic {
-    private static final String PATTERN = "..0036....1F..71..0054..4839"; // TBZ
+    private static final String PATTERN = AppPreferences.getInstance().getPatchOffset("FS", 1, 0); // TBZ
 
     private final byte[] where;
     private final List<Integer> findings;

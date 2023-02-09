@@ -29,7 +29,7 @@ public class TinfoilUsbCli {
     private final String[] arguments;
     private List<File> filesList;
 
-    public TinfoilUsbCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
+    TinfoilUsbCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
         this.arguments = arguments;
         checkArguments();
         parseFilesArguments();

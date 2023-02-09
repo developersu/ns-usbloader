@@ -144,4 +144,9 @@ public class AppPreferences {
 
     public String getPatchesSaveToLocation(){ return FilesHelper.getRealFolder(preferences.get("patches_saveto", System.getProperty("user.home"))); }
     public void setPatchesSaveToLocation(String value){ preferences.put("patches_saveto", value); }
+
+    public boolean getPatchesTabInvisible(){return preferences.getBoolean("patches_tab_visible", true); }
+    public void setPatchesTabInvisible(boolean value){preferences.putBoolean("patches_tab_visible", value);}
+    public String getPatchOffset(String type, int moduleNumber, int offsetId){ return preferences.get(String.format("%s_%02x_%02x", type, moduleNumber, offsetId), ""); }
+    public void setPatchOffset(String fullTypeSpecifier, String offset){ preferences.put(fullTypeSpecifier, offset); }
 }

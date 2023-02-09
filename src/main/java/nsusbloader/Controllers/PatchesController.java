@@ -24,7 +24,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.TransferMode;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -128,7 +130,10 @@ public class PatchesController implements Initializable {
         List<File> filesDropped = event.getDragboard().getFiles();
         for (File file : filesDropped){
             if (file.isDirectory()) {
-                locationFirmwareLbl.setText(file.getAbsolutePath());
+                if (file.getName().toLowerCase().contains("atmosphe"))
+                    locationAtmosphereLbl.setText(file.getAbsolutePath());
+                else
+                    locationFirmwareLbl.setText(file.getAbsolutePath());
                 continue;
             }
             String fileName = file.getName().toLowerCase();
@@ -137,10 +142,42 @@ public class PatchesController implements Initializable {
                     ! fileName.equals("dev.keys") &&
                     ! fileName.equals("title.keys")))
                 locationKeysLbl.setText(file.getAbsolutePath());
+            else if (fileName.equals("offsets.txt"))
+                setOffsets(file);
         }
         event.setDropCompleted(true);
         event.consume();
     }
+
+    private void setOffsets(File fileWithOffsets){
+        AppPreferences preferences = AppPreferences.getInstance();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileWithOffsets))) {
+            String fileLine;
+            String[] lineValues;
+            while ((fileLine = reader.readLine()) != null) {
+                lineValues = fileLine.trim().split("\\s+?=\\s+?", 2);
+                if (lineValues.length == 2) {
+                    String[] pointer = lineValues[0].split("_", 3);
+                    if (! pointer[0].equals("ES") && ! pointer[0].equals("FS"))
+                        continue;
+                    if (! pointer[1].matches("^([0-9A-Fa-f]{2})$"))
+                        continue;
+                    if (! pointer[2].matches("^([0-9A-Fa-f]{2})$"))
+                        continue;
+                    if (! lineValues[1].matches("^(([0-9A-Fa-f]{2})|\\.)+?$"))
+                        continue;
+                    preferences.setPatchOffset(lineValues[0], lineValues[1]);
+
+                    System.out.println(pointer[0]+"_"+pointer[1]+"_"+pointer[2]+" = "+lineValues[1]);
+                }
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     @FXML
     private void selectFirmware(){
         DirectoryChooser directoryChooser = new DirectoryChooser();

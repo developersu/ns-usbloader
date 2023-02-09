@@ -27,7 +27,7 @@ public class NxdtCli {
     private final String[] arguments;
     private String saveTo;
 
-    public NxdtCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
+    NxdtCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
         this.arguments = arguments;
         parseArgument();
         runBackend();

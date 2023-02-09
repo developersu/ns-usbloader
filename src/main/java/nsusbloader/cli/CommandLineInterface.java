@@ -67,6 +67,11 @@ public class CommandLineInterface {
                 new GoldLeafCli(arguments);
                 return;
             }
+            if (cli.hasOption("experimental")){
+                final String[] arguments = cli.getOptionValues("experimental");
+                new ExperimentalCli(arguments);
+                return;
+            }
             /*
             if (cli.hasOption("x") || cli.hasOption("nxdt")){
                 final String[] arguments = cli.getOptionValues("nxdt");
@@ -153,6 +158,12 @@ public class CommandLineInterface {
                 .hasArgs()
                 .argName("...")
                 .build();
+        final Option experimentalOption = Option.builder()
+                .longOpt("experimental")
+                .desc("Enable testing and experimental functions")
+                .hasArgs()
+                .argName("y|n")
+                .build();
         /* nxdumptool */
         /*
         final Option nxdtOption = Option.builder("x")
@@ -183,6 +194,7 @@ public class CommandLineInterface {
         group.addOption(helpOption);
         group.addOption(tinfoilOption);
         group.addOption(glOption);
+        group.addOption(experimentalOption);
         //group.addOption(nxdtOption);
         group.addOption(splitOption);
         group.addOption(mergeOption);

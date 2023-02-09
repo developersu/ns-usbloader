@@ -19,6 +19,7 @@
 package nsusbloader.Utilities.patches.es.finders;
 
 import libKonogonka.Converter;
+import nsusbloader.AppPreferences;
 import nsusbloader.Utilities.patches.AHeuristic;
 import nsusbloader.Utilities.patches.BinToAsmPrinter;
 import nsusbloader.Utilities.patches.SimplyFind;
@@ -26,8 +27,8 @@ import nsusbloader.Utilities.patches.SimplyFind;
 import java.util.List;
 
 class HeuristicEs3 extends AHeuristic {
-    private static final String PATTERN0 = "..FF97";
-    private static final String PATTERN1 = "......FF97"; // aka "E0230091..FF97";
+    private static final String PATTERN0 = AppPreferences.getInstance().getPatchOffset("ES", 3, 0);
+    private static final String PATTERN1 = AppPreferences.getInstance().getPatchOffset("ES", 3, 1);
 
     private final List<Integer> findings;
     private final byte[] where;

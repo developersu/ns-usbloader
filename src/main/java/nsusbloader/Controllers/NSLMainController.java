@@ -70,9 +70,13 @@ public class NSLMainController implements Initializable {
 
         MediatorControl.getInstance().setController(this);
 
-        if (AppPreferences.getInstance().getAutoCheckUpdates()){
+        AppPreferences preferences = AppPreferences.getInstance();
+
+        if (preferences.getAutoCheckUpdates())
             checkForUpdates();
-        }
+
+        if (preferences.getPatchesTabInvisible())
+            mainTabPane.getTabs().remove(3);
 
         openLastOpenedTab();
     }

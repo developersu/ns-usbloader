@@ -34,7 +34,7 @@ public class GoldLeafCli {
 
     private int parseFileSince = 1;
 
-    public GoldLeafCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
+    GoldLeafCli(String[] arguments) throws InterruptedException, IncorrectSetupException{
         this.arguments = arguments;
 
         checkArguments();
@@ -43,7 +43,7 @@ public class GoldLeafCli {
         runGoldLeafBackend();
     }
 
-    public void checkArguments() throws IncorrectSetupException{
+    private void checkArguments() throws IncorrectSetupException{
         if (arguments == null || arguments.length == 0) {
             throw new IncorrectSetupException("No arguments.\n" +
                     "Try 'ns-usbloader -g help' for more information.");
@@ -83,7 +83,7 @@ public class GoldLeafCli {
         return builder.toString();
     }
 
-    public void parseGoldLeafVersion() throws IncorrectSetupException{
+    private void parseGoldLeafVersion() throws IncorrectSetupException{
         String argument1 = arguments[0];
 
         if (! argument1.startsWith("ver=")) {
@@ -107,7 +107,7 @@ public class GoldLeafCli {
                 getGlSupportedVersions());
     }
 
-    public void parseFilesArguments() throws IncorrectSetupException{
+    private void parseFilesArguments() throws IncorrectSetupException{
         filesList = new ArrayList<>();
         File file;
 
@@ -123,7 +123,7 @@ public class GoldLeafCli {
         }
     }
 
-    public void runGoldLeafBackend() throws InterruptedException {
+    private void runGoldLeafBackend() throws InterruptedException {
         Runnable task = new UsbCommunications(filesList,
                 "GoldLeaf"+goldLeafVersion,
                 filterForNsp);

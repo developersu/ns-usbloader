@@ -42,6 +42,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * [Pablo Curiel (DarkMatterCore)](https://github.com/DarkMatterCore)
 * [wolfposd](https://github.com/wolfposd)
 * [agungrbudiman](https://github.com/agungrbudiman)
+* Perfect algorithms and great examples taken from mrdude project [mrdude2478/IPS_Patch_Creator](https://github.com/mrdude2478/IPS_Patch_Creator/)
 
 * French by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 
 * Italian by [unbranched](https://github.com/unbranched)
@@ -63,9 +64,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 
 ### System requirements
 
-JRE/JDK 8u60 or higher for Windows
-
-JDK 11 for MacOS and Linux
+JDK 11 for macOS and Linux
 
 ### Supported Goldleaf versions
 | Goldleaf version | NS-USBloader version |
@@ -130,8 +129,6 @@ Set 'Security & Privacy' settings if needed.
 
 ##### Windows: 
 
-* [Download and install Java JRE](http://java.com/download/) (8u60 or higher)
-* Get this application (JAR file) and double-click on it (alternatively open 'cmd', go to place where jar located and execute via `java -jar thisAppName.jar`)
 * Once application opens click on 'Gear' icon. 
 * Click 'Download and install drivers'
 * Install drivers
@@ -235,10 +232,10 @@ Handling successful/failed installation is a purpose of the other side applicati
 
 #### What is this '-legacy' jar?!
 
-**JAR with NO postfixes** recommended for Windows users, Linux users and MacOS users who're using Mojave or later versions.
+**JAR with NO postfixes** recommended for Windows users, Linux users and macOS users who're using Mojave or later versions.
 
-**JAR with '-legacy' postfix** is for MacOS users who're still using OS X releases before (!) Mojave.
-(It also works for Linux and for Windows but sometimes it doesn't work for Windows and I don't know why).
+**JAR with '-legacy' postfix** is for macOS users who're still using OS X releases before (!) Mojave.
+(It also works for Linux and for Windows, but sometimes it doesn't work for Windows and I don't know why).
 
 We have this situation because of weird behaviour inside usb4java library used in this application for USB interactions. In '-legacy' it's v1.2.0 and in 'normal' it's v1.3.0
 

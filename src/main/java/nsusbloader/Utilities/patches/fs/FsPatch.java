@@ -88,13 +88,6 @@ public class FsPatch {
         logPrinter.print("                  == Debug information ==\n"+wizard.getDebug(), EMsgType.NULL);
     }
     private KIP1Provider getKIP1Provider() throws Exception{
-        System.out.println("ncaProvider "+ncaProvider);
-        System.out.println("CONTENT "+ncaProvider.getNCAContentProvider(0));
-        System.out.println("CONTENT "+ncaProvider.getNCAContentProvider(1));
-        System.out.println("CONTENT "+ncaProvider.getNCAContentProvider(2));
-        System.out.println("CONTENT "+ncaProvider.getNCAContentProvider(3));
-
-
         RomFsProvider romFsProvider = ncaProvider.getNCAContentProvider(0).getRomfs();
 
         FileSystemEntry package2FsEntry = romFsProvider.getRootEntry().getContent()

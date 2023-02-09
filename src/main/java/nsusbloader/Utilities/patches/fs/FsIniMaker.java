@@ -77,9 +77,9 @@ public class FsIniMaker {
     private void makeFwVersionInformationNotice(boolean isFat32, byte[] fwVersion){
         String fwVersionFormatted = fwVersion[3]+"."+fwVersion[2]+"."+fwVersion[1]+"."+fwVersion[0];
         if (isFat32)
-            firmwareVersionInformationNotice = "\n#FS "+fwVersionFormatted+"\n";
+            firmwareVersionInformationNotice = "\n#FS (FAT)"+fwVersionFormatted+"\n";
         else
-            firmwareVersionInformationNotice = "\n#FS "+fwVersionFormatted+"-ExFAT\n";
+            firmwareVersionInformationNotice = "\n#FS (ExFAT) "+fwVersionFormatted+"\n";
     }
 
     private void makeSectionDeclaration(String patchName){

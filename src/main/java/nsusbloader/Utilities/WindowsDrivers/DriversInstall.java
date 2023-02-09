@@ -32,9 +32,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import nsusbloader.AppPreferences;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ResourceBundle;
 
 public class DriversInstall {
