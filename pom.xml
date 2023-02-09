@@ -49,13 +49,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
+        <javafx.version>19.0.2.1</javafx.version>
     </properties>
 
     <issueManagement>
         <system>GitHub</system>
         <url>https://github.com/developer_su/${project.artifactId}/issues</url>
     </issueManagement>
-    <!-- openJFX Linux -->
     <dependencies>
         <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
         <dependency>
@@ -64,31 +64,18 @@
             <version>1.5.0</version>
             <scope>compile</scope>
         </dependency>
+        <!-- openJFX Linux -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>19.0.2.1</version>
-            <classifier>linux</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-media</artifactId>
-            <version>19.0.2.1</version>
+            <version>${javafx.version}</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>19.0.2.1</version>
-            <classifier>linux</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>19.0.2.1</version>
+            <version>${javafx.version}</version>
             <classifier>linux</classifier>
             <scope>compile</scope>
         </dependency>
@@ -96,28 +83,14 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>19.0.2.1</version>
-            <classifier>win</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-media</artifactId>
-            <version>19.0.2.1</version>
+            <version>${javafx.version}</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>19.0.2.1</version>
-            <classifier>win</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>19.0.2.1</version>
+            <version>${javafx.version}</version>
             <classifier>win</classifier>
             <scope>compile</scope>
         </dependency>
@@ -125,57 +98,29 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>19.0.2.1</version>
-            <classifier>mac</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-media</artifactId>
-            <version>19.0.2.1</version>
+            <version>${javafx.version}</version>
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>19.0.2.1</version>
+            <version>${javafx.version}</version>
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>19.0.2.1</version>
-            <classifier>mac</classifier>
-            <scope>compile</scope>
-        </dependency>
-
+        <!-- openJFX MAC aarch64 -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>19.0.2.1</version>
-            <classifier>mac-aarch64</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-media</artifactId>
-            <version>19.0.2.1</version>
+            <version>${javafx.version}</version>
             <classifier>mac-aarch64</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>19.0.2.1</version>
-            <classifier>mac-aarch64</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>19.0.2.1</version>
+            <version>${javafx.version}</version>
             <classifier>mac-aarch64</classifier>
             <scope>compile</scope>
         </dependency>
@@ -227,6 +172,15 @@
         </resources>
 
         <plugins>
+            <!--OpenJFX for Java9+ -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>nsusbloader.NSLMain</mainClass>
+                </configuration>
+            </plugin>
             <!-- Junit5 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -251,7 +205,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
+                <version>3.1.2</version>
+                <configuration>
+                    <manifestEntries>
+                        <Automatic-Module-Name>nsusbloader</Automatic-Module-Name>
+                    </manifestEntries>
+                </configuration>
                 <executions>
                     <execution>
                         <id>default-jar</id>
