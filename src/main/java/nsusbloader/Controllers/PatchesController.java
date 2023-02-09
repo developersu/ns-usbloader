@@ -151,11 +151,13 @@ public class PatchesController implements Initializable {
 
     private void setOffsets(File fileWithOffsets){
         AppPreferences preferences = AppPreferences.getInstance();
-
+        int count = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(fileWithOffsets))) {
             String fileLine;
             String[] lineValues;
             while ((fileLine = reader.readLine()) != null) {
+                if (fileLine.startsWith("#"))
+                    continue;
                 lineValues = fileLine.trim().split("\\s+?=\\s+?", 2);
                 if (lineValues.length == 2) {
                     String[] pointer = lineValues[0].split("_", 3);
@@ -170,6 +172,8 @@ public class PatchesController implements Initializable {
                     preferences.setPatchOffset(lineValues[0], lineValues[1]);
 
                     System.out.println(pointer[0]+"_"+pointer[1]+"_"+pointer[2]+" = "+lineValues[1]);
+                    count++;
+                    statusLbl.setText("OK "+count);
                 }
             }
         }
