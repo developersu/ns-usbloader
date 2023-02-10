@@ -61,6 +61,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Ryukyuan languages by [kuragehime](https://github.com/kuragehimekurara1)
 
 * Angelo Elias Dalzotto makes packages in AUR
+* Phoenix[Msc] provides his shiny Mac M1 for debug
 
 ### System requirements
 
@@ -120,12 +121,11 @@ Double-click on downloaded .jar file. Follow instructions. Or see 'Linux' sectio
 
 Set 'Security & Privacy' settings if needed.
 
-*Please note: JDK 11 is recommended for using on MacOS (EXCEPT APPLE SILICON). There are few really weird issues already reported from JDK 14 users on Mac.*
+*Please note: JDK 19 is recommended for using on macOS. There are issues already reported from users on Mac with JDK 14.*
 
 ##### macOS on Apple Silicon (ARM)
 
-* Some users [tested](https://github.com/developersu/ns-usbloader/issues/91) this application with [Zulu-JDK with FX support](https://www.azul.com/downloads/zulu-community/?version=java-11-lts&os=macos&architecture=arm-64-bit&package=jdk-fx). Try it!
-* OpenJDK 17 also should be a working solution. [Tell us if it works for you!]((https://github.com/developersu/ns-usbloader/issues/91))
+Download application with `-m1.jar` postfix.
 
 ##### Windows: 
 
@@ -153,7 +153,7 @@ Table.
 
 There you can select checkbox for files that will be sent to application (AW/GL). ~~Since Goldleaf v0.5 allow you only one file transmission per time, only one file is available for selection.~~ 
 
-Also you can use space to select/un-select files and 'delete' button for deleting. By right-mouse-click you can see context menu where you can delete one OR all items from the table.
+Also, you can use space to select/un-select files and 'delete' button for deleting. By right-mouse-click you can see context menu where you can delete one OR all items from the table.
 
 For Goldleaf v0.6.1 and NS-USBloader v0.6 (and higher) you will have to use 'Explore content' -> 'Remote PC (via USB)' You will see two drives HOME:/ and VIRT:/. First drive is pointing to your home directory. Second one is reflection of what you've added to table (first application tab). Also VIRT:/ drive have limited functionality in comparison to HOME:/. E.g. you can't write files to this drive since it's not a drive. But don't worry, it won't make any impact on Goldleaf or your NS if you try.
 

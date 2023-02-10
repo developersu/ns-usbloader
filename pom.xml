@@ -131,28 +131,6 @@
             <classifier>mac</classifier>
             <scope>compile</scope>
         </dependency>
-        <!-- openJFX MAC aarch64 -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>mac-aarch64</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>mac-aarch64</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>mac-aarch64</classifier>
-            <scope>compile</scope>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.usb4java/usb4java -->
         <dependency>
             <groupId>org.usb4java</groupId>
