@@ -65,12 +65,14 @@ steps:
       path: /drone/src/misc/windows/NSIS/jdk
 
   - name: emerge-mac-m1-artifact
-    image: alpine:latest
+    image: maven:3-openjdk-17
     commands:
       - . ./.make_m1
       - mvn -B -DskipTests clean package
       - cp target/ns-usbloader-*jar /builds/ns-usbloader/
     volumes:
+      - name: m2
+        path: /root/.m2
       - name: builds
         path: /builds
 
