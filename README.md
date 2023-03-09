@@ -255,17 +255,14 @@ This is non-commercial project.
 
 Nevertheless, I'll be more than happy if you find a chance to make a donation for charity to people I trust:
 
-* BTC → bc1q67j4yjmt67mes0hv03fyydjejmw6ahw0v932su
-* ETH → 0x82Ab0ddE183C12cAa6eD61DF3671675C4bdC42fc
-* DOGE → D8o42b952yjEWZ5Ajq4ZtjGvx1kR7DyDHm
-* DOT → 1511KQqm6Mme5Za4rtgsSdzCyuEzQ6CC1a6XLxQJXXW3GWpo
-* LTC → LRFXTN4rTEiQ3RxzssMFC5S1WMRd1raN2Q
-* LUNA → terra1n0sfmljpuu87h7lrn9nzxadfa3qxthlmvtq5lf
-* TRX → TU3AyFkF12Jg1yApcXGz91R8xKvXV1EzkW
-* ETC → 0x78A946fC9708c024298c9a4f8961A49B7a830d53
-* USDT (TRC20) → TU3AyFkF12Jg1yApcXGz91R8xKvXV1EzkW
-* USDT (ERC20) → 0x82Ab0ddE183C12cAa6eD61DF3671675C4bdC42fc
-* XRP → r91kfRiRsvnDp7evHNmXkrL3yAL7eakWk1
+* BTC → 1BnErE3n6LEdEjvvFrt4FMdXd1UGa5L7Ge
+* ETH → 0x9c29418129553bE171181bb6245151aa0576A3b7
+* DOT → 15BWSwmA4xEHZdq3gGftWg7dctMQk9vXwqA92Pg22gsxDweF
+* LTC → ltc1qfjvzxm04tax077ra9rvmxdnsum8alws2n20fag
+* ETC → 0xe9064De288C8454942533a005AB72515e689226E
+* USDT (TRC20) → TKgp5SvJGiqYNFtvJfEDGLFbezFEHq1tBy
+* USDT (ERC20) → 0x9c29418129553bE171181bb6245151aa0576A3b7
+* XRP → rGmGaLsKmSUbxWfyi4mujtVamTzj3Nqxbw.
 
 Thanks!
 
