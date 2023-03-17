@@ -16,6 +16,7 @@ steps:
     image: alpine:latest
     commands:
     - mkdir -p /builds/ns-usbloader
+    - echo target/ns-usbloader-*jar
     - cp target/ns-usbloader-*jar /builds/ns-usbloader/
     volumes:
     - name: builds
@@ -28,8 +29,10 @@ steps:
     - misc/windows/update_version.sh
     - cd misc/windows/NSIS
     - makensis -V4 ./installer.nsi
+    - echo Installer-*.exe
     - cp Installer-*.exe /builds/ns-usbloader/
     - rm ./NS-USBloader.exe
+    - rm ./Installer-*.exe
     - cd ../../../
     volumes:
     - name: builds
@@ -42,6 +45,7 @@ steps:
     commands:
     - . ./.make_legacy
     - mvn -B -DskipTests clean package
+    - echo target/ns-usbloader-*jar
     - cp target/ns-usbloader-*jar /builds/ns-usbloader/
     volumes:
     - name: m2
@@ -56,6 +60,7 @@ steps:
     - misc/windows/update_version.sh legacy
     - cd misc/windows/NSIS
     - makensis -V4 ./installer.nsi
+    - echo Installer-*.exe
     - cp Installer-*.exe /builds/ns-usbloader/
     - cd ../../../
     volumes:
@@ -69,6 +74,7 @@ steps:
     commands:
       - . ./.make_m1
       - mvn -B -DskipTests clean package
+      - echo target/ns-usbloader-*jar
       - cp target/ns-usbloader-*jar /builds/ns-usbloader/
     volumes:
       - name: m2
