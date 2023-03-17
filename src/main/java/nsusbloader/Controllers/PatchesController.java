@@ -169,7 +169,7 @@ public class PatchesController implements Initializable {
                         continue;
                     if (! lineValues[1].matches("^(([0-9A-Fa-f]{2})|\\.)+?$"))
                         continue;
-                    preferences.setPatchOffset(lineValues[0], lineValues[1]);
+                    preferences.setPatchPattern(lineValues[0], lineValues[1]);
 
                     System.out.println(pointer[0]+"_"+pointer[1]+"_"+pointer[2]+" = "+lineValues[1]);
                     count++;

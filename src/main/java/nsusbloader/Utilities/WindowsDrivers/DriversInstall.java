@@ -140,7 +140,7 @@ public class DriversInstall {
             return true;
         }
         catch (Exception e){
-            runInstallerStatusLabel.setText("Error: "+e.toString());
+            runInstallerStatusLabel.setText("Error: "+e);
             e.printStackTrace();
             return false;
         }

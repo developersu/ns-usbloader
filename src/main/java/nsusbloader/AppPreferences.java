@@ -32,7 +32,10 @@ public class AppPreferences {
     private AppPreferences(){
         this.preferences = Preferences.userRoot().node("NS-USBloader");
         String localeCode = preferences.get("locale", Locale.getDefault().toString());
-        this.locale = new Locale(localeCode.substring(0, 2), localeCode.substring(3));
+        if (localeCode.length() < 5)
+            this.locale = new Locale("en", "EN");
+        else
+            this.locale = new Locale(localeCode.substring(0, 2), localeCode.substring(3));
     }
 
     public String getTheme(){
@@ -147,6 +150,6 @@ public class AppPreferences {
 
     public boolean getPatchesTabInvisible(){return preferences.getBoolean("patches_tab_visible", true); }
     public void setPatchesTabInvisible(boolean value){preferences.putBoolean("patches_tab_visible", value);}
-    public String getPatchOffset(String type, int moduleNumber, int offsetId){ return preferences.get(String.format("%s_%02x_%02x", type, moduleNumber, offsetId), ""); }
-    public void setPatchOffset(String fullTypeSpecifier, String offset){ preferences.put(fullTypeSpecifier, offset); }
+    public String getPatchPattern(String type, int moduleNumber, int offsetId){ return preferences.get(String.format("%s_%02x_%02x", type, moduleNumber, offsetId), ""); }
+    public void setPatchPattern(String fullTypeSpecifier, String offset){ preferences.put(fullTypeSpecifier, offset); }
 }

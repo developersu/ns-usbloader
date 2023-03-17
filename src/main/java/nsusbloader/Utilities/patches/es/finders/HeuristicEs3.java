@@ -27,8 +27,8 @@ import nsusbloader.Utilities.patches.SimplyFind;
 import java.util.List;
 
 class HeuristicEs3 extends AHeuristic {
-    private static final String PATTERN0 = AppPreferences.getInstance().getPatchOffset("ES", 3, 0);
-    private static final String PATTERN1 = AppPreferences.getInstance().getPatchOffset("ES", 3, 1);
+    private static final String PATTERN0 = AppPreferences.getInstance().getPatchPattern("ES", 3, 0);
+    private static final String PATTERN1 = AppPreferences.getInstance().getPatchPattern("ES", 3, 1);
 
     private final List<Integer> findings;
     private final byte[] where;

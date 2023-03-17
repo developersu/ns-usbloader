@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 class HeuristicFs1 extends AHeuristic {
-    private static final String PATTERN = AppPreferences.getInstance().getPatchOffset("FS", 1, 0); // TBZ
+    private static final String PATTERN = AppPreferences.getInstance().getPatchPattern("FS", 1, 0); // TBZ
 
     private final byte[] where;
     private final List<Integer> findings;
