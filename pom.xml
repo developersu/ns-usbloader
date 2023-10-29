@@ -8,7 +8,7 @@
     <name>NS-USBloader</name>
 
     <artifactId>ns-usbloader</artifactId>
-    <version>7.1-SNAPSHOT</version> <!-- linked via script to NSIS system. Should have format of 2 blocks of numbers. May have end on '-SNAPSHOT' -->
+    <version>7.1</version> <!-- linked via script to NSIS system. Should have format of 2 blocks of numbers -->
 
     <url>https://redrise.ru</url>
     <description>NS multi-tool</description>
