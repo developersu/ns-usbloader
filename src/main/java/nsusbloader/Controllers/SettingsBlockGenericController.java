@@ -88,7 +88,7 @@ public class SettingsBlockGenericController implements Initializable {
     }
     private void openFontSettings() {
         try {
-            new FontSelector(resourceBundle);
+            new FontSettings(resourceBundle);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

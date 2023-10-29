@@ -27,11 +27,11 @@ import nsusbloader.AppPreferences;
 
 import java.util.ResourceBundle;
 
-public class FontSelector {
-    public FontSelector(ResourceBundle resourceBundle) throws Exception{
+public class FontSettings {
+    public FontSettings(ResourceBundle resourceBundle) throws Exception{
         Stage stage = new Stage();
-        stage.setMinWidth(800);
-        stage.setMinHeight(800);
+        stage.setMinWidth(650);
+        stage.setMinHeight(450);
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/FontSettings.fxml"));
         fxmlLoader.setResources(resourceBundle);
@@ -44,7 +44,7 @@ public class FontSelector {
                 new Image("/res/app_icon128x128.png"));
 
         Parent parent = fxmlLoader.load();
-        Scene fontScene = new Scene(parent, 550, 600);
+        Scene fontScene = new Scene(parent, 660, 525);
 
         fontScene.getStylesheets().add(AppPreferences.getInstance().getTheme());
         parent.setStyle(AppPreferences.getInstance().getFontStyle());
