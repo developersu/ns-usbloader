@@ -103,6 +103,7 @@ public class DriversInstall {
         Scene mainScene = new Scene(parentVBox, 405, 155);
 
         mainScene.getStylesheets().add(AppPreferences.getInstance().getTheme());
+        parentVBox.setStyle(AppPreferences.getInstance().getFontStyle());
 
         stage.setOnHidden(windowEvent -> {
             downloadTask.cancel(true );

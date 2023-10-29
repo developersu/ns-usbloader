@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="5.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsBlockGenericController">
+<VBox spacing="5.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.SettingsBlockGenericController">
            <children>
         <Label text="%tab2_Lbl_ApplicationSettings" />
               <HBox alignment="CENTER_LEFT" spacing="5.0">
@@ -28,6 +28,11 @@
            <Insets left="5.0" />
         </VBox.margin>
               </HBox>
+      <Button fx:id="fontSelectBtn" mnemonicParsing="false" text="%tab2_Btn_ApplicationFont">
+         <VBox.margin>
+            <Insets left="5.0" />
+         </VBox.margin>
+      </Button>
               <HBox>
                  <children>
                     <VBox>

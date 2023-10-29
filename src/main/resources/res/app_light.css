@@ -5,6 +5,18 @@
     -fx-background: #ebebeb;
 }
 
+Text {
+    -fx-fill: black;
+}
+
+.bold-text{
+    -fx-font-weight: bold;
+}
+
+.italic-text{
+    -fx-font-style: italic;
+}
+
 .button, .buttonUp, .buttonStop, .buttonSelect{
     -fx-background-color: #fefefe;
     -fx-background-insets: 0 0 0 0, 0, 1, 2;
@@ -253,23 +265,35 @@
     -fx-border-width: 2;
 }
 
-.list-cell, .list-cell:selected, .list-cell:filled:selected{
+.list-cell:even{
     -fx-background-color: -fx-table-cell-border-color, #ebfffe;
     -fx-background-insets: 0, 0 0 1 0;
     -fx-table-cell-border-color: #b0b0b0;
 }
-.list-cell:odd, .list-cell:odd:selected, .list-cell:odd:filled:selected{
+.list-cell:odd{
     -fx-background-color: -fx-table-cell-border-color, #fefefe;
     -fx-background-insets: 0, 0 0 1 0;
     -fx-table-cell-border-color: #b0b0b0;
 }
 
-.list-cell .text, .list-cell:odd .text{
+.list-cell:even:selected,
+.list-cell:even:filled:selected,
+.list-cell:odd:selected,
+.list-cell:odd:filled:selected{
+    -fx-background-color: -fx-table-cell-border-color, #e4ffde;
+}
+
+.list-cell .text,
+.list-cell:odd .text,
+.list-cell Text,
+.list-cell:odd Text{
     -fx-fill: #2c2c2c;
 }
-.list-cell:filled:selected .text, .list-cell:odd:filled:selected .text{
+.list-cell:filled:selected .text,
+.list-cell:odd:filled:selected .text,
+.list-cell:filled:selected Text,
+.list-cell:odd:filled:selected Text{
     -fx-fill: #2c2c2c;
-    -fx-font-weight: bold
 }
 /* -========================= Separator ===================- */
 .separator *.line {
@@ -363,6 +387,7 @@
 }
 .nxdt.label .text {
     -fx-fill: #9d010e;
+    -fx-font-weight: bold;
 }
 .regionWindows {
     -fx-shape: "M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z";

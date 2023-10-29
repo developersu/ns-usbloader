@@ -87,6 +87,7 @@ public class FilesDropHandle {
         Scene mainScene = new Scene(parentVBox, 310, 185);
 
         mainScene.getStylesheets().add(AppPreferences.getInstance().getTheme());
+        parentVBox.setStyle(AppPreferences.getInstance().getFontStyle());
 
         stage.setOnHidden(windowEvent -> filesDropHandleTask.cancel(true ) );
 

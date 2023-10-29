@@ -12,21 +12,12 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
-<?import javafx.scene.text.Font?>
 
-<VBox spacing="15.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.NxdtController">
+<VBox spacing="15.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.NxdtController">
    <HBox alignment="CENTER">
       <children>
-         <Label styleClass="nxdt" text="nx">
-            <font>
-               <Font name="System Bold" size="18.0" />
-            </font>
-         </Label>
-         <Label text="dumptool">
-            <font>
-               <Font name="System Bold" size="18.0" />
-            </font>
-         </Label>
+         <Label styleClass="nxdt" text="nx" />
+         <Label styleClass="bold-text" text="dumptool" />
       </children>
    </HBox>
    <GridPane>

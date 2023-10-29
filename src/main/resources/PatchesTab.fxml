@@ -12,18 +12,13 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
-<?import javafx.scene.text.Font?>
 
 <ScrollPane fitToWidth="true" onDragDropped="#handleDrop" onDragOver="#handleDragOver" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.PatchesController">
 <VBox fx:id="patchesToolPane" spacing="15.0">
    <Pane minHeight="-Infinity" prefHeight="10.0" style="-fx-background-color: linear-gradient(from 41px 34px to 50px 50px, reflect,  #2cd882 40%, transparent  45%);" />
    <HBox alignment="CENTER">
       <children>
-         <Label text="%tabPatches_Lbl_Title">
-            <font>
-               <Font name="System Bold" size="15.0" />
-            </font>
-         </Label>
+         <Label styleClass="bold-text" text="%tabPatches_Lbl_Title" />
       </children>
    </HBox>
    <GridPane>
@@ -55,11 +50,7 @@
                         </Button>
                   </children>
                </HBox>
-                  <Label fx:id="locationFirmwareLbl" disable="true" textOverrun="LEADING_WORD_ELLIPSIS">
-                     <font>
-                        <Font name="System Italic" size="13.0" />
-                     </font>
-                  </Label>
+                  <Label fx:id="locationFirmwareLbl" disable="true" styleClass="italic-text" textOverrun="LEADING_WORD_ELLIPSIS" />
                   <HBox alignment="CENTER_LEFT" spacing="5.0">
                      <children>
                         <Label minHeight="-Infinity" minWidth="-Infinity" text="%tabPatches_Lbl_Atmo" wrapText="true" />
@@ -72,11 +63,7 @@
                         </Button>
                      </children>
                   </HBox>
-                  <Label fx:id="locationAtmosphereLbl" disable="true" textOverrun="LEADING_WORD_ELLIPSIS">
-                     <font>
-                        <Font name="System Italic" size="13.0" />
-                     </font>
-                  </Label>
+                  <Label fx:id="locationAtmosphereLbl" disable="true" styleClass="italic-text" textOverrun="LEADING_WORD_ELLIPSIS" />
                </children>
             </VBox>
          <Separator prefWidth="200.0" />
@@ -94,10 +81,7 @@
                         </Button>
                      </children>
                   </HBox>
-                  <Label fx:id="locationKeysLbl" disable="true" textOverrun="LEADING_WORD_ELLIPSIS">
-                     <font>
-                        <Font name="System Italic" size="13.0" />
-                     </font></Label>
+                  <Label fx:id="locationKeysLbl" disable="true" styleClass="italic-text" textOverrun="LEADING_WORD_ELLIPSIS" />
                </children>
             </VBox>
             <VBox spacing="5.0">

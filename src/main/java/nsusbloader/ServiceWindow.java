@@ -44,7 +44,6 @@ public class ServiceWindow   {
         alertBox.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
         alertBox.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alertBox.setResizable(true);        // Java bug workaround for JDR11/OpenJFX. TODO: nothing. really.
-        alertBox.getDialogPane().getStylesheets().add(AppPreferences.getInstance().getTheme());
 
         Stage dialogStage = (Stage) alertBox.getDialogPane().getScene().getWindow();
         dialogStage.setAlwaysOnTop(true);
@@ -54,6 +53,9 @@ public class ServiceWindow   {
                 new Image("/res/warn_ico64x64.png"),
                 new Image("/res/warn_ico128x128.png")
         );
+        alertBox.getDialogPane().getStylesheets().add(AppPreferences.getInstance().getTheme());
+        dialogStage.getScene().getRoot().setStyle(AppPreferences.getInstance().getFontStyle());
+
         alertBox.show();
         dialogStage.toFront();
     }
@@ -68,7 +70,6 @@ public class ServiceWindow   {
         alertBox.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
         alertBox.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alertBox.setResizable(true);        // Java bug workaround for JDR11/OpenJFX. TODO: nothing. really.
-        alertBox.getDialogPane().getStylesheets().add(AppPreferences.getInstance().getTheme());
 
         Stage dialogStage = (Stage) alertBox.getDialogPane().getScene().getWindow();
         dialogStage.setAlwaysOnTop(true);
@@ -78,6 +79,10 @@ public class ServiceWindow   {
                 new Image("/res/ask_ico64x64.png"),
                 new Image("/res/ask_ico128x128.png")
         );
+
+        alertBox.getDialogPane().getStylesheets().add(AppPreferences.getInstance().getTheme());
+        dialogStage.getScene().getRoot().setStyle(AppPreferences.getInstance().getFontStyle());
+
         dialogStage.toFront();
 
         Optional<ButtonType> result = alertBox.showAndWait();

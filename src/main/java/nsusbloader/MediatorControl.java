@@ -60,4 +60,8 @@ public class MediatorControl {
         getPatchesController().notifyThreadStarted(isActive, appModuleType);
     }
     public synchronized boolean getTransferActive() { return this.isTransferActive.get(); }
+    public void updateApplicationFont(String fontFamily, double fontSize){
+        mainController.logArea.getScene().getRoot().setStyle(
+                String.format("-fx-font-family: \"%s\"; -fx-font-size: %.0f;", fontFamily, fontSize));
+    }
 }

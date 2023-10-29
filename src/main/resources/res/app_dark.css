@@ -5,6 +5,18 @@
     -fx-background: #2d2d2d;
 }
 
+Text {
+    -fx-fill: white;
+}
+
+.bold-text{
+    -fx-font-weight: bold;
+}
+
+.italic-text{
+    -fx-font-style: italic;
+}
+
 .button, .buttonUp, .buttonStop, .buttonSelect{
     -fx-background-color: #4f4f4f;
     -fx-border-color: #4f4f4f;
@@ -235,21 +247,31 @@
     -fx-border-width: 2;
 }
 
-.list-cell, .list-cell:selected, .list-cell:filled:selected{
+.list-cell:even,
+.list-cell:even:selected,
+.list-cell:even:filled:selected{
     -fx-background-color: -fx-table-cell-border-color, #424242;
     -fx-background-insets: 0, 0 0 1 0;
     -fx-table-cell-border-color: #6d8484;
 }
-.list-cell:odd, .list-cell:odd:selected, .list-cell:odd:filled:selected{
+.list-cell:odd,
+.list-cell:odd:selected,
+.list-cell:odd:filled:selected{
     -fx-background-color: -fx-table-cell-border-color, #4f4f4f;
     -fx-background-insets: 0, 0 0 1 0;
     -fx-table-cell-border-color: #6d8484;
 }
 
-.list-cell .text, .list-cell:odd .text{
+.list-cell .text,
+.list-cell:odd .text,
+.list-cell Text,
+.list-cell:odd Text{
     -fx-fill: #f7fafa;
 }
-.list-cell:filled:selected .text, .list-cell:odd:filled:selected .text{
+.list-cell:filled:selected .text,
+.list-cell:odd:filled:selected .text,
+.list-cell:filled:selected Text,
+.list-cell:odd:filled:selected Text{
     -fx-fill: #08f3ff;
 }
 /* -========================== Context menu =====================- */
@@ -445,6 +467,7 @@
 }
 .nxdt.label .text {
     -fx-fill: #cb0010;
+    -fx-font-weight: bold;
 }
 
 .regionWindows {
@@ -468,7 +491,39 @@
     -fx-min-height: -size;
     -fx-min-width: 24;
 }
-//
+/********************* Spinner  **************************/
+.spinner{
+    -fx-background-color: #4f4f4f;
+    -fx-border-radius: 3;
+    -fx-border-width: 1;
+    -fx-border-color: #4f4f4f;
+    -fx-mark-color: #eea11e;
+    -fx-effect: none;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-radius: 0;
+    -fx-background-color: #4f4f4f;
+}
+
+.spinner .increment-arrow-button:hover .increment-arrow,
+.spinner .decrement-arrow-button:hover .decrement-arrow {
+    -fx-background-color: #ff8000;
+}
+
+.spinner .increment-arrow-button:hover:pressed .increment-arrow,
+.spinner .decrement-arrow-button:hover:pressed .decrement-arrow,
+.spinner .increment-arrow-button:pressed .increment-arrow,
+.spinner .decrement-arrow-button:pressed .decrement-arrow {
+    -fx-background-color: #71e016;
+}
+
+.spinner .increment-arrow-button .increment-arrow,
+.spinner .decrement-arrow-button .decrement-arrow {
+	-fx-background-color: #eea11e;
+}
+
 //.lineGradient {
 //    -fx-background-color: linear-gradient(from 41px 34px to 50px 50px, reflect,  #00c8fc 30%, transparent  45%);
 //}

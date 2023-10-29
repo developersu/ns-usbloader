@@ -18,6 +18,8 @@
 */
 package nsusbloader;
 
+import javafx.scene.text.Font;
+
 import java.util.Locale;
 import java.util.prefs.Preferences;
 
@@ -28,6 +30,7 @@ public class AppPreferences {
     private final Preferences preferences;
     private final Locale locale;
     public static final String[] goldleafSupportedVersions = {"v0.5", "v0.7.x", "v0.8-0.9", "v0.10"};
+    private static final Font DEFAULT_FONT = Font.getDefault();
 
     private AppPreferences(){
         this.preferences = Preferences.userRoot().node("NS-USBloader");
@@ -152,4 +155,17 @@ public class AppPreferences {
     public void setPatchesTabInvisible(boolean value){preferences.putBoolean("patches_tab_visible", value);}
     public String getPatchPattern(String type, int moduleNumber, int offsetId){ return preferences.get(String.format("%s_%02x_%02x", type, moduleNumber, offsetId), ""); }
     public void setPatchPattern(String fullTypeSpecifier, String offset){ preferences.put(fullTypeSpecifier, offset); }
+
+    public String getFontFamily(){ return preferences.get("font_family", DEFAULT_FONT.getFamily()); }
+    public double getFontSize(){ return preferences.getDouble("font_size", DEFAULT_FONT.getSize()); }
+    public String getFontStyle(){
+        final String fontFamily = preferences.get("font_family", DEFAULT_FONT.getFamily());
+        final double fontSize = preferences.getDouble("font_size", DEFAULT_FONT.getSize());
+
+        return String.format("-fx-font-family: \"%s\"; -fx-font-size: %.0f;", fontFamily, fontSize);
+    }
+    public void setFontStyle(String fontFamily, double size){
+        preferences.put("font_family", fontFamily);
+        preferences.putDouble("font_size", size);
+    }
 }

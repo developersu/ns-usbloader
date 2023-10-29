@@ -44,6 +44,9 @@ public class SettingsBlockGenericController implements Initializable {
     @FXML
     private ChoiceBox<LocaleHolder> languagesChB;
     @FXML
+    private Button fontSelectBtn;
+
+    @FXML
     private Button submitLanguageBtn,
             driversInstallBtn,
             checkForUpdBtn;
@@ -81,6 +84,14 @@ public class SettingsBlockGenericController implements Initializable {
         newVersionHyperlink.setOnAction(e-> hostServices.showDocument(newVersionHyperlink.getText()));
         checkForUpdBtn.setOnAction(e->checkForUpdatesAction());
         submitLanguageBtn.setOnAction(e->languageButtonAction());
+        fontSelectBtn.setOnAction(e -> openFontSettings());
+    }
+    private void openFontSettings() {
+        try {
+            new FontSelector(resourceBundle);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private void setDriversInstallFeature(){

@@ -14,18 +14,13 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
-<?import javafx.scene.text.Font?>
 
-<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.RcmController">
+<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.RcmController">
 <VBox fx:id="rcmToolPane" spacing="15.0">
    <Pane minHeight="-Infinity" prefHeight="10.0" style="-fx-background-color: linear-gradient(from 41px 34px to 50px 50px, reflect,  #ff1515 40%, transparent  45%);" />
    <HBox alignment="CENTER">
       <children>
-         <Label text="%tabRcm_Lbl_FuseeGelee">
-            <font>
-               <Font name="System Bold" size="15.0" />
-            </font>
-         </Label>
+         <Label styleClass="bold-text" text="%tabRcm_Lbl_FuseeGelee" />
       </children>
    </HBox>
    <GridPane>
@@ -57,11 +52,7 @@
                            <Label fx:id="payloadFNameLbl1" />
                         </children>
                      </HBox>
-                     <Label fx:id="payloadFPathLbl1" disable="true">
-                        <font>
-                           <Font name="System Italic" size="13.0" />
-                        </font>
-                     </Label>
+                     <Label fx:id="payloadFPathLbl1" disable="true" styleClass="italic-text" />
                   </children>
                </VBox>
                <Button fx:id="selPldBtn1" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">
@@ -86,11 +77,7 @@
                            <Label fx:id="payloadFNameLbl2" />
                         </children>
                      </HBox>
-                     <Label fx:id="payloadFPathLbl2" disable="true">
-                        <font>
-                           <Font name="System Italic" size="13.0" />
-                        </font>
-                     </Label>
+                     <Label fx:id="payloadFPathLbl2" disable="true" styleClass="italic-text" />
                   </children>
                </VBox>
                <Button fx:id="selPldBtn2" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">
@@ -115,11 +102,7 @@
                            <Label fx:id="payloadFNameLbl3" />
                         </children>
                      </HBox>
-                     <Label fx:id="payloadFPathLbl3" disable="true">
-                        <font>
-                           <Font name="System Italic" size="13.0" />
-                        </font>
-                     </Label>
+                     <Label fx:id="payloadFPathLbl3" disable="true" styleClass="italic-text" />
                   </children>
                </VBox>
                <Button fx:id="selPldBtn3" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">
@@ -144,11 +127,7 @@
                            <Label fx:id="payloadFNameLbl4" />
                         </children>
                      </HBox>
-                     <Label fx:id="payloadFPathLbl4" disable="true">
-                        <font>
-                           <Font name="System Italic" size="13.0" />
-                        </font>
-                     </Label>
+                     <Label fx:id="payloadFPathLbl4" disable="true" styleClass="italic-text" />
                   </children>
                </VBox>
                <Button fx:id="selPldBtn4" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">
@@ -173,11 +152,7 @@
                            <Label fx:id="payloadFNameLbl5" />
                         </children>
                      </HBox>
-                     <Label fx:id="payloadFPathLbl5" disable="true">
-                        <font>
-                           <Font name="System Italic" size="13.0" />
-                        </font>
-                     </Label>
+                     <Label fx:id="payloadFPathLbl5" disable="true" styleClass="italic-text" />
                   </children>
                </VBox>
                <Button fx:id="selPldBtn5" mnemonicParsing="false" onAction="#bntSelectPayloader" styleClass="buttonSelect">

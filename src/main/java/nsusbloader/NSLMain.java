@@ -62,6 +62,7 @@ public class NSLMain extends Application {
         );
 
         mainScene.getStylesheets().add(AppPreferences.getInstance().getTheme());
+        root.setStyle(AppPreferences.getInstance().getFontStyle());
 
         primaryStage.setScene(mainScene);
         primaryStage.show();

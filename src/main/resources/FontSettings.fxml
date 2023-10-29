@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsusbloader.Controllers.FontSettingsController">
+   <children>
+      <VBox layoutX="344.0" layoutY="132.0" prefHeight="200.0" prefWidth="100.0" spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <ListView fx:id="fontsLv" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
+            <Text fx:id="exampleText" strokeType="OUTSIDE" strokeWidth="0.0" />
+            <HBox alignment="CENTER_RIGHT" spacing="5.0">
+               <children>
+                  <Label text="%fontSize" wrapText="true" />
+                  <Spinner fx:id="fontSizeSpinner" minWidth="100.0" />
+                  <Pane HBox.hgrow="ALWAYS" />
+                  <Button fx:id="resetBtn" mnemonicParsing="false" text="%btn_ResetToDefaults">
+                     <HBox.margin>
+                        <Insets right="5.0" />
+                     </HBox.margin>
+                  </Button>
+                  <Button fx:id="cancelBtn" mnemonicParsing="false" text="%btn_Cancel" wrapText="true" />
+                  <Button fx:id="applyBtn" mnemonicParsing="false" styleClass="buttonUp" text="%btn_Select" wrapText="true" />
+               </children>
+            </HBox>
+         </children>
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding>
+      </VBox>
+   </children>
+</AnchorPane>
