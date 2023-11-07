@@ -44,7 +44,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * [agungrbudiman](https://github.com/agungrbudiman)
 * Perfect algorithms and great examples taken from mrdude project [mrdude2478/IPS_Patch_Creator](https://github.com/mrdude2478/IPS_Patch_Creator/)
 
-* French by [Stephane Meden (JackFromNice)](https://github.com/JackFromNice) 
+* French by [Stephane Meden (JackFromNice)](https://twitter.com/medenstephane) 
 * Italian by [unbranched](https://github.com/unbranched)
 * Korean by [DDinghoya](https://github.com/DDinghoya)
 * Portuguese by [almircanella](https://github.com/almircanella)
