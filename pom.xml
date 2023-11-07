@@ -42,7 +42,7 @@
         <repository>
             <id>redrise</id>
             <name>redrise.ru repository</name>
-            <url>https://repo.redrise.ru/releases</url>
+            <url>https://repo.redrise.ru/#/releases</url>
         </repository>
     </repositories>
 
