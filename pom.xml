@@ -55,7 +55,7 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/developer_su/${project.artifactId}/issues</url>
+        <url>https://github.com/developersu/${project.artifactId}/issues</url>
     </issueManagement>
     <dependencies>
         <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
