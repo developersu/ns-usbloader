@@ -51,7 +51,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Spanish by [/u/cokimaya007](https://www.reddit.com/u/cokimaya007), [Kuziel Alejandro](https://github.com/Uzi-Oni)
 * Chinese (Simplified) by [Huang YunKun (htynkn)](https://github.com/htynkn), [FFT9 (XXgame Group)](http://xxgame.net/)
 * Chinese (Traditional) by [qazrfv1234](https://github.com/qazrfv1234), [FFT9 (XXgame Group)](http://xxgame.net/)
-* German by [Swarsele](https://github.com/Swarsele)
+* German by [Swarsele](https://www.instagram.com/swarsele/?hl=en)
 * Vietnamese by [Hai Phan Nguyen (pnghai)](https://github.com/pnghai)
 * Czech by [Spenaat](https://github.com/spenaat)
 * Arabic by [eslamabdel](https://github.com/eslamabdel)
