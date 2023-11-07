@@ -81,7 +81,7 @@ where '+' means 'any next NS-USBloader version'.
 
 ### Awoo Installer and compatible applications support
 
-Awoo Installer uses the same command-set (or 'protocol') to [Adubbz/Tinfoil](https://github.com/Adubbz/Tinfoil/).
+Awoo Installer uses the same command-set (or 'protocol') to [Adubbz](https://github.com/Adubbz) Tinfoil (repo does not exist anymore)
 
 A lot of other forks/apps uses the same command-set. To stop speculating about the name it's now called 'Awoo'. It WAS called 'TinFoil' before. Not any more.
 
