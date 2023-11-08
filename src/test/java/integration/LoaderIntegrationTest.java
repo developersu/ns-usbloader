@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
+@Disabled
 public class LoaderIntegrationTest {
     static String pathToAtmo;
     static String saveTo;
@@ -22,7 +23,6 @@ public class LoaderIntegrationTest {
         pathToAtmo = environment.getAtmosphereLocation();
     }
 
-    @Disabled
     @DisplayName("Loader Integration validation")
     @Test
     void makeLoader() throws Exception{

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*;
 import java.io.File;
 import java.util.Arrays;
 
+@Disabled
 public class EsIntegrationTest {
     static String pathToFirmware;
     static String pathToFirmwares;
@@ -24,7 +25,6 @@ public class EsIntegrationTest {
         pathToFirmware = pathToFirmware + File.separator + "Firmware 14.1.0";
     }
 
-    @Disabled
     @DisplayName("ES Integration validation - everything")
     @Test
     void makeEss() throws Exception{
@@ -42,7 +42,6 @@ public class EsIntegrationTest {
         }
     }
 
-    @Disabled
     @DisplayName("ES Integration validation - one particular firmware")
     @Test
     void makeEs() throws Exception{

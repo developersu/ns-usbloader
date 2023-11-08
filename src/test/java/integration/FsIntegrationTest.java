@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.util.Arrays;
 
+@Disabled
 public class FsIntegrationTest {
     static String pathToFirmware;
     static String pathToFirmwares;
@@ -27,7 +28,6 @@ public class FsIntegrationTest {
         pathToFirmware = pathToFirmware + File.separator + "Firmware 13.0.0";
     }
 
-    @Disabled
     @DisplayName("FS Integration validation - everything")
     @Test
     void makeFss() throws Exception{
@@ -47,7 +47,6 @@ public class FsIntegrationTest {
         }
     }
 
-    @Disabled
     @DisplayName("FS Integration validation - one particular firmware")
     @Test
     void makeFs() throws Exception{
