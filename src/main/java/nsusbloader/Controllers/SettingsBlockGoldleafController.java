@@ -38,7 +38,7 @@ public class SettingsBlockGoldleafController implements Initializable {
         final AppPreferences preferences = AppPreferences.getInstance();
 
         nspFilesFilterForGLCB.setSelected(preferences.getNspFileFilterGL());
-        glVersionChoiceBox.getItems().addAll(AppPreferences.goldleafSupportedVersions);
+        glVersionChoiceBox.getItems().addAll(AppPreferences.GOLDLEAF_SUPPORTED_VERSIONS);
 
         glVersionChoiceBox.getSelectionModel().select(preferences.getGlVersion());
     }

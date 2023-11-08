@@ -29,7 +29,7 @@ public class AppPreferences {
 
     private final Preferences preferences;
     private final Locale locale;
-    public static final String[] goldleafSupportedVersions = {"v0.5", "v0.7.x", "v0.8-0.9", "v0.10"};
+    public static final String[] GOLDLEAF_SUPPORTED_VERSIONS = {"v0.5", "v0.7.x", "v0.8-0.9", "v0.10+"};
     private static final Font DEFAULT_FONT = Font.getDefault();
 
     private AppPreferences(){
@@ -42,13 +42,13 @@ public class AppPreferences {
     }
 
     public String getTheme(){
-        String theme = preferences.get("THEME", "/res/app_dark.css");           // Don't let user to change settings manually
+        String theme = preferences.get("THEME", "/res/app_dark.css");           // Don't let user change settings manually
         if (!theme.matches("(^/res/app_dark.css$)|(^/res/app_light.css$)"))
             theme = "/res/app_dark.css";
         return theme;
     }
     public int getProtocol(){
-        int protocolIndex = preferences.getInt("protocol_index", 0);           // Don't let user to change settings manually
+        int protocolIndex = preferences.getInt("protocol_index", 0);           // Don't let user change settings manually
         if (protocolIndex < 0 || protocolIndex > 1)
             protocolIndex = 0;
         return protocolIndex;
@@ -56,7 +56,7 @@ public class AppPreferences {
     public void setProtocol(int protocolIndex){ preferences.putInt("protocol_index", protocolIndex); }
 
     public String getNetUsb(){
-        String netUsb = preferences.get("NETUSB", "USB");           // Don't let user to change settings manually
+        String netUsb = preferences.get("NETUSB", "USB");           // Don't let user change settings manually
         if (!netUsb.matches("(^USB$)|(^NET$)"))
             netUsb = "USB";
         return netUsb;
@@ -120,7 +120,7 @@ public class AppPreferences {
     public void setNspFileFilterGL(boolean prop){preferences.putBoolean("GL_NSP_FILTER", prop);}
 
     public int getGlVersion(){
-        return preferences.getInt("gl_ver", goldleafSupportedVersions.length - 1);
+        return preferences.getInt("gl_ver", GOLDLEAF_SUPPORTED_VERSIONS.length - 1);
     }
     public void setGlVersion(int version){ preferences.putInt("gl_ver", version);}
 

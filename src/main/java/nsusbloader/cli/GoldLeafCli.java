@@ -75,7 +75,7 @@ public class GoldLeafCli {
     private String getGlSupportedVersions(){
         StringBuilder builder = new StringBuilder("Supported versions: \n");
 
-        for (String a : AppPreferences.goldleafSupportedVersions){
+        for (String a : AppPreferences.GOLDLEAF_SUPPORTED_VERSIONS){
             builder.append("\t");
             builder.append(a);
             builder.append("\n");
@@ -98,7 +98,7 @@ public class GoldLeafCli {
                     "Try 'ns-usbloader -g help' for more information.");
         }
 
-        for (String version : AppPreferences.goldleafSupportedVersions){
+        for (String version : AppPreferences.GOLDLEAF_SUPPORTED_VERSIONS){
             if (version.equals(goldLeafVersion))
                 return;
         }
