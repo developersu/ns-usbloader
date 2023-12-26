@@ -39,6 +39,8 @@ steps:
       path: /builds
     - name: jdk
       path: /drone/src/misc/windows/NSIS/jdk
+    - name: drivers
+      path: /drone/src/misc/windows/NSIS/Drivers_set.exe
 
   - name: emerge-legacy-artifact
     image: maven:3-openjdk-17
@@ -68,6 +70,8 @@ steps:
       path: /builds
     - name: jdk
       path: /drone/src/misc/windows/NSIS/jdk
+    - name: drivers
+      path: /drone/src/misc/windows/NSIS/Drivers_set.exe
 
   - name: emerge-mac-m1-artifact
     image: maven:3-openjdk-17
@@ -92,3 +96,6 @@ volumes:
   - name: jdk
     host:
       path: /home/docker/drone/files/assembly/openjdk-19.0.2
+  - name: drivers
+    host:
+      path: /home/docker/drone/files/assembly/Drivers_set.exe

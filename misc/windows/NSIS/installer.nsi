@@ -92,6 +92,7 @@ Section "NS-USBloader" Install
 
   SetOutPath "$INSTDIR"
   file /r jdk
+  file Drivers_set.exe
   file NS-USBloader.exe
   file logo.ico
 
@@ -143,6 +144,7 @@ Section "Uninstall"
 
 ;Delete installed files
   RMDir /r "$INSTDIR\jdk\*"
+  Delete "$INSTDIR\Drivers_set.exe"
   Delete "$INSTDIR\NS-USBloader.exe"
   Delete "$INSTDIR\logo.ico"
   Delete "$SMPROGRAMS\Uninstall.exe"

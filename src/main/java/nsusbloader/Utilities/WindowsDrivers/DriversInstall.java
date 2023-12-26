@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2023 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -32,16 +32,32 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import nsusbloader.AppPreferences;
 
+import java.io.File;
 import java.util.ResourceBundle;
 
 public class DriversInstall {
 
     private static volatile boolean isRunning;
 
+    private final ResourceBundle resourceBundle;
     private Label runInstallerStatusLabel;
 
     public DriversInstall(ResourceBundle rb){
+        this.resourceBundle = rb;
 
+        if (isDriversDistributesWithExecutable())
+            runInstaller("Drivers_set.exe");
+        else
+            runDownloadProcess();
+    }
+
+    private boolean isDriversDistributesWithExecutable(){
+        final File drivers = new File("Drivers_set.exe");
+
+        return drivers.length() == DownloadDriversTask.DRIVERS_FILE_SIZE;
+    }
+
+    private void runDownloadProcess(){
         if (DriversInstall.isRunning)
             return;
 
@@ -49,11 +65,11 @@ public class DriversInstall {
 
         DownloadDriversTask downloadTask = new DownloadDriversTask();
 
-        Button cancelButton = new Button(rb.getString("btn_Cancel"));
+        Button cancelButton = new Button(resourceBundle.getString("btn_Cancel"));
 
         HBox hBoxInformation = new HBox();
         hBoxInformation.setAlignment(Pos.TOP_LEFT);
-        hBoxInformation.getChildren().add(new Label(rb.getString("windowBodyDownloadDrivers")));
+        hBoxInformation.getChildren().add(new Label(resourceBundle.getString("windowBodyDownloadDrivers")));
 
         ProgressBar progressBar = new ProgressBar();
         progressBar.setPrefWidth(Double.MAX_VALUE);
@@ -90,7 +106,7 @@ public class DriversInstall {
 
         Stage stage = new Stage();
 
-        stage.setTitle(rb.getString("windowTitleDownloadDrivers"));
+        stage.setTitle(resourceBundle.getString("windowTitleDownloadDrivers"));
         stage.getIcons().addAll(
                 new Image("/res/dwnload_ico32x32.png"),    //TODO: REDRAW
                 new Image("/res/dwnload_ico48x48.png"),
@@ -115,7 +131,7 @@ public class DriversInstall {
         stage.toFront();
 
         downloadTask.setOnSucceeded(event -> {
-            cancelButton.setText(rb.getString("btn_Close"));
+            cancelButton.setText(resourceBundle.getString("btn_Close"));
 
             String returnedValue = downloadTask.getValue();
 

@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2023 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -25,8 +25,8 @@ import java.net.URL;
 
 public class DownloadDriversTask extends Task<String> {
 
+    public static final long DRIVERS_FILE_SIZE = 3857375;
     private static final String driverFileLocationURL = "https://github.com/developersu/NS-Drivers/releases/download/v1.0/Drivers_set.exe";
-    private static final long driversFileSize = 3857375;
 
     private static File driversInstallerFile;
 
@@ -38,7 +38,7 @@ public class DownloadDriversTask extends Task<String> {
     }
 
     private boolean isDriversDownloaded(){
-        return driversInstallerFile != null && driversInstallerFile.length() == driversFileSize;
+        return driversInstallerFile != null && driversInstallerFile.length() == DRIVERS_FILE_SIZE;
     }
 
     private boolean downloadDrivers(){
@@ -64,7 +64,7 @@ public class DownloadDriversTask extends Task<String> {
             while ((bytesRead = bis.read(dataBuffer, 0, 1024)) != -1) {
                 fos.write(dataBuffer, 0, bytesRead);
                 totalRead += bytesRead;
-                updateProgress(totalRead, driversFileSize);
+                updateProgress(totalRead, DRIVERS_FILE_SIZE);
                 if (this.isCancelled()) {
                     bis.close();
                     fos.close();
