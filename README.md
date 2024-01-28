@@ -65,7 +65,8 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 
 ### System requirements
 
-JDK 11 for macOS and Linux
+- JDK 11 for macOS and Linux
+- libusb, if you have a Mac with Apple Silicon (install via `brew install libusb`)
 
 ### Supported Goldleaf versions
 | Goldleaf version | NS-USBloader version |
@@ -126,6 +127,8 @@ Set 'Security & Privacy' settings if needed.
 ##### macOS on Apple Silicon (ARM)
 
 Download application with `-m1.jar` postfix.
+
+Manually install libusb with Homebrew by running `brew install libusb` in your Terminal.
 
 ##### Windows: 
 
