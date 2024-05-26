@@ -182,7 +182,19 @@ public class NSTableViewController implements Initializable {
                         MediatorControl.getInstance().getGamesController().disableUploadStopBtn(true);    // TODO: change to something better
                         table.refresh();
                     });
-                    contextMenu.getItems().addAll(deleteMenuItem, deleteAllMenuItem);
+                    MenuItem selectAllMenuItem = new MenuItem(resourceBundle.getString("tab1_table_contextMenu_Btn_SelectAll"));
+                    selectAllMenuItem.setOnAction(actionEvent -> {
+                        for (NSLRowModel model : rowsObsLst)
+                            model.setMarkForUpload(true);
+                        table.refresh();
+                    });
+                    MenuItem deselectAllMenuItem = new MenuItem(resourceBundle.getString("tab1_table_contextMenu_Btn_DeselectAll"));
+                    deselectAllMenuItem.setOnAction(actionEvent -> {
+                        for (NSLRowModel model : rowsObsLst)
+                            model.setMarkForUpload(false);
+                        table.refresh();
+                    });
+                    contextMenu.getItems().addAll(deleteMenuItem, deleteAllMenuItem, selectAllMenuItem, deselectAllMenuItem);
 
                     row.setContextMenu(contextMenu);
                     row.contextMenuProperty().bind(
