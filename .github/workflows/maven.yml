@@ -31,8 +31,7 @@ jobs:
       run: mvn -B -DskipTests clean package --file pom.xml
 
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.3.3
+      uses: actions/upload-artifact@master
       with:
         name: package
-        path: ns-usbloader.jar
-
+        path: targets/*.jar
