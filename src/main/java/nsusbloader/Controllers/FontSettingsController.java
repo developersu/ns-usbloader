@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2023 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
      
     This file is part of NS-USBloader.
 
@@ -142,7 +142,9 @@ public class FontSettingsController implements Initializable {
         final double fontSize = fontSizeSpinner.getValue().intValue();
 
         preferences.setFontStyle(fontFamily, fontSize);
-        MediatorControl.getInstance().updateApplicationFont(fontFamily, fontSize);
+
+        MediatorControl.INSTANCE.getLogArea().getScene().getRoot().setStyle(
+                String.format("-fx-font-family: \"%s\"; -fx-font-size: %.0f;", fontFamily, fontSize));
 
         closeWindow();
     }

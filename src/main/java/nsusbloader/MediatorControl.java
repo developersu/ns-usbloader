@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -18,50 +18,57 @@
 */
 package nsusbloader;
 
+import javafx.application.HostServices;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextArea;
 import nsusbloader.Controllers.*;
 import nsusbloader.NSLDataTypes.EModule;
 
 import java.util.ResourceBundle;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MediatorControl {
-    private final AtomicBoolean isTransferActive = new AtomicBoolean(false);  // Overcoded just for sure
-    private NSLMainController mainController;
+    public static final MediatorControl INSTANCE = new MediatorControl();
 
-    public static MediatorControl getInstance(){
-        return MediatorControlHold.INSTANCE;
+    private ResourceBundle resourceBundle;
+    private TransfersPublisher transfersPublisher;
+    private HostServices hostServices;
+    private GamesController gamesController;
+    private SettingsController settingsController;
+
+    private TextArea logArea;
+    private ProgressBar progressBar;
+
+    private MediatorControl(){}
+
+    public void configure(ResourceBundle resourceBundle,
+                          SettingsController settingsController,
+                          TextArea logArea,
+                          ProgressBar progressBar,
+                          GamesController gamesController,
+                          TransfersPublisher transfersPublisher) {
+        this.resourceBundle = resourceBundle;
+        this.settingsController = settingsController;
+        this.gamesController = gamesController;
+        this.logArea = logArea;
+        this.progressBar = progressBar;
+        this.transfersPublisher = transfersPublisher;
+    }
+    public void setHostServices(HostServices hostServices) {
+        this.hostServices = hostServices;
     }
 
-    private static class MediatorControlHold {
-        private static final MediatorControl INSTANCE = new MediatorControl();
-    }
-    public void setController(NSLMainController controller){
-        this.mainController = controller;
+    public HostServices getHostServices() { return hostServices; }
+    public ResourceBundle getResourceBundle(){ return resourceBundle; }
+    public SettingsController getSettingsController() { return settingsController; }
+    public GamesController getGamesController() { return gamesController; }
+    public TextArea getLogArea() { return logArea; }
+    public ProgressBar getProgressBar() { return progressBar; }
+
+    public synchronized void setTransferActive(EModule appModuleType, boolean isActive, Payload payload) {
+        transfersPublisher.setTransferActive(appModuleType, isActive, payload);
     }
 
-    public NSLMainController getContoller(){ return mainController; }
-    public GamesController getGamesController(){ return mainController.getGamesCtrlr(); }
-    public SettingsController getSettingsController(){ return mainController.getSettingsCtrlr(); }
-    public SplitMergeController getSplitMergeController(){ return mainController.getSmCtrlr(); }
-    public RcmController getRcmController(){ return mainController.getRcmCtrlr(); }
-    public NxdtController getNxdtController(){ return mainController.getNXDTabController(); }
-    public PatchesController getPatchesController(){ return mainController.getPatchesTabController(); }
-
-    public ResourceBundle getResourceBundle(){
-        return mainController.getResourceBundle();
-    }
-
-    public synchronized void setBgThreadActive(boolean isActive, EModule appModuleType) {
-        isTransferActive.set(isActive);
-        getGamesController().notifyThreadStarted(isActive, appModuleType);
-        getSplitMergeController().notifyThreadStarted(isActive, appModuleType);
-        getRcmController().notifyThreadStarted(isActive, appModuleType);
-        getNxdtController().notifyThreadStarted(isActive, appModuleType);
-        getPatchesController().notifyThreadStarted(isActive, appModuleType);
-    }
-    public synchronized boolean getTransferActive() { return this.isTransferActive.get(); }
-    public void updateApplicationFont(String fontFamily, double fontSize){
-        mainController.logArea.getScene().getRoot().setStyle(
-                String.format("-fx-font-family: \"%s\"; -fx-font-size: %.0f;", fontFamily, fontSize));
+    public synchronized boolean getTransferActive() {
+        return transfersPublisher.getTransferActive();
     }
 }

@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -31,7 +31,6 @@ import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
 import nsusbloader.FilesHelper;
 import nsusbloader.MediatorControl;
-import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.ServiceWindow;
 import nsusbloader.Utilities.splitmerge.SplitMergeTaskExecutor;
@@ -41,7 +40,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class SplitMergeController implements Initializable {
+public class SplitMergeController implements Initializable, ISubscriber {
     @FXML
     private ToggleGroup splitMergeTogGrp;
     @FXML
@@ -147,13 +146,87 @@ public class SplitMergeController implements Initializable {
         convertBtn.setOnAction(actionEvent -> setConvertBtnAction());
     }
 
-    public void notifyThreadStarted(boolean isStart, EModule type){ // todo: refactor: remove everything, place to separate container and just disable.
-        if (! type.equals(EModule.SPLIT_MERGE_TOOL)){
-            smToolPane.setDisable(isStart);
+    /**
+     * It's button listener when convert-process in progress
+     * */
+    private void stopBtnAction(){
+        if (smThread != null && smThread.isAlive()) {
+            smThread.interrupt();
+        }
+    }
+    /**
+     * It's button listener when convert-process NOT in progress
+     * */
+    private void setConvertBtnAction(){
+        if (MediatorControl.INSTANCE.getTransferActive()) {
+            ServiceWindow.getErrorNotification(
+                    resourceBundle.getString("windowTitleError"),
+                    resourceBundle.getString("windowBodyPleaseFinishTransfersFirst")
+            );
             return;
         }
-        if (isStart){
-            MediatorControl.getInstance().getContoller().logArea.clear();
+
+        if (splitRad.isSelected())
+            smTask = new SplitMergeTaskExecutor(true, BlockListViewController.getItems(), saveToPathLbl.getText());
+        else
+            smTask = new SplitMergeTaskExecutor(false, BlockListViewController.getItems(), saveToPathLbl.getText());
+        smThread = new Thread(smTask);
+        smThread.setDaemon(true);
+        smThread.start();
+    }
+    /**
+     * Drag-n-drop support (dragOver consumer)
+     * */
+    @FXML
+    private void handleDragOver(DragEvent event){
+        if (event.getDragboard().hasFiles() && ! MediatorControl.INSTANCE.getTransferActive())
+            event.acceptTransferModes(TransferMode.ANY);
+        event.consume();
+    }
+    /**
+     * Drag-n-drop support (drop consumer)
+     * */
+    @FXML
+    private void handleDrop(DragEvent event) {
+        List<File> files = event.getDragboard().getFiles();
+        File firstFile = files.get(0);
+
+        if (firstFile.isDirectory())
+            mergeRad.fire();
+        else
+            splitRad.fire();
+
+        this.BlockListViewController.addAll(files);
+
+        event.setDropCompleted(true);
+        event.consume();
+    }
+
+
+    /**
+     * Save application settings on exit
+     * */
+    public void updatePreferencesOnExit(){
+        if (splitRad.isSelected())
+            AppPreferences.getInstance().setSplitMergeType(0);
+        else
+            AppPreferences.getInstance().setSplitMergeType(1);
+
+        AppPreferences.getInstance().setSplitMergeRecent(saveToPathLbl.getText());
+    }
+
+    @Override
+    public void notify(EModule type, boolean isActive, Payload payload) {
+        // todo: refactor: remove everything, place to separate container and just disable.
+
+        if (! type.equals(EModule.SPLIT_MERGE_TOOL)){
+            smToolPane.setDisable(isActive);
+            return;
+        }
+
+        statusLbl.setText(payload.getMessage());
+
+        if (isActive){
             splitRad.setDisable(true);
             mergeRad.setDisable(true);
             selectFileFolderBtn.setDisable(true);
@@ -181,80 +254,5 @@ public class SplitMergeController implements Initializable {
             convertRegion.getStyleClass().add("regionSplitToOne");
         else
             convertRegion.getStyleClass().add("regionOneToSplit");
-    }
-
-    /**
-     * It's button listener when convert-process in progress
-     * */
-    private void stopBtnAction(){
-        if (smThread != null && smThread.isAlive()) {
-            smThread.interrupt();
-        }
-    }
-    /**
-     * It's button listener when convert-process NOT in progress
-     * */
-    private void setConvertBtnAction(){
-        statusLbl.setText("");
-        if (MediatorControl.getInstance().getTransferActive()) {
-            ServiceWindow.getErrorNotification(
-                    resourceBundle.getString("windowTitleError"),
-                    resourceBundle.getString("windowBodyPleaseFinishTransfersFirst")
-            );
-            return;
-        }
-
-        if (splitRad.isSelected())
-            smTask = new SplitMergeTaskExecutor(true, BlockListViewController.getItems(), saveToPathLbl.getText());
-        else
-            smTask = new SplitMergeTaskExecutor(false, BlockListViewController.getItems(), saveToPathLbl.getText());
-        smThread = new Thread(smTask);
-        smThread.setDaemon(true);
-        smThread.start();
-    }
-    /**
-     * Drag-n-drop support (dragOver consumer)
-     * */
-    @FXML
-    private void handleDragOver(DragEvent event){
-        if (event.getDragboard().hasFiles() && ! MediatorControl.getInstance().getTransferActive())
-            event.acceptTransferModes(TransferMode.ANY);
-        event.consume();
-    }
-    /**
-     * Drag-n-drop support (drop consumer)
-     * */
-    @FXML
-    private void handleDrop(DragEvent event) {
-        List<File> files = event.getDragboard().getFiles();
-        File firstFile = files.get(0);
-
-        if (firstFile.isDirectory())
-            mergeRad.fire();
-        else
-            splitRad.fire();
-
-        this.BlockListViewController.addAll(files);
-
-        event.setDropCompleted(true);
-        event.consume();
-    }
-
-    public void setOneLineStatus(boolean status){
-        if (status)
-            statusLbl.setText(resourceBundle.getString("done_txt"));
-        else
-            statusLbl.setText(resourceBundle.getString("failure_txt"));
-    }
-    /**
-     * Save application settings on exit
-     * */
-    public void updatePreferencesOnExit(){
-        if (splitRad.isSelected())
-            AppPreferences.getInstance().setSplitMergeType(0);
-        else
-            AppPreferences.getInstance().setSplitMergeType(1);
-
-        AppPreferences.getInstance().setSplitMergeRecent(saveToPathLbl.getText());
     }
 }

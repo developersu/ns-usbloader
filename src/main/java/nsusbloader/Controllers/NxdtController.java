@@ -25,8 +25,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import nsusbloader.AppPreferences;
-import nsusbloader.FilesHelper;
-import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.Utilities.nxdumptool.NxdtTask;
@@ -35,7 +33,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class NxdtController implements Initializable {
+public class NxdtController implements Initializable, ISubscriber {
     @FXML
     private Label saveToLocationLbl, statusLbl;
 
@@ -79,7 +77,6 @@ public class NxdtController implements Initializable {
      * */
     private void startDumpProcess(){
         if ((workThread == null || ! workThread.isAlive())){
-            MediatorControl.getInstance().getContoller().logArea.clear();
 
             nxdtTask = new NxdtTask(saveToLocationLbl.getText());
             workThread = new Thread(nxdtTask);
@@ -97,11 +94,21 @@ public class NxdtController implements Initializable {
         }
     }
 
-    public void notifyThreadStarted(boolean isActive, EModule type){
+    /**
+     * Save application settings on exit
+     * */
+    public void updatePreferencesOnExit(){
+        AppPreferences.getInstance().setNXDTSaveToLocation(saveToLocationLbl.getText());
+    }
+
+    @Override
+    public void notify(EModule type, boolean isActive, Payload payload) {
         if (! type.equals(EModule.NXDT)){
             injectPldBtn.setDisable(isActive);
             return;
         }
+
+        statusLbl.setText(payload.getMessage());
 
         if (isActive) {
             btnDumpStopImage.getStyleClass().clear();
@@ -120,17 +127,5 @@ public class NxdtController implements Initializable {
         injectPldBtn.setText(rb.getString("tabNXDT_Btn_Start"));
         injectPldBtn.getStyleClass().remove("buttonStop");
         injectPldBtn.getStyleClass().add("buttonUp");
-    }
-    public void setOneLineStatus(boolean status){
-        if (status)
-            statusLbl.setText(rb.getString("done_txt"));
-        else
-            statusLbl.setText(rb.getString("failure_txt"));
-    }
-    /**
-     * Save application settings on exit
-     * */
-    public void updatePreferencesOnExit(){
-        AppPreferences.getInstance().setNXDTSaveToLocation(saveToLocationLbl.getText());
     }
 }

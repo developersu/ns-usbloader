@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -41,7 +41,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class RcmController implements Initializable {
+public class RcmController implements Initializable, ISubscriber {
     @FXML
     private ToggleGroup rcmToggleGrp;
 
@@ -68,12 +68,14 @@ public class RcmController implements Initializable {
     @FXML
     private Label statusLbl;
 
+    private AppPreferences preferences;
     private ResourceBundle rb;
     private String myRegexp;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         this.rb = resourceBundle;
-        final AppPreferences preferences = AppPreferences.getInstance();
+        this.preferences = AppPreferences.getInstance();
 
         rcmToggleGrp.selectToggle(pldrRadio1);
         pldrRadio1.setOnAction(e -> statusLbl.setText(""));
@@ -193,8 +195,7 @@ public class RcmController implements Initializable {
     }
 
     private void smash(){
-        statusLbl.setText("");
-        if (MediatorControl.getInstance().getTransferActive()) {
+        if (MediatorControl.INSTANCE.getTransferActive()) {
             ServiceWindow.getErrorNotification(rb.getString("windowTitleError"),
                     rb.getString("windowBodyPleaseStopOtherProcessFirst"));
             return;
@@ -273,31 +274,28 @@ public class RcmController implements Initializable {
     private void bntResetPayloader(ActionEvent event){
         final Node btn = (Node)event.getSource();
 
+        statusLbl.setText("");
+
         switch (btn.getId()){
             case "resPldBtn1":
                 payloadFNameLbl1.setText("");
                 payloadFPathLbl1.setText("");
-                statusLbl.setText("");
                 break;
             case "resPldBtn2":
                 payloadFNameLbl2.setText("");
                 payloadFPathLbl2.setText("");
-                statusLbl.setText("");
                 break;
             case "resPldBtn3":
                 payloadFNameLbl3.setText("");
                 payloadFPathLbl3.setText("");
-                statusLbl.setText("");
                 break;
             case "resPldBtn4":
                 payloadFNameLbl4.setText("");
                 payloadFPathLbl4.setText("");
-                statusLbl.setText("");
                 break;
             case "resPldBtn5":
                 payloadFNameLbl5.setText("");
                 payloadFPathLbl5.setText("");
-                statusLbl.setText("");
         }
     }
 
@@ -324,27 +322,20 @@ public class RcmController implements Initializable {
         }
     }
 
-    public void setOneLineStatus(boolean statusSuccess){
-        if (statusSuccess)
-            statusLbl.setText(rb.getString("done_txt"));
-        else
-            statusLbl.setText(rb.getString("failure_txt"));
-    }
-
-    public void notifyThreadStarted(boolean isStart, EModule type){
-        rcmToolPane.setDisable(isStart);
-        if (type.equals(EModule.RCM) && isStart){
-            MediatorControl.getInstance().getContoller().logArea.clear();
-        }
+    @Override
+    public void notify(EModule type, boolean isActive, Payload payload) {
+        rcmToolPane.setDisable(isActive);
+        if (type.equals(EModule.RCM))
+            statusLbl.setText(payload.getMessage());
     }
     /**
      * Save application settings on exit
      * */
     public void updatePreferencesOnExit(){
-        AppPreferences.getInstance().setRecentRcm(1, payloadFPathLbl1.getText());
-        AppPreferences.getInstance().setRecentRcm(2, payloadFPathLbl2.getText());
-        AppPreferences.getInstance().setRecentRcm(3, payloadFPathLbl3.getText());
-        AppPreferences.getInstance().setRecentRcm(4, payloadFPathLbl4.getText());
-        AppPreferences.getInstance().setRecentRcm(5, payloadFPathLbl5.getText());
+        preferences.setRecentRcm(1, payloadFPathLbl1.getText());
+        preferences.setRecentRcm(2, payloadFPathLbl2.getText());
+        preferences.setRecentRcm(3, payloadFPathLbl3.getText());
+        preferences.setRecentRcm(4, payloadFPathLbl4.getText());
+        preferences.setRecentRcm(5, payloadFPathLbl5.getText());
     }
 }

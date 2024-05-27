@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -68,14 +68,15 @@ public class NSLMain extends Application {
         primaryStage.show();
 
         primaryStage.setOnCloseRequest(e->{
-            if (MediatorControl.getInstance().getTransferActive())
+            if (MediatorControl.INSTANCE.getTransferActive())
                 if(! ServiceWindow.getConfirmationWindow(rb.getString("windowTitleConfirmExit"),
                         rb.getString("windowBodyConfirmExit")))
                     e.consume();
         });
 
         NSLMainController controller = loader.getController();
-        controller.setHostServices(getHostServices());
+        MediatorControl.INSTANCE.setHostServices(getHostServices());
+
         primaryStage.setOnHidden(e-> {
             AppPreferences.getInstance().setSceneHeight(mainScene.getHeight());
             AppPreferences.getInstance().setSceneWidth(mainScene.getWidth());

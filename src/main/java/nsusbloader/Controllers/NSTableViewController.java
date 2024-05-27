@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko, wolfposd
+    Copyright 2019-2024 Dmitry Isaenko, wolfposd
 
     This file is part of NS-USBloader.
 
@@ -42,6 +42,8 @@ public class NSTableViewController implements Initializable {
     private TableView<NSLRowModel> table;
     private ObservableList<NSLRowModel> rowsObsLst;
 
+    private GamesController gamesController;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         rowsObsLst = FXCollections.observableArrayList();
@@ -52,10 +54,10 @@ public class NSTableViewController implements Initializable {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setOnKeyPressed(keyEvent -> {
                 if (!rowsObsLst.isEmpty()) {
-                    if (keyEvent.getCode() == KeyCode.DELETE && !MediatorControl.getInstance().getTransferActive()) {
+                    if (keyEvent.getCode() == KeyCode.DELETE && !MediatorControl.INSTANCE.getTransferActive()) {
                         rowsObsLst.removeAll(table.getSelectionModel().getSelectedItems());
                         if (rowsObsLst.isEmpty())
-                            MediatorControl.getInstance().getGamesController().disableUploadStopBtn(true);    // TODO: change to something better
+                            gamesController.disableUploadStopBtn(true);
                         table.refresh();
                     } else if (keyEvent.getCode() == KeyCode.SPACE) {
                         for (NSLRowModel item : table.getSelectionModel().getSelectedItems()) {
@@ -173,13 +175,13 @@ public class NSTableViewController implements Initializable {
                     deleteMenuItem.setOnAction(actionEvent -> {
                         rowsObsLst.remove(row.getItem());
                         if (rowsObsLst.isEmpty())
-                            MediatorControl.getInstance().getGamesController().disableUploadStopBtn(true);    // TODO: change to something better
+                            gamesController.disableUploadStopBtn(true);
                         table.refresh();
                     });
                     MenuItem deleteAllMenuItem = new MenuItem(resourceBundle.getString("tab1_table_contextMenu_Btn_DeleteAll"));
                     deleteAllMenuItem.setOnAction(actionEvent -> {
                         rowsObsLst.clear();
-                        MediatorControl.getInstance().getGamesController().disableUploadStopBtn(true);    // TODO: change to something better
+                        gamesController.disableUploadStopBtn(true);
                         table.refresh();
                     });
                     contextMenu.getItems().addAll(deleteMenuItem, deleteAllMenuItem);
@@ -189,7 +191,7 @@ public class NSTableViewController implements Initializable {
                             Bindings.when(
                                     Bindings.isNotNull(
                                             row.itemProperty()))
-                                            .then(MediatorControl.getInstance().getTransferActive()?null:contextMenu)
+                                            .then(MediatorControl.INSTANCE.getTransferActive()?null:contextMenu)
                                             .otherwise((ContextMenu) null)
                     );
                     // Just.. don't ask..
@@ -210,6 +212,11 @@ public class NSTableViewController implements Initializable {
         table.getColumns().add(fileSizeColumn);
         table.getColumns().add(uploadColumn);
     }
+
+    public void setGamesController(GamesController gamesController) {
+        this.gamesController = gamesController;
+    }
+
     /**
      * Add single file when user selected it (Split file usually)
      * */
@@ -224,7 +231,7 @@ public class NSTableViewController implements Initializable {
         }
         else {
             rowsObsLst.add(new NSLRowModel(file, true));
-            MediatorControl.getInstance().getGamesController().disableUploadStopBtn(false);    // TODO: change to something better
+            gamesController.disableUploadStopBtn(false);
         }
         table.refresh();
     }
@@ -244,7 +251,7 @@ public class NSTableViewController implements Initializable {
         else {
             for (File file: newFiles)
                 rowsObsLst.add(new NSLRowModel(file, true));
-            MediatorControl.getInstance().getGamesController().disableUploadStopBtn(false);    // TODO: change to something better
+            gamesController.disableUploadStopBtn(false);
         }
         //rowsObsLst.get(0).setMarkForUpload(true);
         table.refresh();

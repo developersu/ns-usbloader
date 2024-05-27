@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -18,7 +18,6 @@
 */
 package nsusbloader.Controllers;
 
-import javafx.application.HostServices;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -35,10 +34,10 @@ public class NSLMainController implements Initializable {
     private ResourceBundle resourceBundle;
 
     @FXML
-    public TextArea logArea;            // Accessible from Mediator
+    private TextArea logArea;
 
     @FXML
-    public ProgressBar progressBar;            // Accessible from Mediator
+    private ProgressBar progressBar;
 
     @FXML
     private TabPane mainTabPane;
@@ -68,8 +67,6 @@ public class NSLMainController implements Initializable {
 
         logArea.appendText(rb.getString("tab3_Txt_GreetingsMessage2")+"\n");
 
-        MediatorControl.getInstance().setController(this);
-
         AppPreferences preferences = AppPreferences.getInstance();
 
         if (preferences.getAutoCheckUpdates())
@@ -79,6 +76,22 @@ public class NSLMainController implements Initializable {
             mainTabPane.getTabs().remove(3);
 
         openLastOpenedTab();
+
+        TransfersPublisher transfersPublisher = new TransfersPublisher(
+                GamesTabController,
+                SplitMergeTabController,
+                RcmTabController,
+                NXDTabController,
+                PatchesTabController);
+
+        MediatorControl.INSTANCE.configure(
+                resourceBundle,
+                SettingsTabController,
+                logArea,
+                progressBar,
+                GamesTabController,
+                transfersPublisher);
+
     }
     private void checkForUpdates(){
         Task<List<String>> updTask = new UpdatesChecker();
@@ -101,40 +114,7 @@ public class NSLMainController implements Initializable {
         updates.setDaemon(true);
         updates.start();
     }
-    /**
-     * Get resources
-     * TODO: Find better solution; used in UsbCommunications() -> GL -> SelectFile command
-     * @return ResourceBundle
-     */
-    public ResourceBundle getResourceBundle() {
-        return resourceBundle;
-    }
-    /**
-     * Provide hostServices to Settings tab
-     * */
-    public void setHostServices(HostServices hs ){ SettingsTabController.getGenericSettings().registerHostServices(hs);}
 
-    /**
-     * Get 'Settings' controller
-     * Used by FrontController
-     * */
-    public SettingsController getSettingsCtrlr(){
-        return SettingsTabController;
-    }
-
-    public GamesController getGamesCtrlr(){
-        return GamesTabController;
-    }
-
-    public SplitMergeController getSmCtrlr(){
-        return SplitMergeTabController;
-    }
-
-    public RcmController getRcmCtrlr(){ return RcmTabController; }
-
-    public NxdtController getNXDTabController(){ return NXDTabController; }
-
-    public PatchesController getPatchesTabController(){ return PatchesTabController; }
     /**
      * Save preferences before exit
      * */
