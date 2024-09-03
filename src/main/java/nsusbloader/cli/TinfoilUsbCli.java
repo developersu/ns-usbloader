@@ -21,8 +21,14 @@ package nsusbloader.cli;
 import nsusbloader.com.usb.UsbCommunications;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TinfoilUsbCli {
 
@@ -49,14 +55,34 @@ public class TinfoilUsbCli {
 
         for (String arg : arguments) {
             file = new File(arg);
-            if (file.exists())
+            if (!file.exists()) {
+                continue;
+            }
+
+            if (file.isDirectory()) {
+                filesList.addAll(fillListOfFiles(file));
+            } else {
                 filesList.add(file);
+            }
         }
 
         if (filesList.size() == 0) {
             throw new IncorrectSetupException("File(s) doesn't exist.\n" +
                     "Try 'ns-usbloader -n help' for more information.");
         }
+    }
+
+    public List<File> fillListOfFiles(File rootDir) {
+        try (Stream<Path> stream = Files.walk(rootDir.toPath())) {
+            return stream
+                    .map(Path::toFile)
+                    .filter(File::isFile)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return Collections.emptyList();
     }
 
     private void runTinfoilBackend() throws InterruptedException{
