@@ -256,17 +256,6 @@ If you like this app, just give a star (@ GitHub).
 
 This is non-commercial project.
 
-Nevertheless, I'll be more than happy if you find a chance to make a donation for charity to people I trust:
-
-* BTC → 1BnErE3n6LEdEjvvFrt4FMdXd1UGa5L7Ge
-* ETH → 0x9c29418129553bE171181bb6245151aa0576A3b7
-* DOT → 15BWSwmA4xEHZdq3gGftWg7dctMQk9vXwqA92Pg22gsxDweF
-* LTC → ltc1qfjvzxm04tax077ra9rvmxdnsum8alws2n20fag
-* ETC → 0xe9064De288C8454942533a005AB72515e689226E
-* USDT (TRC20) → TKgp5SvJGiqYNFtvJfEDGLFbezFEHq1tBy
-* USDT (ERC20) → 0x9c29418129553bE171181bb6245151aa0576A3b7
-* XRP → rGmGaLsKmSUbxWfyi4mujtVamTzj3Nqxbw.
-
 Thanks!
 
 Appreciate assistance and support of both [Vitaliy](https://github.com/SebastianUA) and [Konstantin](https://github.com/konstantin-kelemen). Without you all this magic would not have happened.
