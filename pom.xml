@@ -51,6 +51,7 @@
         <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
         <javafx.version>19.0.2.1</javafx.version>
         <maven.compiler.release>11</maven.compiler.release>
+        <project.build.outputTimestamp>2023-01-01T00:00:00Z</project.build.outputTimestamp>
     </properties>
 
     <issueManagement>
@@ -166,7 +167,7 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>${project.artifactId}-${project.version}-${maven.build.timestamp}</finalName>
+        <finalName>${project.artifactId}-${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -193,26 +194,51 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>3.1.2</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>3.1.2</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.11.0</version>
                 <configuration>
                     <release>11</release>
                 </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-enforcer-plugin</artifactId>
+              <version>3.3.0</version>
+              <executions>
+                <execution>
+                  <id>enforce-versions</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                    <rules>
+                      <requireMavenVersion>
+                        <version>[3.2.5,)</version>
+                      </requireMavenVersion>
+                      <requireJavaVersion>
+                        <version>[1.8,)</version>
+                      </requireJavaVersion>
+                      <requirePluginVersions />
+                    </rules>
+                  </configuration>
+                </execution>
+              </executions>
             </plugin>
             <!-- Don't generate default JAR without dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>3.3.0</version>
                 <!--
                 <configuration>
                     <manifestEntries>
@@ -231,7 +257,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.6.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -255,7 +281,7 @@
             </plugin>
             <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <version>2.2.0</version>
+                <version>2.4.1</version>
                 <artifactId>launch4j-maven-plugin</artifactId>
                 <executions>
                     <execution>
@@ -268,7 +294,7 @@
                             <headerType>gui</headerType>
                             <icon>appicon.ico</icon>
                             <outfile>target/${project.name}.exe</outfile>
-                            <jar>target/${project.artifactId}-${project.version}-${maven.build.timestamp}.jar</jar>
+                            <jar>target/${project.artifactId}-${project.version}.jar</jar>
                             <!-- <downloadUrl>https://download.oracle.com/java/17/archive/jdk-17.0.1_windows-x64_bin.msi</downloadUrl> -->
                             <errTitle>Launching error</errTitle>
                             <!-- <dontWrapJar>true</dontWrapJar> -->
@@ -297,6 +323,31 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-deploy-plugin</artifactId>
+              <version>3.1.1</version>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-resources-plugin</artifactId>
+              <version>3.3.1</version>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-site-plugin</artifactId>
+              <version>4.0.0-M9</version>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-install-plugin</artifactId>
+              <version>3.1.1</version>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-clean-plugin</artifactId>
+              <version>3.3.1</version>
             </plugin>
         </plugins>
     </build>
