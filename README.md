@@ -59,6 +59,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Swedish by [Daniel Nylander](https://github.com/yeager)
 * Japanese by [kuragehime](https://github.com/kuragehimekurara1)
 * Ryukyuan languages by [kuragehime](https://github.com/kuragehimekurara1)
+* Turkish language by [Erimsaholut](https://github.com/Erimsaholut)
 
 * Angelo Elias Dalzotto makes packages in AUR
 * Phoenix[Msc] provides his shiny Mac M1 for debug
