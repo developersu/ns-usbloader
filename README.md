@@ -1,6 +1,6 @@
 <h1 align="center"><img src="screenshots/ApplicationLogo.svg" alt="NS-USBloader" width="450px"/></h1>
 
-![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) [![Build Status](https://ci.redrise.ru/api/badges/desu/ns-usbloader/status.svg)](https://ci.redrise.ru/desu/ns-usbloader)
+![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) [![status-badge](https://ci.redrise.ru/api/badges/12/status.svg)](https://ci.redrise.ru/repos/12)
 
 NS-USBloader is:
 * A PC-side installer for **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** / other compatible installers (USB and Network supported) and **[XorTroll/Goldleaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 

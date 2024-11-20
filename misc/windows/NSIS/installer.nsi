@@ -91,8 +91,8 @@
 Section "NS-USBloader" Install
 
   SetOutPath "$INSTDIR"
-  file /r jdk
-  file Drivers_set.exe
+  file /r \assembly\jdk
+  file \assembly\Drivers_set.exe
   file NS-USBloader.exe
   file logo.ico
 
