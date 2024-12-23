@@ -1,5 +1,5 @@
 /*
-    Copyright 2018-2022 Dmitry Isaenko
+    Copyright 2018-2024 Dmitry Isaenko
      
     This file is part of NS-USBloader.
 
@@ -46,7 +46,7 @@ import nsusbloader.Utilities.patches.fs.FsPatchMaker;
 import nsusbloader.Utilities.patches.loader.LoaderPatchMaker;
 
 // TODO: CLI SUPPORT
-public class PatchesController implements Initializable {
+public class PatchesController implements Initializable, ISubscriber {
     @FXML
     private VBox patchesToolPane;
     @FXML
@@ -237,9 +237,8 @@ public class PatchesController implements Initializable {
 
         if (workThread != null && workThread.isAlive())
             return;
-        statusLbl.setText("");
 
-        if (MediatorControl.getInstance().getTransferActive()) {
+        if (MediatorControl.INSTANCE.getTransferActive()) {
             ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"),
                     resourceBundle.getString("windowBodyPleaseStopOtherProcessFirst"));
             return;
@@ -261,9 +260,8 @@ public class PatchesController implements Initializable {
 
         if (workThread != null && workThread.isAlive())
             return;
-        statusLbl.setText("");
 
-        if (MediatorControl.getInstance().getTransferActive()) {
+        if (MediatorControl.INSTANCE.getTransferActive()) {
             ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"),
                     resourceBundle.getString("windowBodyPleaseStopOtherProcessFirst"));
             return;
@@ -285,9 +283,8 @@ public class PatchesController implements Initializable {
 
         if (workThread != null && workThread.isAlive())
             return;
-        statusLbl.setText("");
 
-        if (MediatorControl.getInstance().getTransferActive()) {
+        if (MediatorControl.INSTANCE.getTransferActive()) {
             ServiceWindow.getErrorNotification(resourceBundle.getString("windowTitleError"),
                     resourceBundle.getString("windowBodyPleaseStopOtherProcessFirst"));
             return;
@@ -306,18 +303,20 @@ public class PatchesController implements Initializable {
         workThread.interrupt();
     }
 
-    public void notifyThreadStarted(boolean isActive, EModule type) {
+    @Override
+    public void notify(EModule type, boolean isActive, Payload payload) {
         if (! type.equals(EModule.PATCHES)) {
             patchesToolPane.setDisable(isActive);
             return;
         }
+
+        statusLbl.setText(payload.getMessage());
 
         convertRegionEs.getStyleClass().clear();
         makeFsBtn.setVisible(! isActive);
         makeLoaderBtn.setVisible(! isActive);
 
         if (isActive) {
-            MediatorControl.getInstance().getContoller().logArea.clear();
             convertRegionEs.getStyleClass().add("regionStop");
 
             makeEsBtn.setOnAction(e-> interruptProcessOfPatchMaking());
@@ -332,13 +331,6 @@ public class PatchesController implements Initializable {
         makeEsBtn.setText(resourceBundle.getString("tabPatches_Btn_MakeEs"));
         makeEsBtn.getStyleClass().remove("buttonStop");
         makeEsBtn.getStyleClass().add("buttonUp");
-    }
-
-    public void setOneLineStatus(boolean statusSuccess){
-        if (statusSuccess)
-            statusLbl.setText(resourceBundle.getString("done_txt"));
-        else
-            statusLbl.setText(resourceBundle.getString("failure_txt"));
     }
 
     void updatePreferencesOnExit(){

@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -32,7 +32,7 @@ public class FilesDropHandleTask extends Task<List<File>> {
     private final List<File> filesDropped;
     private final List<File> allFiles;
 
-    private String messageTemplate;
+    private final String messageTemplate;
     private long filesScanned = 0;
     private long filesAdded = 0;
 
@@ -43,12 +43,12 @@ public class FilesDropHandleTask extends Task<List<File>> {
         this.filesRegex = filesRegex;
         this.foldersRegex = foldersRegex;
         this.allFiles = new ArrayList<>();
-        this.messageTemplate = MediatorControl.getInstance().getResourceBundle().getString("windowBodyFilesScanned");
+        this.messageTemplate = MediatorControl.INSTANCE.getResourceBundle().getString("windowBodyFilesScanned");
     }
 
     @Override
     protected List<File> call() {
-        if (filesDropped == null || filesDropped.size() == 0)
+        if (filesDropped == null || filesDropped.isEmpty())
             return allFiles;
 
         for (File file : filesDropped){

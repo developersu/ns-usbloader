@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -55,9 +55,7 @@ public class SettingsBlockGenericController implements Initializable {
             direcroriesChooserForRomsCB;
     @FXML
     private Hyperlink newVersionHyperlink;
-
     private ResourceBundle resourceBundle;
-
     private HostServices hostServices;
 
     @Override
@@ -68,8 +66,8 @@ public class SettingsBlockGenericController implements Initializable {
         autoCheckForUpdatesCB.setSelected(preferences.getAutoCheckUpdates());
         direcroriesChooserForRomsCB.setSelected(preferences.getDirectoriesChooserForRoms());
         direcroriesChooserForRomsCB.setOnAction(actionEvent ->
-                    MediatorControl.getInstance().getGamesController().updateFilesSelectorButtonBehaviour(direcroriesChooserForRomsCB.isSelected())
-                );
+                MediatorControl.INSTANCE.getGamesController().setFilesSelectorButtonBehaviour(direcroriesChooserForRomsCB.isSelected())
+        );
 
         Region btnSwitchImage = new Region();
         btnSwitchImage.getStyleClass().add("regionUpdatesCheck");
@@ -81,6 +79,7 @@ public class SettingsBlockGenericController implements Initializable {
         languagesChB.setItems(settingsLanguagesSetup.getLanguages());
         languagesChB.getSelectionModel().select(settingsLanguagesSetup.getRecentLanguage());
 
+        hostServices = MediatorControl.INSTANCE.getHostServices();
         newVersionHyperlink.setOnAction(e-> hostServices.showDocument(newVersionHyperlink.getText()));
         checkForUpdBtn.setOnAction(e->checkForUpdatesAction());
         submitLanguageBtn.setOnAction(e->languageButtonAction());
@@ -148,8 +147,6 @@ public class SettingsBlockGenericController implements Initializable {
     public boolean isDirectoriesChooserForRoms(){
         return direcroriesChooserForRomsCB.isSelected();
     }
-
-    protected void registerHostServices(HostServices hostServices){ this.hostServices = hostServices;}
 
     void setNewVersionLink(String newVer){
         newVersionHyperlink.setVisible(true);

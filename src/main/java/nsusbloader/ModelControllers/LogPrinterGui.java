@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -40,9 +40,13 @@ public class LogPrinterGui implements ILogPrinter {
     LogPrinterGui(EModule whoIsAsking){
         this.msgQueue = new LinkedBlockingQueue<>();
         this.progressQueue = new LinkedBlockingQueue<>();
-        this.statusMap =  new HashMap<>();
+        this.statusMap = new HashMap<>();
         this.oneLinerStatus = new AtomicBoolean();
-        this.msgConsumer = new MessagesConsumer(whoIsAsking, this.msgQueue, this.progressQueue, this.statusMap, this.oneLinerStatus);
+        this.msgConsumer = new MessagesConsumer(whoIsAsking,
+                this.msgQueue,
+                this.progressQueue,
+                this.statusMap,
+                this.oneLinerStatus);
         this.msgConsumer.start();
     }
     /**

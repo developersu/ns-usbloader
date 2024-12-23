@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko, wolfposd
+    Copyright 2019-2024 Dmitry Isaenko, wolfposd
 
     This file is part of NS-USBloader.
 
@@ -31,6 +31,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import nsusbloader.AppPreferences;
+import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.com.net.NETCommunications;
 import nsusbloader.com.usb.UsbCommunications;
 import nsusbloader.FilesHelper;
@@ -45,12 +46,14 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class GamesController implements Initializable {
+public class GamesController implements Initializable, ISubscriber {
     
     private static final String REGEX_ONLY_NSP = ".*\\.nsp$";
     private static final String REGEX_ALLFILES_TINFOIL = ".*\\.(nsp$|xci$|nsz$|xcz$)";
     private static final String REGEX_ALLFILES = ".*";
 
+    private static final MediatorControl mediator = MediatorControl.INSTANCE;
+    
     @FXML
     private AnchorPane usbNetPane;
 
@@ -63,7 +66,7 @@ public class GamesController implements Initializable {
     @FXML
     private Button switchThemeBtn;
     @FXML
-    public NSTableViewController tableFilesListController;            // Accessible from Mediator (for drag-n-drop support)
+    private NSTableViewController tableFilesListController;
 
     @FXML
     private Button selectNspBtn, selectSplitBtn, uploadStopBtn;
@@ -101,6 +104,7 @@ public class GamesController implements Initializable {
             disableUploadStopBtn(tableFilesListController.isFilesForUploadListEmpty());
         });  // Add listener to notify tableView controller
         tableFilesListController.setNewProtocol(getSelectedProtocolByName());   // Notify tableView controller
+        tableFilesListController.setGamesController(this);
 
         ObservableList<String> choiceNetUsbList = FXCollections.observableArrayList("USB", "NET");
         choiceNetUsb.setItems(choiceNetUsbList);
@@ -204,11 +208,11 @@ public class GamesController implements Initializable {
     }
     
     private boolean isAllFiletypesAllowedForGL() {
-        return ! MediatorControl.getInstance().getSettingsController().getGoldleafSettings().getNSPFileFilterForGL();
+        return ! mediator.getSettingsController().getGoldleafSettings().getNSPFileFilterForGL();
     }
     
     private boolean isXciNszXczSupport() {
-        return MediatorControl.getInstance().getSettingsController().getTinfoilSettings().isXciNszXczSupport();
+        return mediator.getSettingsController().getTinfoilSettings().isXciNszXczSupport();
     }
     
     /**
@@ -216,7 +220,7 @@ public class GamesController implements Initializable {
      * tinfoil + xcinszxcz </br>
      * tinfoil + nsponly </br>
      * goldleaf </br>
-     * etc..
+     * etc...
      */
     private String getRegexForFiles() {
         if (isTinfoil() && isXciNszXczSupport())
@@ -368,56 +372,58 @@ public class GamesController implements Initializable {
         if (workThread != null && workThread.isAlive())
             return;
 
-        // Collect files
-        List<File> nspToUpload;
-
-        TextArea logArea = MediatorControl.getInstance().getContoller().logArea;
-
         if (isTinfoil() && tableFilesListController.getFilesForUpload() == null) {
-            logArea.setText(resourceBundle.getString("tab3_Txt_NoFolderOrFileSelected"));
+            ServiceWindow.getInfoNotification("(o_o\")", resourceBundle.getString("tab3_Txt_NoFolderOrFileSelected"));
             return;
         }
 
-        if ((nspToUpload = tableFilesListController.getFilesForUpload()) != null){
+        // Collect files
+        List<File> nspToUpload = tableFilesListController.getFilesForUpload();
+
+        if (nspToUpload == null)
+            nspToUpload = new ArrayList<>();
+        //todo: add to make it visible
+        /*
+        else {
+            TextArea logArea = mediator.getLogArea();
             logArea.setText(resourceBundle.getString("tab3_Txt_FilesToUploadTitle")+"\n");
             nspToUpload.forEach(item -> logArea.appendText(" "+item.getAbsolutePath()+"\n"));
         }
-        else {
-            logArea.clear();
-            nspToUpload = new LinkedList<>();
-        }
+        */
 
-        SettingsController settings = MediatorControl.getInstance().getSettingsController();
+        SettingsController settings = mediator.getSettingsController();
         // If USB selected
         if (isGoldLeaf()){
             final SettingsBlockGoldleafController goldleafSettings = settings.getGoldleafSettings();
             usbNetCommunications = new UsbCommunications(nspToUpload, "GoldLeaf" + goldleafSettings.getGlVer(), goldleafSettings.getNSPFileFilterForGL());
         }
-        else if (( isTinfoil() && getSelectedNetUsb().equals("USB") )){
-            usbNetCommunications = new UsbCommunications(nspToUpload, "TinFoil", false);
-        }
-        else {      // NET INSTALL OVER TINFOIL
-            final String ipValidationPattern = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
-            final SettingsBlockTinfoilController tinfoilSettings = settings.getTinfoilSettings();
-
-            if (tinfoilSettings.isValidateNSHostName() && ! getNsIp().matches(ipValidationPattern)) {
-                if (!ServiceWindow.getConfirmationWindow(resourceBundle.getString("windowTitleBadIp"), resourceBundle.getString("windowBodyBadIp")))
-                    return;
+        else {
+            if (getSelectedNetUsb().equals("USB")){
+                usbNetCommunications = new UsbCommunications(nspToUpload, "TinFoil", false);
             }
+            else {      // NET INSTALL OVER TINFOIL
+                final String ipValidationPattern = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+                final SettingsBlockTinfoilController tinfoilSettings = settings.getTinfoilSettings();
 
-            String nsIP = getNsIp();
+                if (tinfoilSettings.isValidateNSHostName() && ! getNsIp().matches(ipValidationPattern)) {
+                    if (!ServiceWindow.getConfirmationWindow(resourceBundle.getString("windowTitleBadIp"), resourceBundle.getString("windowBodyBadIp")))
+                        return;
+                }
 
-            if (! tinfoilSettings.isExpertModeSelected())
-                usbNetCommunications = new NETCommunications(nspToUpload, nsIP, false, "", "", "");
-            else {
-                usbNetCommunications = new NETCommunications(
-                        nspToUpload,
-                        nsIP,
-                        tinfoilSettings.isNoRequestsServe(),
-                        tinfoilSettings.isAutoDetectIp()?"":tinfoilSettings.getHostIp(),
-                        tinfoilSettings.isRandomlySelectPort()?"":tinfoilSettings.getHostPort(),
-                        tinfoilSettings.isNoRequestsServe()?tinfoilSettings.getHostExtra():""
-                );
+                String nsIP = getNsIp();
+
+                if (! tinfoilSettings.isExpertModeSelected())
+                    usbNetCommunications = new NETCommunications(nspToUpload, nsIP, false, "", "", "");
+                else {
+                    usbNetCommunications = new NETCommunications(
+                            nspToUpload,
+                            nsIP,
+                            tinfoilSettings.isNoRequestsServe(),
+                            tinfoilSettings.isAutoDetectIp()?"":tinfoilSettings.getHostIp(),
+                            tinfoilSettings.isRandomlySelectPort()?"":tinfoilSettings.getHostPort(),
+                            tinfoilSettings.isNoRequestsServe()?tinfoilSettings.getHostExtra():""
+                    );
+                }
             }
         }
         workThread = new Thread(usbNetCommunications);
@@ -446,7 +452,7 @@ public class GamesController implements Initializable {
      * */
     @FXML
     private void handleDragOver(DragEvent event){
-        if (event.getDragboard().hasFiles() && ! MediatorControl.getInstance().getTransferActive())
+        if (event.getDragboard().hasFiles() && ! mediator.getTransferActive())
             event.acceptTransferModes(TransferMode.ANY);
         event.consume();
     }
@@ -456,47 +462,15 @@ public class GamesController implements Initializable {
     @FXML
     private void handleDrop(DragEvent event) {
         List<File> files = event.getDragboard().getFiles();
-        new FilesDropHandle(files, getRegexForFiles(), getRegexForFolders());
+        new FilesDropHandle(files, getRegexForFiles(), getRegexForFolders(), tableFilesListController);
         event.setDropCompleted(true);
         event.consume();
     }
-    
+
     /**
-     * This thing modify UI for reusing 'Upload to NS' button and make functionality set for "Stop transmission"
-     * Called from mediator
-     * TODO: remove shitcoding practices
+     * This function called from NSTableViewController
      * */
-    public void notifyThreadStarted(boolean isActive, EModule type){
-        if (! type.equals(EModule.USB_NET_TRANSFERS)){
-            usbNetPane.setDisable(isActive);
-            return;
-        }
-
-        selectNspBtn.setDisable(isActive);
-        selectSplitBtn.setDisable(isActive);
-        btnUpStopImage.getStyleClass().clear();
-
-        if (isActive) {
-            btnUpStopImage.getStyleClass().add("regionStop");
-
-            uploadStopBtn.setOnAction(e-> stopBtnAction());
-            uploadStopBtn.setText(resourceBundle.getString("btn_Stop"));
-            uploadStopBtn.getStyleClass().remove("buttonUp");
-            uploadStopBtn.getStyleClass().add("buttonStop");
-        }
-        else {
-            btnUpStopImage.getStyleClass().add("regionUpload");
-
-            uploadStopBtn.setOnAction(e-> uploadBtnAction());
-            uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
-            uploadStopBtn.getStyleClass().remove("buttonStop");
-            uploadStopBtn.getStyleClass().add("buttonUp");
-        }
-    }
-    /**
-     * Crunch. This function called from NSTableViewController
-     * */
-    public void disableUploadStopBtn(boolean disable){
+    void disableUploadStopBtn(boolean disable){
         if (isTinfoil())
             uploadStopBtn.setDisable(disable);
         else
@@ -515,11 +489,8 @@ public class GamesController implements Initializable {
         }).start();
     }
 
-    public void updateFilesSelectorButtonBehaviour(boolean isDirectoryChooser){
+    void setFilesSelectorButtonBehaviour(boolean isDirectoryChooser){
         btnSelectImage.getStyleClass().clear();
-        setFilesSelectorButtonBehaviour(isDirectoryChooser);
-    }
-    private void setFilesSelectorButtonBehaviour(boolean isDirectoryChooser){
         if (isDirectoryChooser){
             selectNspBtn.setOnAction(e -> selectFoldersBtnAction());
             btnSelectImage.getStyleClass().add("regionScanFolders");
@@ -535,7 +506,7 @@ public class GamesController implements Initializable {
     /**
      * Get 'Recent' path
      */
-    public String getRecentPath(){
+    private String getRecentPath(){
         return previouslyOpenedPath;
     }
 
@@ -546,5 +517,43 @@ public class GamesController implements Initializable {
         preferences.setRecent(getRecentPath());
         preferences.setNetUsb(getSelectedNetUsb());
         preferences.setNsIp(getNsIp());
+    }
+
+    /**
+     * This thing modifies UI for reusing 'Upload to NS' button and make functionality set for "Stop transmission"
+     * */
+    @Override
+    public void notify(EModule type, boolean isActive, Payload payload) {
+        if (! type.equals(EModule.USB_NET_TRANSFERS)){
+            usbNetPane.setDisable(isActive);
+            return;
+        }
+
+        selectNspBtn.setDisable(isActive);
+        selectSplitBtn.setDisable(isActive);
+        btnUpStopImage.getStyleClass().clear();
+
+        if (isActive) {
+            btnUpStopImage.getStyleClass().add("regionStop");
+
+            uploadStopBtn.setOnAction(e-> stopBtnAction());
+            uploadStopBtn.setText(resourceBundle.getString("btn_Stop"));
+            uploadStopBtn.getStyleClass().remove("buttonUp");
+            uploadStopBtn.getStyleClass().add("buttonStop");
+            return;
+        }
+        btnUpStopImage.getStyleClass().add("regionUpload");
+
+        uploadStopBtn.setOnAction(e-> uploadBtnAction());
+        uploadStopBtn.setText(resourceBundle.getString("btn_Upload"));
+        uploadStopBtn.getStyleClass().remove("buttonStop");
+        uploadStopBtn.getStyleClass().add("buttonUp");
+
+        Map<String, EFileStatus> statusMap = payload.getStatusMap();
+
+        if (! statusMap.isEmpty()) {
+            for (String key : statusMap.keySet())
+                tableFilesListController.setFileStatus(key, statusMap.get(key));
+        }
     }
 }

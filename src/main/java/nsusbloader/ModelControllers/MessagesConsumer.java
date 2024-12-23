@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -22,24 +22,26 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextArea;
-import nsusbloader.Controllers.NSTableViewController;
+import nsusbloader.Controllers.Payload;
 import nsusbloader.MediatorControl;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EModule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.ResourceBundle;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MessagesConsumer extends AnimationTimer {
-    private final BlockingQueue<String> msgQueue;
-    private final TextArea logsArea;
+    private static final MediatorControl mediator = MediatorControl.INSTANCE;
+    private static final TextArea logsArea = mediator.getLogArea();
+    private static final ProgressBar progressBar = mediator.getProgressBar();;
+    private static final ResourceBundle resourceBundle = mediator.getResourceBundle();
 
+    private final BlockingQueue<String> msgQueue;
     private final BlockingQueue<Double> progressQueue;
-    private final ProgressBar progressBar;
     private final HashMap<String, EFileStatus> statusMap;
-    private final NSTableViewController tableViewController;
     private final EModule appModuleType;
 
     private final AtomicBoolean oneLinerStatus;
@@ -53,22 +55,16 @@ public class MessagesConsumer extends AnimationTimer {
                      AtomicBoolean oneLinerStatus){
         this.appModuleType = appModuleType;
         this.isInterrupted = false;
-
         this.msgQueue = msgQueue;
-        this.logsArea = MediatorControl.getInstance().getContoller().logArea;
-
         this.progressQueue = progressQueue;
-        this.progressBar = MediatorControl.getInstance().getContoller().progressBar;
-
         this.statusMap = statusMap;
-        this.tableViewController = MediatorControl.getInstance().getGamesController().tableFilesListController;
-
         this.oneLinerStatus = oneLinerStatus;
 
         progressBar.setProgress(0.0);
-
         progressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
-        MediatorControl.getInstance().setBgThreadActive(true, appModuleType);
+
+        logsArea.clear();
+        mediator.setTransferActive(appModuleType, true, new Payload());
     }
 
     @Override
@@ -89,32 +85,18 @@ public class MessagesConsumer extends AnimationTimer {
             });
         }
 
-        if (isInterrupted)                 // It's safe 'cuz it's could't be interrupted while HashMap populating
+        if (isInterrupted)                 // safe, could not be interrupted while HashMap populating
             updateElementsAndStop();
     }
 
     private void updateElementsAndStop(){
-        MediatorControl.getInstance().setBgThreadActive(false, appModuleType);
+        Payload payload = new Payload(
+                resourceBundle.getString(oneLinerStatus.get() ? "done_txt" : "failure_txt"),
+                statusMap);
+
+        mediator.setTransferActive(appModuleType, false, payload);
         progressBar.setProgress(0.0);
 
-        if (statusMap.size() > 0){
-            for (String key : statusMap.keySet())
-                tableViewController.setFileStatus(key, statusMap.get(key));
-        }
-
-        switch (appModuleType){
-            case RCM:
-                MediatorControl.getInstance().getRcmController().setOneLineStatus(oneLinerStatus.get());
-                break;
-            case NXDT:
-                MediatorControl.getInstance().getNxdtController().setOneLineStatus(oneLinerStatus.get());
-                break;
-            case SPLIT_MERGE_TOOL:
-                MediatorControl.getInstance().getSplitMergeController().setOneLineStatus(oneLinerStatus.get());
-                break;
-            case PATCHES:
-                MediatorControl.getInstance().getPatchesController().setOneLineStatus(oneLinerStatus.get());
-        }
         this.stop();
     }
 

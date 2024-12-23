@@ -22,7 +22,7 @@ public class EsIntegrationTest {
         pathToKeysFile = environment.getProdkeysLocation();
         saveTo = environment.getSaveToLocation() + File.separator + "ES_LPR";
         pathToFirmwares = environment.getFirmwaresLocation();
-        pathToFirmware = pathToFirmware + File.separator + "Firmware 14.1.0";
+        pathToFirmware = environment.getFirmwaresLocation() + File.separator + "Firmware 17.0.0";
     }
 
     @DisplayName("ES Integration validation - everything")

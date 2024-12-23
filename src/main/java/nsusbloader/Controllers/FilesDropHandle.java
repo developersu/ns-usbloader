@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -39,10 +39,13 @@ import java.util.ResourceBundle;
 
 public class FilesDropHandle {
 
-    public FilesDropHandle(List<File> files, String filesRegex, String foldersRegex){
+    public FilesDropHandle(List<File> files,
+                           String filesRegex,
+                           String foldersRegex,
+                           NSTableViewController tableController){
         FilesDropHandleTask filesDropHandleTask = new FilesDropHandleTask(files, filesRegex, foldersRegex);
 
-        ResourceBundle resourceBundle = MediatorControl.getInstance().getResourceBundle();
+        ResourceBundle resourceBundle = MediatorControl.INSTANCE.getResourceBundle();
         Button cancelButton = new Button(resourceBundle.getString("btn_Cancel"));
 
         ProgressIndicator progressIndicator = new ProgressIndicator();
@@ -101,7 +104,7 @@ public class FilesDropHandle {
             List<File> allFiles = filesDropHandleTask.getValue();
 
             if (! allFiles.isEmpty()) {
-                MediatorControl.getInstance().getGamesController().tableFilesListController.setFiles(allFiles);
+                tableController.setFiles(allFiles);
             }
             stage.close();
         });

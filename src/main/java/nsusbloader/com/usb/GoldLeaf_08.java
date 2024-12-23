@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2024 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -941,7 +941,7 @@ class GoldLeaf_08 extends TransferModule {
     private boolean selectFile(){
         File selectedFile = CompletableFuture.supplyAsync(() -> {
             FileChooser fChooser = new FileChooser();
-            fChooser.setTitle(MediatorControl.getInstance().getResourceBundle().getString("btn_OpenFile")); // TODO: FIX BAD IMPLEMENTATION
+            fChooser.setTitle(MediatorControl.INSTANCE.getResourceBundle().getString("btn_OpenFile")); // TODO: FIX BAD IMPLEMENTATION
             fChooser.setInitialDirectory(new File(System.getProperty("user.home")));// TODO: Consider fixing; not a prio.
             fChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("*", "*"));
             return fChooser.showOpenDialog(null);    // Leave as is for now.

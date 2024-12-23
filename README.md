@@ -1,6 +1,6 @@
 <h1 align="center"><img src="screenshots/ApplicationLogo.svg" alt="NS-USBloader" width="450px"/></h1>
 
-![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) [![Build Status](https://ci.redrise.ru/api/badges/desu/ns-usbloader/status.svg)](https://ci.redrise.ru/desu/ns-usbloader)
+![License](https://img.shields.io/badge/License-GPLv3-blue.svg) ![Releases](https://img.shields.io/github/downloads/developersu/ns-usbloader/total.svg) ![LatestVer](https://img.shields.io/github/release/developersu/ns-usbloader.svg) [![status-badge](https://ci.redrise.ru/api/badges/12/status.svg)](https://ci.redrise.ru/repos/12)
 
 NS-USBloader is:
 * A PC-side installer for **[Huntereb/Awoo-Installer](https://github.com/Huntereb/Awoo-Installer)** / other compatible installers (USB and Network supported) and **[XorTroll/Goldleaf](https://github.com/XorTroll/Goldleaf)** (USB) NSP installer. 
@@ -59,6 +59,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Swedish by [Daniel Nylander](https://github.com/yeager)
 * Japanese by [kuragehime](https://github.com/kuragehimekurara1)
 * Ryukyuan languages by [kuragehime](https://github.com/kuragehimekurara1)
+* Turkish language by [Erimsaholut](https://github.com/Erimsaholut)
 
 * Angelo Elias Dalzotto makes packages in AUR
 * Phoenix[Msc] provides his shiny Mac M1 for debug
@@ -255,17 +256,6 @@ To convert files of any locale to readable format (and vise-versa) you can use t
 If you like this app, just give a star (@ GitHub).
 
 This is non-commercial project.
-
-Nevertheless, I'll be more than happy if you find a chance to make a donation for charity to people I trust:
-
-* BTC → 1BnErE3n6LEdEjvvFrt4FMdXd1UGa5L7Ge
-* ETH → 0x9c29418129553bE171181bb6245151aa0576A3b7
-* DOT → 15BWSwmA4xEHZdq3gGftWg7dctMQk9vXwqA92Pg22gsxDweF
-* LTC → ltc1qfjvzxm04tax077ra9rvmxdnsum8alws2n20fag
-* ETC → 0xe9064De288C8454942533a005AB72515e689226E
-* USDT (TRC20) → TKgp5SvJGiqYNFtvJfEDGLFbezFEHq1tBy
-* USDT (ERC20) → 0x9c29418129553bE171181bb6245151aa0576A3b7
-* XRP → rGmGaLsKmSUbxWfyi4mujtVamTzj3Nqxbw.
 
 Thanks!
 

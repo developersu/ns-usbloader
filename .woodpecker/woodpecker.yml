@@ -1,0 +1,82 @@
+steps:
+  - name: test-standard
+    when:
+      event: [tag, push]
+    image: maven:3-openjdk-17
+    commands:
+      - mvn -B -DskipTests clean package
+      - mvn test -B
+      - echo target/ns-usbloader-*jar
+      - mkdir artifacts
+      - cp target/ns-usbloader-*jar artifacts
+    volumes:
+      - /home/docker/woodpecker/files/m2:/root/.m2
+
+  - name: make-windows-installer
+    when:
+      event: [tag, push]
+    image: wheatstalk/makensis:3
+    commands:
+      - cp target/NS-USBloader.exe misc/windows/NSIS/
+      - misc/windows/update_version.sh
+      - cd misc/windows/NSIS
+      - makensis -V4 ./installer.nsi
+      - echo Installer-*.exe
+      - cp Installer-*.exe "../../../artifacts"
+      - rm ./NS-USBloader.exe
+      - rm ./Installer-*.exe
+      - cd ../../../
+    volumes:
+      - /home/docker/woodpecker/files/assembly/openjdk-19.0.2:/assembly/jdk
+      - /home/docker/woodpecker/files/assembly/Drivers_set.exe:/assembly/Drivers_set.exe
+
+  - name: emerge-legacy-artifact
+    when:
+      event: [tag, push]
+    image: maven:3-openjdk-17
+    commands:
+      - . ./.make_legacy
+      - mvn -B -DskipTests clean package
+      - echo target/ns-usbloader-*jar
+      - cp target/ns-usbloader-*jar artifacts
+    volumes:
+      - /home/docker/woodpecker/files/m2:/root/.m2
+
+  - name: make-legacy-windows-installer
+    when:
+      event: [tag, push]
+    image: wheatstalk/makensis:3
+    commands:
+      - cp target/NS-USBloader.exe misc/windows/NSIS/
+      - misc/windows/update_version.sh legacy
+      - cd misc/windows/NSIS
+      - makensis -V4 ./installer.nsi
+      - echo Installer-*.exe
+      - cp Installer-*.exe "../../../artifacts"
+      - cd ../../../
+    volumes:
+      - /home/docker/woodpecker/files/assembly/openjdk-19.0.2:/assembly/jdk
+      - /home/docker/woodpecker/files/assembly/Drivers_set.exe:/assembly/Drivers_set.exe
+  
+  - name: emerge-mac-m1-artifact
+    when:
+      event: [tag, push]
+    image: maven:3-openjdk-17
+    commands:
+      - . ./.make_m1
+      - mvn -B -DskipTests clean package
+      - echo target/ns-usbloader-*jar
+      - cp target/ns-usbloader-*jar artifacts
+    volumes:
+      - /home/docker/woodpecker/files/m2:/root/.m2
+
+  - name: save-artifacts
+    when:
+      event: [tag, push]
+    image: alpine:latest
+    commands:
+      - export ARTIFACTS_DIR="$(date -d @$CI_PIPELINE_CREATED +'%Y-%m-%d %H:%m %Z')"
+      - mkdir -p /builds/ns-usbloader/
+      - mv artifacts "/builds/ns-usbloader/$ARTIFACTS_DIR"
+    volumes:
+      - /home/www/builds:/builds
