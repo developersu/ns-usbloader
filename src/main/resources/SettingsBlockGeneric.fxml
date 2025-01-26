@@ -15,8 +15,8 @@
         <Label text="%tab2_Lbl_ApplicationSettings" />
               <HBox alignment="CENTER_LEFT" spacing="5.0">
                  <children>
-                    <Label text="%tab2_Lbl_Language" />
-                    <ChoiceBox fx:id="languagesChB" prefWidth="180.0" />
+                    <Label minWidth="35.0" text="%tab2_Lbl_Language" />
+                    <ChoiceBox fx:id="languagesChB" prefWidth="240.0" />
                     <Button fx:id="submitLanguageBtn" mnemonicParsing="false" text="OK" />
            <VBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
               <children>
