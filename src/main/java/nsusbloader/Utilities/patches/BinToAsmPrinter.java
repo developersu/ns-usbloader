@@ -352,8 +352,8 @@ public class BinToAsmPrinter {
         int conditionalJumpLocation = ((instructionExpression >> 5 & 0x7FFFF) * 4 + offset) & 0xfffff;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CBZ         " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + " (" + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CBZ         " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + " (" + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 (instructionExpression >> 31 == 0) ? "w" : "x", (instructionExpression & 0b11111),
                 conditionalJumpLocation, (conditionalJumpLocation + 0x100));
     }
@@ -362,8 +362,8 @@ public class BinToAsmPrinter {
         int conditionalJumpLocation = ((instructionExpression >> 5 & 0x7FFFF) * 4 + offset) & 0xfffff;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CBNZ        " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + " (" + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CBNZ        " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + " (" + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 (instructionExpression >> 31 == 0) ? "w" : "x", (instructionExpression & 0b11111),
                 conditionalJumpLocation, (conditionalJumpLocation + 0x100));
     }
@@ -372,8 +372,8 @@ public class BinToAsmPrinter {
         int conditionalJumpLocationPatch = ((instructionExpression & 0x3ffffff) * 4 + offset) & 0xfffff;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   B           " +  ANSI_BLUE + "#0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   B           " +  ANSI_BLUE + "#0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 conditionalJumpLocationPatch, (conditionalJumpLocationPatch + 0x100));
     }
 
@@ -382,8 +382,8 @@ public class BinToAsmPrinter {
         int conditionalJumpLocationPatch = ((instructionExpression & 0x3ffffff) * 4 + offset) & 0xfffff;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   BL          " +  ANSI_BLUE + "#0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   BL          " +  ANSI_BLUE + "#0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 conditionalJumpLocationPatch, (conditionalJumpLocationPatch + 0x100));
     }
 
@@ -392,15 +392,15 @@ public class BinToAsmPrinter {
         int sfHw = (instructionExpression >> 22 & 1);
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   MOV         " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   MOV         " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + "\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 (sfHw == 0) ? "w" : "x", (instructionExpression & 0b11111), imm16);
     }
 
     private static String printNOPSimplified(int instructionExpression, int offset){
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   NOP           " + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression);
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   NOP           " + ANSI_RESET + "\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression);
     }
 
     private static String printTBZSimplified(int instructionExpression, int offset){
@@ -410,8 +410,8 @@ public class BinToAsmPrinter {
         int label = offset + (instructionExpression >> 5 & 0x3fff) * 4;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   TBZ         " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ", " + ANSI_PURPLE + "%x" + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   TBZ         " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ", " + ANSI_PURPLE + "%x" + ANSI_RESET + "\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 (xwSelector == 0) ? "w" : "x", Rt, imm, label);
     }
 
@@ -419,15 +419,15 @@ public class BinToAsmPrinter {
         int conditionalJumpLocation = ((instructionExpression >> 4 & 0b1111111111111111111) * 4 + offset) & 0xfffff;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   B.%s        " + ANSI_BLUE + "#0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   B.%s        " + ANSI_BLUE + "#0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ")\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 getBConditionalMarker(instructionExpression & 0xf),
                 conditionalJumpLocation, (conditionalJumpLocation + 0x100));
     }
     private static String printImTooLazy(String name, int instructionExpression, int offset){
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   "+name+"           . . . \n"+ ANSI_RESET,
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression);
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   "+name+"           . . . \n"+ ANSI_RESET,
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression);
     }
 
     private static String printSUBSimplified(int instructionExpression, int offset){
@@ -437,8 +437,8 @@ public class BinToAsmPrinter {
         int imm12 = instructionExpression >> 10 & 0xFFF; // unsigned only
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   SUB (imm)   " + ANSI_GREEN + "%s%d, " + ANSI_BLUE + "%s%d, #0x%x" + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   SUB (imm)   " + ANSI_GREEN + "%s%d, " + ANSI_BLUE + "%s%d, #0x%x" + ANSI_RESET + "\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 wx, Rt, wx, Rn, imm12);
     }
 
@@ -448,8 +448,8 @@ public class BinToAsmPrinter {
         int Rd = instructionExpression & 0x1F;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   MOV (reg)   " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "%s%d" + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   MOV (reg)   " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "%s%d" + ANSI_RESET + "\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 sfHw, Rm, sfHw, Rd);
     }
 
@@ -458,8 +458,8 @@ public class BinToAsmPrinter {
         int imm = instructionExpression >> 10 & 0xFFF;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CMN         " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CMN         " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "#0x%x" + ANSI_RESET + "\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 (instructionExpression >> 31 == 0) ? "w" : "x", Rn, imm);
     }
 
@@ -471,8 +471,8 @@ public class BinToAsmPrinter {
 
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   LDR(imm)    " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "[%s%d, #0x%x]" + ANSI_RESET + "     (note: unsigned offset)\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   LDR(imm)    " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "[%s%d, #0x%x]" + ANSI_RESET + "     (note: unsigned offset)\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 wx, Rt, wx, Rn, imm12);
     }
     private static String printLRDBImmUnsignSimplified(int instructionExpression, int offset){
@@ -482,8 +482,8 @@ public class BinToAsmPrinter {
         int imm12 = (instructionExpression >> 10 & 0xFFF) * 8; // unsigned only
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   LDRB(imm)   " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "[%s%d, #0x%x]" + ANSI_RESET + "     (note: unsigned offset)\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   LDRB(imm)   " + ANSI_GREEN + "%s%d " + ANSI_BLUE + "[%s%d, #0x%x]" + ANSI_RESET + "     (note: unsigned offset)\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 wx, Rt, wx, Rn, imm12);
     }
 
@@ -494,9 +494,9 @@ public class BinToAsmPrinter {
         int LSL = (instructionExpression >> 22 & 0b1) == 1 ? 12 : 0;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CMP         " + ANSI_GREEN + sf + "%d," +
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CMP         " + ANSI_GREEN + sf + "%d," +
                         ANSI_BLUE + "0x%x" + ANSI_RESET + " (Real: " + ANSI_BLUE + "#0x%x" + ANSI_RESET + ") " + ANSI_PURPLE + "LSL #%d" + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 Rn,
                 conditionalJumpLocation, (conditionalJumpLocation + 0x100),
                 LSL);
@@ -527,9 +527,9 @@ public class BinToAsmPrinter {
         }
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CMP (sr)    " + ANSI_GREEN + sf + "%d," +
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   CMP (sr)    " + ANSI_GREEN + sf + "%d," +
                         ANSI_BLUE + sf + "%d " + ANSI_BLUE + LSLStr + ANSI_PURPLE + " %d" + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression,
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression,
                 Rn, Rm, imm6);
     }
 
@@ -544,23 +544,23 @@ public class BinToAsmPrinter {
             imm = instructionExpression >> 10 & 0x1fff;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   AND         " + ANSI_GREEN + sf + "%d, " + ANSI_BLUE +
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   AND         " + ANSI_GREEN + sf + "%d, " + ANSI_BLUE +
                         sf + "%d" + ANSI_PURPLE + " # ??? 0b%s " + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression, Rn, Rd, Converter.intToBinaryString(imm));
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression, Rn, Rd, Converter.intToBinaryString(imm));
     }
 
     private static String printRetSimplified(int instructionExpression, int offset){
         int Xn = (instructionExpression >> 5) & 0x1F;
 
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   RET        " + ANSI_GREEN + " X%d" + ANSI_RESET + "\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression, Xn == 0 ? 30 : Xn);
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   RET        " + ANSI_GREEN + " X%d" + ANSI_RESET + "\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression, Xn == 0 ? 30 : Xn);
     }
 
     private static String printUnknownSimplified(int instructionExpression, int offset){
         return String.format(
-                "%05x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   ???          0b"+ANSI_RESET+ Converter.intToBinaryString(instructionExpression) +"\n",
-                offset, Integer.reverseBytes(instructionExpression), instructionExpression);
+                "%06x 7100%06x "+ANSI_CYAN+"%08x (%08x)"+ANSI_YELLOW + "   ???          0b"+ANSI_RESET+ Converter.intToBinaryString(instructionExpression) +"\n",
+                offset+0x100, offset,Integer.reverseBytes(instructionExpression), instructionExpression);
     }
 
     private static String intAsBinString(int number) {

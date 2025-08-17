@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2025 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -66,7 +66,10 @@ public class UsbCommunications extends CancellableRunnable {
             case "TinFoil":
                 module = new TinFoil(handler, nspMap, this, logPrinter);
                 break;
-            case "GoldLeafv0.10+":
+            case "GoldLeafv1.1.1+":
+                module = new GoldLeaf_111(handler, nspMap, this, logPrinter, nspFilterForGl);
+                break;
+            case "GoldLeafv0.10-1.1.0":
                 module = new GoldLeaf_010(handler, nspMap, this, logPrinter, nspFilterForGl);
                 break;
             case "GoldLeafv0.8-0.9":

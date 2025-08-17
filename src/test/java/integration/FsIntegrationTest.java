@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.util.Arrays;
 
-@Disabled
+//@Disabled
 public class FsIntegrationTest {
     static String pathToFirmware;
     static String pathToFirmwares;
@@ -25,19 +25,17 @@ public class FsIntegrationTest {
         pathToKeysFile = environment.getProdkeysLocation();
         saveTo = environment.getSaveToLocation() + File.separator + "FS_LPR";
         pathToFirmwares = environment.getFirmwaresLocation();
-        pathToFirmware = environment.getFirmwaresLocation() + File.separator + "Firmware 17.0.0";
+        pathToFirmware = environment.getFirmwaresLocation() + File.separator + "Firmware 15.0.0";
     }
 
     @DisplayName("FS Integration validation - everything")
     @Test
     void makeFss() throws Exception{
-        File[] fwDirs = new File(pathToFirmwares).listFiles((file, s) -> {
-            return (s.matches("^Firmware (9\\.|[0-9][0-9]\\.).*") && ! s.endsWith(".zip"));
-            //return s.matches("^Firmware 10.0.1.*");
-        });
+        File[] fwDirs = new File(pathToFirmwares).listFiles((file, s) ->
+                s.matches("^Firmware (9\\.|[0-9][0-9]\\.).*") && ! s.endsWith(".zip"));
         assert fwDirs != null;
         Arrays.sort(fwDirs);
-
+        Arrays.stream(fwDirs).forEach(System.out::println);
         for (File dir : fwDirs){
             System.out.println("\n\t\t\t"+dir.getName());
             FsPatchMaker fsPatchMaker = new FsPatchMaker(dir.getAbsolutePath(), pathToKeysFile, saveTo);
@@ -47,6 +45,7 @@ public class FsIntegrationTest {
         }
     }
 
+    @Disabled
     @DisplayName("FS Integration validation - one particular firmware")
     @Test
     void makeFs() throws Exception{
