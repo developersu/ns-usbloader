@@ -37,22 +37,22 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * GoldLeaf 0.8 processing
+ * GoldLeaf 1.1.1 processing
  */
 class GoldLeaf_111 extends TransferModule {
     private final boolean nspFilterForGl;
 
     //                     CMD
     private final byte[] CMD_GLCO_SUCCESS = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, 0x00, 0x00};         // used @ writeToUsb_GLCMD
-    private final byte[] CMD_GLCO_FAILURE = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, (byte) 0xAD, (byte) 0xDE};  // used @ writeToUsb_GLCMD TODO: TEST
+    private final byte[] CMD_GLCO_FAILURE = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, (byte) 0xAD, (byte) 0xDE};  // used @ writeToUsb_GLCMD
 
     // System.out.println((356 & 0x1FF) | ((1 + 100) & 0x1FFF) << 9); // 52068 // 0x00 0x00 0xCB 0x64
     private final byte[] GL_OBJ_TYPE_FILE = new byte[]{0x01, 0x00, 0x00, 0x00};
     private final byte[] GL_OBJ_TYPE_DIR  = new byte[]{0x02, 0x00, 0x00, 0x00};
 
-    private String recentPath = null;
-    private String[] recentDirs = null;
-    private String[] recentFiles = null;
+    private String recentPath;
+    private String[] recentDirs;
+    private String[] recentFiles;
 
     private final String[] nspMapKeySetIndexes;
 
@@ -236,17 +236,16 @@ class GoldLeaf_111 extends TransferModule {
                     if (startOrEndFile())
                         break main_loop;
                     break;
+                case CMD_UNKNOWN:
                 default:
                     writeGL_FAIL("GL Unknown command: "+readByte[4]+" [it's a very bad sign]");
             }
         }
         // Close (and flush) all opened streams.
-        if (! writeFilesMap.isEmpty()){
-            for (var bufferedOutputStream: writeFilesMap.values()){
-                try{
-                    bufferedOutputStream.close();
-                } catch (IOException | NullPointerException ignored){}
-            }
+        for (var bufferedOutputStream: writeFilesMap.values()){
+            try{
+                bufferedOutputStream.close();
+            } catch (IOException | NullPointerException ignored){}
         }
         closeOpenedReadFilesGl();
     }
@@ -258,19 +257,28 @@ class GoldLeaf_111 extends TransferModule {
      * Close files opened for read/write
      */
     private void closeOpenedReadFilesGl(){
-        if (openReadFileNameAndPath != null){     // Perfect time to close our opened files
-            try{
-                randAccessFile.close();
-            }
-            catch (IOException | NullPointerException ignored){}
-            try{
-                splitReader.close();
-            }
-            catch (IOException | NullPointerException ignored){}
+        if (openReadFileNameAndPath != null){
+            closeRAFandSplitReader();
             openReadFileNameAndPath = null;
             randAccessFile = null;
             splitReader = null;
         }
+    }
+    private void closeRAFandSplitReader(){
+        try{
+            randAccessFile.close();
+        }
+        catch (IOException ioe_){
+            print("Unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
+        }
+        catch (Exception ignored){}
+        try{
+            splitReader.close();
+        }
+        catch (IOException ioe_){
+            print("Unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
+        }
+        catch (Exception ignored){}
     }
     /**
      * Handle StartFile & EndFile
@@ -278,11 +286,7 @@ class GoldLeaf_111 extends TransferModule {
      * @return true - failed, false - passed
      * */
     private boolean startOrEndFile(){
-        if (writeGL_PASS()){
-            print("GL Handle 'StartFile' command", EMsgType.FAIL);
-            return true;
-        }
-        return false;
+        return writeGL_PASS("GL Handle 'StartFile' command");
     }
     /**
      * Handle GetDriveCount
@@ -290,11 +294,7 @@ class GoldLeaf_111 extends TransferModule {
      * @return true - failed, false - passed
      */
     private boolean getDriveCount(){
-        if (writeGL_PASS(intToArrLE(2))) {
-            print("GL Handle 'ListDrives' command", EMsgType.FAIL);
-            return true;
-        }
-        return false;
+        return writeGL_PASS(intToArrLE(2),"GL Handle 'ListDrives' command");
     }
     /**
      * Handle GetDriveInfo
@@ -315,16 +315,16 @@ class GoldLeaf_111 extends TransferModule {
         if (driveNo == 0){ // 0 == VIRTUAL DRIVE
             driveLabel = "Virtual".getBytes(StandardCharsets.UTF_8);
             driveLabelLen = intToArrLE(driveLabel.length);
-            driveLetter = "VIRT".getBytes(StandardCharsets.UTF_8);      // TODO: Consider moving to class field declaration
-            driveLetterLen = intToArrLE(driveLetter.length);// since GL 0.7
+            driveLetter = "VIRT".getBytes(StandardCharsets.UTF_8);
+            driveLetterLen = intToArrLE(driveLetter.length);
             totalFreeSpace = new byte[4];
             totalSizeLong = virtDriveSize;
         }
         else { //1 == User home dir
             driveLabel = "Home".getBytes(StandardCharsets.UTF_8);
-            driveLabelLen = intToArrLE(driveLabel.length);// since GL 0.7
+            driveLabelLen = intToArrLE(driveLabel.length);
             driveLetter = "HOME".getBytes(StandardCharsets.UTF_8);
-            driveLetterLen = intToArrLE(driveLetter.length);// since GL 0.7
+            driveLetterLen = intToArrLE(driveLetter.length);
             var userHomeDir = new File(System.getProperty("user.home"));
             totalFreeSpace = Arrays.copyOfRange(longToArrLE(userHomeDir.getFreeSpace()), 0, 4);;
             totalSizeLong = userHomeDir.getTotalSpace();
@@ -339,24 +339,15 @@ class GoldLeaf_111 extends TransferModule {
                 totalFreeSpace,
                 totalSize);
 
-        if (writeGL_PASS(command)) {
-            print("GL Handle 'GetDriveInfo' command", EMsgType.FAIL);
-            return true;
-        }
-
-        return false;
+        return writeGL_PASS(command, "GL Handle 'GetDriveInfo' command");
     }
     /**
      * Handle SpecialPathCount
+     * Let's declare nothing. Write count of special paths
      * @return true - failed, false - passed
      * */
     private boolean getSpecialPathCount(){
-        // Let's declare nothing =) Write count of special paths
-        if (writeGL_PASS(intToArrLE(0))) {
-            print("GL Handle 'SpecialPathCount' command", EMsgType.FAIL);
-            return true;
-        }
-        return false;
+        return writeGL_PASS(intToArrLE(0), "GL Handle 'SpecialPathCount' command");
     }
     /**
      * Handle SpecialPath
@@ -371,18 +362,9 @@ class GoldLeaf_111 extends TransferModule {
      * */
     private boolean getDirectoryOrFileCount(String path, boolean isGetDirectoryCount) {
         if (path.equals("VIRT:/")) {
-            if (isGetDirectoryCount){
-                if (writeGL_PASS()) {
-                    print("GL Handle 'GetDirectoryCount' command", EMsgType.FAIL);
-                    return true;
-                }
-            }
-            else {
-                if (writeGL_PASS(intToArrLE(nspMap.size()))) {
-                    print("GL Handle 'GetFileCount' command Count = "+nspMap.size(), EMsgType.FAIL);
-                    return true;
-                }
-            }
+            return isGetDirectoryCount ?
+                    writeGL_PASS("GL Handle 'GetDirectoryCount' command") :
+                    writeGL_PASS(intToArrLE(nspMap.size()), "GL Handle 'GetFileCount' command Count = " + nspMap.size());
         }
         else if (path.startsWith("HOME:/")){
             // Let's make it normal path
@@ -394,15 +376,10 @@ class GoldLeaf_111 extends TransferModule {
                 return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [doesn't exist or not a folder]");
             // Save recent dir path
             this.recentPath = path;
-            String[] filesOrDirs = getFilesOrDirs(isGetDirectoryCount, pathDir);
+            var filesOrDirs = getFilesOrDirs(isGetDirectoryCount, pathDir);
             // If somehow there are no folders, let's say 0;
-            if (filesOrDirs == null){
-                if (writeGL_PASS()) {
-                    print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.FAIL);
-                    return true;
-                }
-                return false;
-            }
+            if (filesOrDirs == null)
+                return writeGL_PASS("GL Handle 'GetDirectoryOrFileCount' command");
             // Sorting is mandatory NOTE: Proxy tail
             Arrays.sort(filesOrDirs, String.CASE_INSENSITIVE_ORDER);
 
@@ -411,31 +388,17 @@ class GoldLeaf_111 extends TransferModule {
             else
                 this.recentFiles = filesOrDirs;
             // Otherwise, let's tell how may folders are in there
-            if (writeGL_PASS(intToArrLE(filesOrDirs.length))) {
-                print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.FAIL);
-                return true;
-            }
+            return writeGL_PASS(intToArrLE(filesOrDirs.length), "GL Handle 'GetDirectoryOrFileCount' command");
         }
         else if (path.startsWith("SPEC:/")){
-            if (isGetDirectoryCount){       // If dir request then 0 dirs
-                if (writeGL_PASS()) {
-                    print("GL Handle 'GetDirectoryCount' command", EMsgType.FAIL);
-                    return true;
-                }
-            }
-            else if (selectedFile != null){ // Else it's file request, if we have selected then we will report 1.
-                if (writeGL_PASS(intToArrLE(1))) {
-                    print("GL Handle 'GetFileCount' command Count = 1", EMsgType.FAIL);
-                    return true;
-                }
-            }
-            else
-                return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] (file) - "+path);
+            if (isGetDirectoryCount)        // If dir request then 0 dirs
+                return writeGL_PASS("GL Handle 'GetDirectoryCount' command");
+            else if (selectedFile != null)  // Else it's file request, if we have selected then we will report 1.
+                return writeGL_PASS(intToArrLE(1), "GL Handle 'GetFileCount' command Count = 1");
+            return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] (file) - "+path);
         }
-        else { // If requested drive is not VIRT and not HOME then reply error
-            return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] "+(isGetDirectoryCount?"(dir) - ":"(file) - ")+path);
-        }
-        return false;
+        // If requested drive is not VIRT and not HOME then reply error
+        return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] "+(isGetDirectoryCount?"(dir) - ":"(file) - ")+path);
     }
     private String[] getFilesOrDirs(boolean isGetDirectoryCount, File pathDir) {
         String[] filesOrDirs;
@@ -447,18 +410,12 @@ class GoldLeaf_111 extends TransferModule {
             });
         }
         else {
-            if (nspFilterForGl){
-                filesOrDirs = pathDir.list((current, name) -> {
-                    var dir = new File(current, name);
-                    return (! dir.isDirectory() && name.toLowerCase().endsWith(".nsp"));
+            filesOrDirs = pathDir.list((current, name) -> {
+                var dir = new File(current, name);
+                return (! dir.isDirectory() && nspFilterForGl ?
+                                                name.toLowerCase().endsWith(".nsp") :
+                                                ! dir.isHidden());
                 });
-            }
-            else {
-                filesOrDirs = pathDir.list((current, name) -> {
-                    var dir = new File(current, name);
-                    return (! dir.isDirectory() && (! dir.isHidden()));
-                });
-            }
         }
         return filesOrDirs;
     }
@@ -499,12 +456,7 @@ class GoldLeaf_111 extends TransferModule {
                 else
                     return writeGL_FAIL("GL Handle 'GetDirectory' command [doesn't exist or not a folder]");
             }
-
-            if (writeGL_PASS(command)) {
-                print("GL Handle 'GetDirectory' command.", EMsgType.FAIL);
-                return true;
-            }
-            return false;
+            return writeGL_PASS(command, "GL Handle 'GetDirectory' command.");
         }
         // VIRT:// and any other
         return writeGL_FAIL("GL Handle 'GetDirectory' command for virtual drive [no folders support]");
@@ -520,9 +472,8 @@ class GoldLeaf_111 extends TransferModule {
             dirName = updateHomePath(dirName);
 
             if (dirName.equals(recentPath) && recentFiles != null && recentFiles.length != 0){
-                byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_8);
-
-                command.add(intToArrLE(fileNameBytes.length)); //Since GL 0.7
+                var fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_8);
+                command.add(intToArrLE(fileNameBytes.length));
                 command.add(fileNameBytes);
             }
             else {
@@ -535,55 +486,38 @@ class GoldLeaf_111 extends TransferModule {
                 if (nspFilterForGl){
                     this.recentFiles = pathDir.list((current, name) -> {
                         var dir = new File(current, name);
-                        return (! dir.isDirectory() && name.toLowerCase().endsWith(".nsp"));      // TODO: FIX FOR WIN ? MOVE TO PROD
+                        return (! dir.isDirectory() && name.toLowerCase().endsWith(".nsp"));
                     });
                 }
                 else {
                     this.recentFiles = pathDir.list((current, name) -> {
                         var dir = new File(current, name);
-                        return (! dir.isDirectory() && (! dir.isHidden()));    // TODO: FIX FOR WIN
+                        return (! dir.isDirectory() && (! dir.isHidden()));
                     });
                 }
                 // Check that we still don't have any fuckups
                 if (this.recentFiles != null && this.recentFiles.length > subDirNo){
-                    Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);        // TODO: NOTE: array sorting is an overhead for using poxy loops
+                    Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);
                     var fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_8);
-                    command.add(intToArrLE(fileNameBytes.length)); //Since GL 0.7
+                    command.add(intToArrLE(fileNameBytes.length));
                     command.add(fileNameBytes);
                 }
                 else
                     return writeGL_FAIL("GL Handle 'GetFile' command [doesn't exist or not a folder]");
             }
-
-            if (writeGL_PASS(command)) {
-                print("GL Handle 'GetFile' command.", EMsgType.FAIL);
-                return true;
-            }
-            return false;
+            return writeGL_PASS(command, "GL Handle 'GetFile' command.");
         }
-        else if (dirName.equals("VIRT:/")){
-            if (! nspMap.isEmpty()){    // therefore nspMapKeySetIndexes also != 0
-                var fileNameBytes = nspMapKeySetIndexes[subDirNo].getBytes(StandardCharsets.UTF_8);
-                command.add(intToArrLE(fileNameBytes.length));
-                command.add(fileNameBytes);
-                if (writeGL_PASS(command)) {
-                    print("GL Handle 'GetFile' command.", EMsgType.FAIL);
-                    return true;
-                }
-                return false;
-            }
+        else if (dirName.equals("VIRT:/") && (! nspMap.isEmpty())){ // thus nspMapKeySetIndexes also != 0
+            var fileNameBytes = nspMapKeySetIndexes[subDirNo].getBytes(StandardCharsets.UTF_8);
+            command.add(intToArrLE(fileNameBytes.length));
+            command.add(fileNameBytes);
+            return writeGL_PASS(command, "GL Handle 'GetFile' command.");
         }
-        else if (dirName.equals("SPEC:/")){
-            if (selectedFile != null){
-                byte[] fileNameBytes = selectedFile.getName().getBytes(StandardCharsets.UTF_8);
-                command.add(intToArrLE(fileNameBytes.length));
-                command.add(fileNameBytes);
-                if (writeGL_PASS(command)) {
-                    print("GL Handle 'GetFile' command.", EMsgType.FAIL);
-                    return true;
-                }
-                return false;
-            }
+        else if (dirName.equals("SPEC:/") && (selectedFile != null)){
+            byte[] fileNameBytes = selectedFile.getName().getBytes(StandardCharsets.UTF_8);
+            command.add(intToArrLE(fileNameBytes.length));
+            command.add(fileNameBytes);
+            return writeGL_PASS(command, "GL Handle 'GetFile' command.");
         }
         //  any other cases
         return writeGL_FAIL("GL Handle 'GetFile' command for virtual drive [no folders support?]");
@@ -606,11 +540,7 @@ class GoldLeaf_111 extends TransferModule {
                     command.add(GL_OBJ_TYPE_FILE);
                     command.add(longToArrLE(fileDirElement.length()));
                 }
-                if (writeGL_PASS(command)) {
-                    print("GL Handle 'StatPath' command.", EMsgType.FAIL);
-                    return true;
-                }
-                return false;
+                return writeGL_PASS(command, "GL Handle 'StatPath' command.");
             }
         }
         else if (filePath.startsWith("VIRT:/")) {
@@ -623,11 +553,7 @@ class GoldLeaf_111 extends TransferModule {
                 else
                     command.add(longToArrLE(nspMap.get(filePath).length()));    // YES, THIS IS LONG!
 
-                if (writeGL_PASS(command)) {
-                    print("GL Handle 'StatPath' command.", EMsgType.FAIL);
-                    return true;
-                }
-                return false;
+                return writeGL_PASS(command, "GL Handle 'StatPath' command.");
             }
         }
         else if (filePath.startsWith("SPEC:/")){
@@ -636,11 +562,7 @@ class GoldLeaf_111 extends TransferModule {
             if (selectedFile.getName().equals(filePath)){
                 command.add(GL_OBJ_TYPE_FILE);
                 command.add(longToArrLE(selectedFile.length()));
-                if (writeGL_PASS(command)) {
-                    print("GL Handle 'StatPath' command.", EMsgType.FAIL);
-                    return true;
-                }
-                return false;
+                return writeGL_PASS(command, "GL Handle 'StatPath' command.");
             }
         }
         return writeGL_FAIL("GL Handle 'StatPath' command [no such folder] - "+filePath);
@@ -662,11 +584,7 @@ class GoldLeaf_111 extends TransferModule {
             if (! newFile.exists()){        // Else, report error
                 try {
                     if (new File(fileName).renameTo(newFile)){
-                        if (writeGL_PASS()) {
-                            print("GL Handle 'Rename' command.", EMsgType.FAIL);
-                            return true;
-                        }
-                        return false;
+                        return writeGL_PASS("GL Handle 'Rename' command.");
                     }
                 }
                 catch (SecurityException ignored){} // Ah, leave it
@@ -686,11 +604,7 @@ class GoldLeaf_111 extends TransferModule {
             File fileToDel = new File(fileName);
             try {
                 if (fileToDel.delete()){
-                    if (writeGL_PASS()) {
-                        print("GL Handle 'Rename' command.", EMsgType.FAIL);
-                        return true;
-                    }
-                    return false;
+                    return writeGL_PASS("GL Handle 'Rename' command.");
                 }
             }
             catch (SecurityException ignored){} // Ah, leave it
@@ -721,12 +635,7 @@ class GoldLeaf_111 extends TransferModule {
         catch (SecurityException | IOException ignored){}
 
         if (result) {
-            if (writeGL_PASS()) {
-                print("GL Handle 'Create' command.", EMsgType.FAIL);
-                return true;
-            }
-            //print("GL Handle 'Create' command.", EMsgType.PASS);
-            return false;
+            return writeGL_PASS("GL Handle 'Create' command.");
         }
 
         return writeGL_FAIL("GL Handle 'Delete' command [not supported for virtual drive/wrong drive/read-only directory]");
@@ -747,14 +656,8 @@ class GoldLeaf_111 extends TransferModule {
             // If we don't have this file opened, let's open it
             if (openReadFileNameAndPath == null || (! openReadFileNameAndPath.equals(fNamePath))) {
                 // Try close what opened
-                if (openReadFileNameAndPath != null){
-                    try{
-                        randAccessFile.close();
-                    }catch (Exception ignored){}
-                    try{
-                        splitReader.close();
-                    }catch (Exception ignored){}
-                }
+                if (openReadFileNameAndPath != null)
+                    closeRAFandSplitReader();
                 // Open what has to be opened
                 try{
                     var tempFile = nspMap.get(fileName.substring(6));
@@ -782,7 +685,7 @@ class GoldLeaf_111 extends TransferModule {
                 if (openReadFileNameAndPath != null){
                     try{
                         randAccessFile.close();
-                    }catch (IOException | NullPointerException ignored){}
+                    }catch (Exception ignored){}
                 }
                 // Open what has to be opened
                 try{
@@ -812,8 +715,7 @@ class GoldLeaf_111 extends TransferModule {
                         "\n         At offset: " + offset +
                         "\n         Requested: " + size +
                         "\n         Received:  " + bytesRead);
-            if (writeGL_PASS(longToArrLE(size))) {    // Let's tell as a command about our result.
-                print("GL Handle 'ReadFile' command [CMD]", EMsgType.FAIL);
+            if (writeGL_PASS(longToArrLE(size), "GL Handle 'ReadFile' command [CMD]")) {    // Let's tell as a command about our result.
                 return true;
             }
             if (writeToUsb(chunk)) {    // Let's bypass bytes we read total
@@ -823,23 +725,7 @@ class GoldLeaf_111 extends TransferModule {
             return false;
         }
         catch (Exception ioe){
-            try{
-                randAccessFile.close();
-            }
-            catch (NullPointerException ignored){}
-            catch (IOException ioe_){
-                print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
-            }
-            try{
-                splitReader.close();
-            }
-            catch (NullPointerException ignored){}
-            catch (IOException ioe_){
-                print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
-            }
-            openReadFileNameAndPath = null;
-            randAccessFile = null;
-            splitReader = null;
+            closeOpenedReadFilesGl();
             return writeGL_FAIL("GL Handle 'ReadFile' command\n\t"+ioe.getMessage());
         }
     }
@@ -855,7 +741,7 @@ class GoldLeaf_111 extends TransferModule {
 
         fileName = updateHomePath(fileName);
         // Check if this file being used during this session
-        if (writeFilesMap.isEmpty() || (! writeFilesMap.containsKey(fileName))){
+        if (! writeFilesMap.containsKey(fileName)){
             try{                                     // If this file exists GL will take care; Otherwise, let's add it
                 writeFilesMap.put(fileName,
                         new BufferedOutputStream(new FileOutputStream(fileName, true))); // Open what we have to open
@@ -877,11 +763,7 @@ class GoldLeaf_111 extends TransferModule {
             return writeGL_FAIL("GL Handle 'WriteFile' command [1/1]\n\t"+ioe.getMessage());
         }
         // Report we're good
-        if (writeGL_PASS()) {
-            print("GL Handle 'WriteFile' command", EMsgType.FAIL);
-            return true;
-        }
-        return false;
+        return writeGL_PASS("GL Handle 'WriteFile' command");
     }
 
     /**
@@ -906,8 +788,7 @@ class GoldLeaf_111 extends TransferModule {
         var command = Arrays.asList(
                 intToArrLE(selectedFileNameBytes.length),
                 selectedFileNameBytes);
-        if (writeGL_PASS(command)) {
-            print("GL Handle 'SelectFile' command", EMsgType.FAIL);
+        if (writeGL_PASS(command, "GL Handle 'SelectFile' command")) {
             this.selectedFile = null;
             return true;
         }
@@ -995,7 +876,7 @@ class GoldLeaf_111 extends TransferModule {
 
             switch (result) {
                 case LibUsb.SUCCESS:
-                    byte[] receivedBytes = new byte[readBufTransferred.get()];
+                    var receivedBytes = new byte[readBufTransferred.get()];
                     readBuffer.get(receivedBytes);
                     return receivedBytes;
                 case LibUsb.ERROR_TIMEOUT:
@@ -1011,31 +892,44 @@ class GoldLeaf_111 extends TransferModule {
         return null;
     }
     /**
-     * Write new command. Shitty implementation.
+     * Write new command
      * */
-    private boolean writeGL_PASS(byte[] message){
-        return writeToUsb(
-                ByteBuffer.allocate(4096)
-                        .put(CMD_GLCO_SUCCESS)
-                        .put(message)
-                        .array());
+    private boolean writeGL_PASS(String onFailureText){
+        if (writeToUsb(Arrays.copyOf(CMD_GLCO_SUCCESS, 4096))){
+            print(onFailureText, EMsgType.FAIL);
+            return true;
+        }
+        return false;
     }
-    private boolean writeGL_PASS(){
-        return writeToUsb(Arrays.copyOf(CMD_GLCO_SUCCESS, 4096));
+    private boolean writeGL_PASS(byte[] message, String onFailureText){
+        var result = writeToUsb(ByteBuffer.allocate(4096)
+                .put(CMD_GLCO_SUCCESS)
+                .put(message)
+                .array());
+
+        if(result){
+            print(onFailureText, EMsgType.FAIL);
+            return true;
+        }
+        return false;
     }
-    private boolean writeGL_PASS(List<byte[]> messages){
+    private boolean writeGL_PASS(List<byte[]> messages, String onFailureText){
         var writeBuffer = ByteBuffer.allocate(4096)
                 .put(CMD_GLCO_SUCCESS);
         messages.forEach(writeBuffer::put);
-        return writeToUsb(writeBuffer.array());
-    }
-
-    private boolean writeGL_FAIL(String reportToUImsg){
-        if (writeToUsb(Arrays.copyOf(CMD_GLCO_FAILURE, 4096))){
-            print(reportToUImsg, EMsgType.WARNING);
+        if (writeToUsb(writeBuffer.array())){
+            print(onFailureText, EMsgType.FAIL);
             return true;
         }
-        print(reportToUImsg, EMsgType.FAIL);
+        return false;
+    }
+
+    private boolean writeGL_FAIL(String failureMessage){
+        if (writeToUsb(Arrays.copyOf(CMD_GLCO_FAILURE, 4096))){
+            print(failureMessage, EMsgType.WARNING);
+            return true;
+        }
+        print(failureMessage, EMsgType.FAIL);
         return false;
     }
     /**
@@ -1044,14 +938,15 @@ class GoldLeaf_111 extends TransferModule {
      *          'true' if errors happened
      * */
     private boolean writeToUsb(byte[] message){
-        //System.out.println(">");
         //RainbowHexDump.hexDumpUTF16LE(message);   // DEBUG
-        var writeBuffer = ByteBuffer.allocateDirect(message.length);   //writeBuffer.order() equals BIG_ENDIAN;
-        writeBuffer.put(message);                                             // Don't do writeBuffer.rewind();
         var writeBufTransferred = IntBuffer.allocate(1);
 
         while (! task.isCancelled()) {
-            int result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
+            int result = LibUsb.bulkTransfer(handlerNS,
+                    (byte) 0x01,
+                    ByteBuffer.allocateDirect(message.length).put(message), // order -> BIG_ENDIAN; Don't writeBuffer.rewind();
+                    writeBufTransferred,
+                    1000);  // TIMEOUT. 0 stands for infinite. Endpoint OUT = 0x01
 
             switch (result){
                 case LibUsb.SUCCESS:
