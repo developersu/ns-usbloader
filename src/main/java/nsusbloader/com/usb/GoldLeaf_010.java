@@ -193,10 +193,10 @@ class GoldLeaf_010 extends TransferModule {
                             break main_loop;
                         break;
                     case CMD_Rename:
-                        someLength1 = arrToIntLE(readByte, 12);
-                        someLength2 = arrToIntLE(readByte, 16+someLength1);
-                        if (rename(new String(readByte, 16, someLength1, StandardCharsets.UTF_8),
-                                new String(readByte, 16+someLength1+4, someLength2, StandardCharsets.UTF_8)))
+                        someLength1 = arrToIntLE(readByte, 8);
+                        someLength2 = arrToIntLE(readByte, 12+someLength1);
+                        if (rename(new String(readByte, 12, someLength1, StandardCharsets.UTF_8),
+                                new String(readByte, 12+someLength1+4, someLength2, StandardCharsets.UTF_8)))
                             break main_loop;
                         break;
                     case CMD_Delete:

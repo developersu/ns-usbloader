@@ -28,6 +28,9 @@ import java.io.File;
 import java.util.*;
 
 public abstract class TransferModule {
+    protected static final byte IN_EP = (byte) 0x81;
+    protected static final byte OUT_EP = (byte) 0x01;
+
     EFileStatus status = EFileStatus.UNKNOWN;
 
     LinkedHashMap<String, File> nspMap;
