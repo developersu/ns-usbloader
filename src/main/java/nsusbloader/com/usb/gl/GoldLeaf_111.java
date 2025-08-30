@@ -16,31 +16,33 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
 */
-package nsusbloader.com.usb;
+package nsusbloader.com.usb.gl;
 
 import javafx.application.Platform;
 import javafx.stage.FileChooser;
-import libKonogonka.RainbowDump;
 import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.com.helpers.NSSplitReader;
+import nsusbloader.com.usb.TransferModule;
+import nsusbloader.com.usb.UsbErrorCodes;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static nsusbloader.com.usb.gl.Converters.*;
+
 /**
  * GoldLeaf 1.1.1 processing
  */
-class GoldLeaf_111 extends TransferModule {
+public class GoldLeaf_111 extends TransferModule {
     //                     CMD
     private final static byte[] CMD_GLCO_FAILURE =
             Arrays.copyOf(new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, (byte) 0xAD, (byte) 0xDE}, 4096);  // used @ writeToUsb_GLCMD
@@ -48,8 +50,8 @@ class GoldLeaf_111 extends TransferModule {
             new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, 0x00, 0x00};         // used @ writeToUsb_GLCMD
 
     // System.out.println((356 & 0x1FF) | ((1 + 100) & 0x1FFF) << 9); // 52068 // 0x00 0x00 0xCB 0x64
-    private final byte[] GL_OBJ_TYPE_FILE = new byte[]{0x01, 0x00, 0x00, 0x00};
-    private final byte[] GL_OBJ_TYPE_DIR  = new byte[]{0x02, 0x00, 0x00, 0x00};
+    private final byte[] GL_OBJECT_TYPE_FILE = new byte[]{0x01, 0x00, 0x00, 0x00};
+    private final byte[] GL_OBJECT_TYPE_DIR = new byte[]{0x02, 0x00, 0x00, 0x00};
 
     private final boolean nspFilter;
 
@@ -72,59 +74,20 @@ class GoldLeaf_111 extends TransferModule {
     // For using in CMD_SelectFile with SPEC:/ prefix
     private File selectedFile;
 
-    private final CancellableRunnable task;
-
-    private enum GL_CMD {
-        CMD_GetDriveCount((byte) 1),
-        CMD_GetDriveInfo((byte) 2),
-        CMD_StatPath((byte) 3),
-        CMD_GetFileCount((byte) 4),
-        CMD_GetFile((byte) 5),
-        CMD_GetDirectoryCount((byte) 6),
-        CMD_GetDirectory((byte) 7),
-        CMD_StartFile((byte) 8),
-        CMD_ReadFile((byte) 9),
-        CMD_WriteFile((byte) 10),
-        CMD_EndFile((byte) 11),
-        CMD_Create((byte) 12),
-        CMD_Delete((byte) 13),
-        CMD_Rename((byte) 14),
-        CMD_GetSpecialPathCount((byte) 15),
-        CMD_GetSpecialPath((byte) 16),
-        CMD_SelectFile((byte) 17),
-        CMD_UNKNOWN((byte) 255);
-
-        private final byte id;
-
-        GL_CMD(byte id) {
-            this.id = id;
-        }
-
-        public static GL_CMD get(byte id) {
-            for(GL_CMD cmd : values()) {
-                if(cmd.id == id)
-                    return cmd;
-            }
-            return CMD_UNKNOWN;
-        }
-    }
-
-    GoldLeaf_111(DeviceHandle handler,
-                 LinkedHashMap<String, File> nspMap,
-                 CancellableRunnable task,
-                 ILogPrinter logPrinter,
-                 boolean nspFilter) {
+    public GoldLeaf_111(DeviceHandle handler,
+                        LinkedHashMap<String, File> nspMap,
+                        CancellableRunnable task,
+                        ILogPrinter logPrinter,
+                        boolean nspFilter) {
         super(handler, nspMap, task, logPrinter);
 
-        this.task = task;
         this.nspFilter = nspFilter;
 
         print("=========== GoldLeaf v1.1.1 ===========\n\t" +
                 "VIRT:/ equals files added into the application\n\t" +
-                "HOME:/ equals "
-                +System.getProperty("user.home"), EMsgType.INFO);
+                "HOME:/ equals " +homePath, EMsgType.INFO);
 
-        // Let's collect file names to the array to simplify our life
+        // Let's collect file names to the array (simplifies flow)
         nspMapKeySetIndexes = nspMap.keySet().toArray(new String[0]);
 
         // Calculate size of VIRT:/ drive
@@ -152,90 +115,88 @@ class GoldLeaf_111 extends TransferModule {
                 return;
 
             //RainbowDump.hexDumpUTF8(readByte);   // DEBUG
-            System.out.println("\t→: "+GL_CMD.get(readByte[4])); // FIXME: DEBUG
+            //System.out.println("\t→ "+ GoldleafCmd.get(readByte[4]));
 
             if (notGLCI(readByte))
                 continue;
 
-            switch (GL_CMD.get(readByte[4])) {
-                case CMD_GetDriveCount:
+            switch (GoldleafCmd.get(readByte[4])) {
+                case GetDriveCount:
                     if (getDriveCount())
                         break main_loop;
                     break;
-                case CMD_GetDriveInfo:
+                case GetDriveInfo:
                     if (getDriveInfo(arrToIntLE(readByte,8)))
                         break main_loop;
                     break;
-                case CMD_GetSpecialPathCount:
+                case GetSpecialPathCount:
                     if (getSpecialPathCount())
                         break main_loop;
                     break;
-                case CMD_GetSpecialPath:
+                case GetSpecialPath:
                     if (getSpecialPath(arrToIntLE(readByte,8)))
                         break main_loop;
                     break;
-                case CMD_GetDirectoryCount:
+                case GetDirectoryCount:
                     someLength1 = arrToIntLE(readByte, 8);
                     if (getDirectoryOrFileCount(new String(readByte, 12, someLength1, StandardCharsets.UTF_8), true))
                         break main_loop;
                     break;
-                case CMD_GetFileCount:
+                case GetFileCount:
                     someLength1 = arrToIntLE(readByte, 8);
                     if (getDirectoryOrFileCount(new String(readByte, 12, someLength1, StandardCharsets.UTF_8), false))
                         break main_loop;
                     break;
-                case CMD_GetDirectory:
+                case GetDirectory:
                     someLength1 = arrToIntLE(readByte, 8);
                     if (getDirectory(new String(readByte, 12, someLength1, StandardCharsets.UTF_8), arrToIntLE(readByte, someLength1+12)))
                         break main_loop;
                     break;
-                case CMD_GetFile:
+                case GetFile:
                     someLength1 = arrToIntLE(readByte, 8);
                     if (getFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_8), arrToIntLE(readByte, someLength1+12)))
                         break main_loop;
                     break;
-                case CMD_StatPath:
+                case StatPath:
                     someLength1 = arrToIntLE(readByte, 8);
                     if (statPath(new String(readByte, 12, someLength1, StandardCharsets.UTF_8)))
                         break main_loop;
                     break;
-                case CMD_Rename:
+                case Rename:
                     someLength1 = arrToIntLE(readByte, 8);
                     someLength2 = arrToIntLE(readByte, 12+someLength1);
                     if (rename(new String(readByte, 12, someLength1, StandardCharsets.UTF_8), // 8+4=12
                             new String(readByte, 12+someLength1+4, someLength2, StandardCharsets.UTF_8)))
                         break main_loop;
                     break;
-                case CMD_Delete:
-                    RainbowDump.hexDumpUTF8(readByte);   // TODO: DEBUG
-                    someLength1 = arrToIntLE(readByte, 12); // FIXME TEST ME!
-                    if (delete(new String(readByte, 16, someLength1, StandardCharsets.UTF_8)))
+                case Delete:
+                    someLength1 = arrToIntLE(readByte, 8);
+                    if (delete(new String(readByte, 12, someLength1, StandardCharsets.UTF_8)))
                         break main_loop;
                     break;
-                case CMD_Create:
-                    someLength1 = arrToIntLE(readByte, 12); // FIXME TEST ME!
-                    if (create(new String(readByte, 16, someLength1, StandardCharsets.UTF_8), readByte[8]))
+                case Create:
+                    someLength1 = arrToIntLE(readByte, 8);
+                    if (create(new String(readByte, 12, someLength1, StandardCharsets.UTF_8), readByte[8]))
                         break main_loop;
                     break;
-                case CMD_ReadFile:
+                case ReadFile:
                     someLength1 = arrToIntLE(readByte, 8);
                     if (readFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_8),
                             arrToLongLE(readByte, 12+someLength1),
                             arrToLongLE(readByte, 12+someLength1+8)))
                         break main_loop;
                     break;
-                case CMD_WriteFile:
+                case WriteFile:
                     someLength1 = arrToIntLE(readByte, 8);
-                    //if (writeFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_8), arrToLongLE(readByte, 12+someLength1)))
                     if (writeFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_8)))
                         break main_loop;
                     break;
-                case CMD_SelectFile:
+                case SelectFile:
                     if (selectFile())
                         break main_loop;
                     break;
-                case CMD_StartFile:
-                case CMD_EndFile:
+                case StartFile:
+                case EndFile:
                     if (startOrEndFile())
                         break main_loop;
                     break;
@@ -254,37 +215,6 @@ class GoldLeaf_111 extends TransferModule {
     }
     private boolean notGLCI(byte[] inputBytes){
         return ! "GLCI".equals(new String(inputBytes, 0, 4, StandardCharsets.US_ASCII));
-    }
-
-    /**
-     * Close files opened for read/write
-     */
-    private void closeOpenedReadFilesGl(){
-        if (openReadFileNameAndPath != null){
-            closeRAFandSplitReader();
-            openReadFileNameAndPath = null;
-            randAccessFile = null;
-            splitReader = null;
-        }
-    }
-    private void closeRAFandSplitReader(){
-        closeRAF();
-        try{
-            splitReader.close();
-        }
-        catch (IOException ioe_){
-            print("Unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
-        }
-        catch (Exception ignored){}
-    }
-    private void closeRAF(){
-        try{
-            randAccessFile.close();
-        }
-        catch (IOException ioe_){
-            print("Unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
-        }
-        catch (Exception ignored){}
     }
 
     /**
@@ -315,8 +245,7 @@ class GoldLeaf_111 extends TransferModule {
                 driveLabelLen,
                 driveLetter,
                 driveLetterLen,
-                totalFreeSpace,
-                totalSize;
+                totalFreeSpace;
         long totalSizeLong;
 
         if (driveNo == 0){ // 0 == VIRTUAL DRIVE
@@ -336,7 +265,7 @@ class GoldLeaf_111 extends TransferModule {
             totalFreeSpace = Arrays.copyOfRange(longToArrLE(userHomeDir.getFreeSpace()), 0, 4);;
             totalSizeLong = userHomeDir.getTotalSpace();
         }
-        totalSize = Arrays.copyOfRange(longToArrLE(totalSizeLong), 0, 4);
+        var totalSize = Arrays.copyOfRange(longToArrLE(totalSizeLong), 0, 4);
 
         var command = Arrays.asList(
                 driveLabelLen,
@@ -367,24 +296,25 @@ class GoldLeaf_111 extends TransferModule {
      * Handle GetDirectoryCount & GetFileCount
      * @return true - failed, false - passed
      * */
-    private boolean getDirectoryOrFileCount(String path, boolean isGetDirectoryCount) {
-        if (path.equals("VIRT:/")) {
+    private boolean getDirectoryOrFileCount(String glFileName, boolean isGetDirectoryCount) {
+        if (glFileName.equals("VIRT:/")) {
             return isGetDirectoryCount ?
                     writeGL_PASS("GL Handle 'GetDirectoryCount' command") :
                     writeGL_PASS(intToArrLE(nspMap.size()), "GL Handle 'GetFileCount' command Count = " + nspMap.size());
         }
-        else if (path.startsWith("HOME:/")){
-            // Let's make it normal path
-            path = updateHomePath(path);
+        else if (glFileName.startsWith("HOME:/")){
+            var path = updateHomePath(glFileName);
             var pathDir = new File(path);
 
-            // Make sure it's exists and it's path
-            if ((! pathDir.exists() ) || (! pathDir.isDirectory()) )
-                return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [doesn't exist or not a folder]");
-            // Save recent dir path
-            this.recentPath = path;
-            var filesOrDirs = getFilesOrDirs(isGetDirectoryCount, pathDir);
-            // If somehow there are no folders, let's say 0;
+            if (notExistsOrDirectory(pathDir))
+                return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [doesn't exist or not a folder] "+ pathDir);
+
+            this.recentPath = path; // Save recent dir path
+            var filesOrDirs = isGetDirectoryCount ?
+                    pathDir.list(this::isDirectoryAndNotHidden) :
+                    pathDir.list(this::isFileAndNotHidden);
+
+            // If no folders, let's say 0;
             if (filesOrDirs == null)
                 return writeGL_PASS("GL Handle 'GetDirectoryOrFileCount' command");
             // Sorting is mandatory NOTE: Proxy tail
@@ -397,34 +327,15 @@ class GoldLeaf_111 extends TransferModule {
             // Otherwise, let's tell how may folders are in there
             return writeGL_PASS(intToArrLE(filesOrDirs.length), "GL Handle 'GetDirectoryOrFileCount' command");
         }
-        else if (path.startsWith("SPEC:/")){
+        else if (glFileName.startsWith("SPEC:/")){
             if (isGetDirectoryCount)        // If dir request then 0 dirs
                 return writeGL_PASS("GL Handle 'GetDirectoryCount' command");
             else if (selectedFile != null)  // Else it's file request, if we have selected then we will report 1.
                 return writeGL_PASS(intToArrLE(1), "GL Handle 'GetFileCount' command Count = 1");
-            return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] (file) - "+path);
+            return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] (file) - "+glFileName);
         }
         // If requested drive is not VIRT and not HOME then reply error
-        return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] "+(isGetDirectoryCount?"(dir) - ":"(file) - ")+path);
-    }
-    private String[] getFilesOrDirs(boolean isGetDirectoryCount, File pathDir) {
-        String[] filesOrDirs;
-        // Now collecting every folder or file inside
-        if (isGetDirectoryCount){
-            filesOrDirs = pathDir.list((current, name) -> {
-                var dir = new File(current, name);
-                return (dir.isDirectory() && ! dir.isHidden());
-            });
-        }
-        else {
-            filesOrDirs = pathDir.list((current, name) -> {
-                var dir = new File(current, name);
-                return (! dir.isDirectory() && nspFilter ?
-                                                name.toLowerCase().endsWith(".nsp") :
-                                                ! dir.isHidden());
-                });
-        }
-        return filesOrDirs;
+        return writeGL_FAIL("GL Handle 'GetDirectoryOrFileCount' command [unknown drive request] "+(isGetDirectoryCount?"(dir) - ":"(file) - ")+glFileName);
     }
 
     /**
@@ -445,14 +356,11 @@ class GoldLeaf_111 extends TransferModule {
             else {
                 var pathDir = new File(dirName);
                 // Make sure it's exists and it's path
-                if ((! pathDir.exists() ) || (! pathDir.isDirectory()) )
+                if (notExistsOrDirectory(pathDir))
                     return writeGL_FAIL("GL Handle 'GetDirectory' command [doesn't exist or not a folder]");
                 this.recentPath = dirName;
                 // Now collecting every folder or file inside
-                this.recentDirs = pathDir.list((current, name) -> {
-                    var dir = new File(current, name);
-                    return (dir.isDirectory() && ! dir.isHidden());      // TODO: FIX FOR WIN ?
-                });
+                this.recentDirs = pathDir.list(this::isDirectoryAndNotHidden);
                 // Check that we still don't have any fuckups
                 if (this.recentDirs != null && this.recentDirs.length > subDirNo){
                     Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);
@@ -472,11 +380,11 @@ class GoldLeaf_111 extends TransferModule {
      * Handle GetFile
      * @return true - failed, false - passed
      * */
-    private boolean getFile(String dirName, int subDirNo){
+    private boolean getFile(String glDirName, int subDirNo){
         var command = new LinkedList<byte[]>();
 
-        if (dirName.startsWith("HOME:/")) {
-            dirName = updateHomePath(dirName);
+        if (glDirName.startsWith("HOME:/")) {
+            var dirName = updateHomePath(glDirName);
 
             if (dirName.equals(recentPath) && recentFiles != null && recentFiles.length != 0){
                 var fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_8);
@@ -485,23 +393,10 @@ class GoldLeaf_111 extends TransferModule {
             }
             else {
                 var pathDir = new File(dirName);
-                // Make sure it's exists and it's path
-                if ((! pathDir.exists() ) || (! pathDir.isDirectory()) ) // TODO: CHECK AND REMOVE .exists() IF REDUNDANT
+                if (notExistsOrDirectory(pathDir))
                     writeGL_FAIL("GL Handle 'GetFile' command [doesn't exist or not a folder]");
                 this.recentPath = dirName;
-                // Now collecting every folder or file inside
-                if (nspFilter){
-                    this.recentFiles = pathDir.list((current, name) -> {
-                        var dir = new File(current, name);
-                        return (! dir.isDirectory() && name.toLowerCase().endsWith(".nsp"));
-                    });
-                }
-                else {
-                    this.recentFiles = pathDir.list((current, name) -> {
-                        var dir = new File(current, name);
-                        return (! dir.isDirectory() && (! dir.isHidden()));
-                    });
-                }
+                this.recentFiles = pathDir.list(this::isFileAndNotHidden);
                 // Check that we still don't have any fuckups
                 if (this.recentFiles != null && this.recentFiles.length > subDirNo){
                     Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);
@@ -514,14 +409,14 @@ class GoldLeaf_111 extends TransferModule {
             }
             return writeGL_PASS(command, "GL Handle 'GetFile' command.");
         }
-        else if (dirName.equals("VIRT:/") && (! nspMap.isEmpty())){ // thus nspMapKeySetIndexes also != 0
+        else if (glDirName.equals("VIRT:/") && (! nspMap.isEmpty())){ // thus nspMapKeySetIndexes also != 0
             var fileNameBytes = nspMapKeySetIndexes[subDirNo].getBytes(StandardCharsets.UTF_8);
             command.add(intToArrLE(fileNameBytes.length));
             command.add(fileNameBytes);
             return writeGL_PASS(command, "GL Handle 'GetFile' command.");
         }
-        else if (dirName.equals("SPEC:/") && (selectedFile != null)){
-            byte[] fileNameBytes = selectedFile.getName().getBytes(StandardCharsets.UTF_8);
+        else if (glDirName.equals("SPEC:/") && (selectedFile != null)){
+            var fileNameBytes = selectedFile.getName().getBytes(StandardCharsets.UTF_8);
             command.add(intToArrLE(fileNameBytes.length));
             command.add(fileNameBytes);
             return writeGL_PASS(command, "GL Handle 'GetFile' command.");
@@ -541,9 +436,9 @@ class GoldLeaf_111 extends TransferModule {
 
             if (fileDirElement.exists()){
                 if (fileDirElement.isDirectory())
-                    command.add(GL_OBJ_TYPE_DIR);
+                    command.add(GL_OBJECT_TYPE_DIR);
                 else {
-                    command.add(GL_OBJ_TYPE_FILE);
+                    command.add(GL_OBJECT_TYPE_FILE);
                     command.add(longToArrLE(fileDirElement.length()));
                 }
                 return writeGL_PASS(command, "GL Handle 'StatPath' command for "+glFileName);
@@ -552,7 +447,7 @@ class GoldLeaf_111 extends TransferModule {
         else if (glFileName.startsWith("VIRT:/")) {
             var fileName = glFileName.replaceFirst("^.*?:/", "");
             if (nspMap.containsKey(fileName)){
-                command.add(GL_OBJ_TYPE_FILE);                              // THIS IS INT
+                command.add(GL_OBJECT_TYPE_FILE);                              // THIS IS INT
                 if (nspMap.get(fileName).isDirectory())
                     command.add(longToArrLE(splitFileSize.get(fileName)));    // YES, THIS IS LONG!;
                 else
@@ -564,7 +459,7 @@ class GoldLeaf_111 extends TransferModule {
         else if (glFileName.startsWith("SPEC:/")){
             var fileName = glFileName.replaceFirst("^.*?:/", "");
             if (selectedFile.getName().equals(fileName)){
-                command.add(GL_OBJ_TYPE_FILE);
+                command.add(GL_OBJECT_TYPE_FILE);
                 command.add(longToArrLE(selectedFile.length()));
                 return writeGL_PASS(command, "GL Handle 'StatPath' command for "+glFileName);
             }
@@ -577,7 +472,7 @@ class GoldLeaf_111 extends TransferModule {
      * */
     private boolean rename(String glFileName, String glNewFileName){
         if (glFileName.startsWith("HOME:/")){
-            // This shit takes too much time to explain, but such behaviour won't let GL to fail
+            // Prevent GL failures
             this.recentPath = null;
             this.recentFiles = null;
             this.recentDirs = null;
@@ -590,7 +485,9 @@ class GoldLeaf_111 extends TransferModule {
                     return writeGL_PASS("GL Handle 'Rename' command.");
                 }
             }
-            catch (SecurityException ignored){}
+            catch (SecurityException se){
+                return writeGL_FAIL("GL Handle 'Rename' command failed:\n\t" +se.getMessage());
+            }
         }
         // For VIRT:/ and others we don't serve requests
         return writeGL_FAIL("GL Handle 'Rename' command is not supported for virtual drive, selected files," +
@@ -600,48 +497,43 @@ class GoldLeaf_111 extends TransferModule {
      * Handle 'Delete'
      * @return true - failed, false - passed
      * */
-    private boolean delete(String fileName) {
-        if (fileName.startsWith("HOME:/")) {
-            fileName = updateHomePath(fileName);
+    private boolean delete(String glFileName) {
+        if (! glFileName.startsWith("HOME:/"))
+            return writeGL_FAIL("GL Handle 'Delete' command [not supported for virtual drive/wrong drive/read-only directory] "+glFileName);
 
-            File fileToDel = new File(fileName);
-            try {
-                if (fileToDel.delete()){
-                    return writeGL_PASS("GL Handle 'Rename' command.");
-                }
-            }
-            catch (SecurityException ignored){} // Ah, leave it
+        var file = new File(updateHomePath(glFileName));
+        try {
+            if (file.delete())
+                return writeGL_PASS("GL Handle 'Rename' command.");
         }
-        // For VIRT:/ and others we don't serve requests
-        return writeGL_FAIL("GL Handle 'Delete' command [not supported for virtual drive/wrong drive/read-only directory]");
+        catch (SecurityException ignored){} // Ah, leave it
+
+        return writeGL_FAIL("GL Handle 'Create' command [unknown drive/read-only directory]");
     }
     /**
      * Handle 'Create'
-     * @param type 1 for file
-     *             2 for folder
-     * @param fileName full path including new file name in the end
+     * @param type 1 → file,  2 → folder
+     * @param glFileName full path including new file name in the end
      * @return true - failed, false - passed
      * */
-    private boolean create(String fileName, byte type) {
-        if (! fileName.startsWith("HOME:/"))    // For VIRT:/ and others we don't serve requests
-            return writeGL_FAIL("GL Handle 'Delete' command [not supported for virtual drive/wrong drive/read-only directory]");
+    private boolean create(String glFileName, byte type) {
+        if (! glFileName.startsWith("HOME:/"))    // For VIRT:/ and others we don't serve requests
+            return writeGL_FAIL("GL Handle 'Create' command [not supported for virtual drive/wrong drive/read-only directory]"+glFileName);
 
-        fileName = updateHomePath(fileName);
-
-        boolean result = false;
+        var file = new File(updateHomePath(glFileName));
         try {
-            if (type == 1)
-                result = new File(fileName).createNewFile();
-            else if (type == 2)
-                result = new File(fileName).mkdir();
+            boolean result = switch (type) {
+                case 1 -> file.createNewFile();
+                case 2 -> file.mkdir();
+                default -> false;
+            };
+
+            if (result)
+                return writeGL_PASS("GL Handle 'Create' command.");
         }
         catch (SecurityException | IOException ignored){}
 
-        if (result) {
-            return writeGL_PASS("GL Handle 'Create' command.");
-        }
-
-        return writeGL_FAIL("GL Handle 'Delete' command [not supported for virtual drive/wrong drive/read-only directory]");
+        return writeGL_FAIL("GL Handle 'Create' command [unknown drive/read-only directory]");
     }
 
     /**
@@ -655,16 +547,14 @@ class GoldLeaf_111 extends TransferModule {
         //System.out.println("readFile "+glFileName+"\t"+offset+"\t"+size+"\n");
         var fileName = glFileName.replaceFirst("^.*?:/", "");
 
-        if (glFileName.startsWith("VIRT:/")){ // Could have split-file
+        if (glFileName.startsWith("VIRT:/")){                                              // Could have split-file
             // Let's find out which file requested
             var fNamePath = nspMap.get(fileName).getAbsolutePath(); // NOTE: 6 = "VIRT:/".length
             // If we don't have this file opened, let's open it
             if (openReadFileNameAndPath == null || (! openReadFileNameAndPath.equals(fNamePath))) {
-                // Try close what opened
-                if (openReadFileNameAndPath != null)
+                if (openReadFileNameAndPath != null)                                      // (Try to) close what opened
                     closeRAFandSplitReader();
-                // Open what has to be opened
-                try{
+                try{                                                                      // And open the rest
                     var tempFile = nspMap.get(fileName);
                     if (tempFile.isDirectory()) {
                         randAccessFile = null;
@@ -713,11 +603,11 @@ class GoldLeaf_111 extends TransferModule {
 
             if (randAccessFile == null){
                 splitReader.seek(offset);
-                bytesRead = splitReader.read(chunk);   // Let's find out how many bytes we got
+                bytesRead = splitReader.read(chunk);   // How many bytes we got?
             }
             else {
                 randAccessFile.seek(offset);
-                bytesRead = randAccessFile.read(chunk); // Let's find out how many bytes we got
+                bytesRead = randAccessFile.read(chunk); // How many bytes we got?
             }
 
             if (bytesRead != (int) size)    // Let's check that we read expected size
@@ -741,7 +631,6 @@ class GoldLeaf_111 extends TransferModule {
     /**
      * Handle 'WriteFile'
      * @param fileName full path including new file name in the end
-     *
      * @return true - failed, false - passed
      * */
     private boolean writeFile(String fileName) {
@@ -814,39 +703,56 @@ class GoldLeaf_111 extends TransferModule {
     private String updateHomePath(String glPath){
         if (isWindows)
             glPath = glPath.replaceAll("/", "\\\\");
-        glPath = homePath + glPath.substring(6);      // Do not use replaceAll since it will consider \ as special directive
+        glPath = homePath + glPath.substring(6);      // Better not using .replaceAll() since it will consider \ as special directive
         return glPath;
     }
-    /**
-     * Convert INT (Little endian) value to bytes-array representation
-     * */
-    private byte[] intToArrLE(int value){
-        return ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN)
-                .putInt(value)
-                .array();
-    }
-    /**
-     * Convert LONG (Little endian) value to bytes-array representation
-     * */
-    private byte[] longToArrLE(long value){
-        return ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN)
-                .putLong(value)
-                .array();
-    }
-    /**
-     * Convert bytes-array to INT value (Little endian)
-     * */
-    private int arrToIntLE(byte[] byteArrayWithInt, int intStartPosition){
-        return ByteBuffer.wrap(byteArrayWithInt).order(ByteOrder.LITTLE_ENDIAN).getInt(intStartPosition);
-    }
-    /**
-     * Convert bytes-array to LONG value (Little endian)
-     * */
-    private long arrToLongLE(byte[] byteArrayWithLong, int intStartPosition){
-        return ByteBuffer.wrap(byteArrayWithLong).order(ByteOrder.LITTLE_ENDIAN).getLong(intStartPosition);
+
+    private boolean isFileAndNotHidden(File parent, String child){
+            var entry = new File(parent, child);
+            return (! entry.isDirectory()) && (nspFilter ?
+                                                child.toLowerCase().endsWith(".nsp") :
+                                                ! entry.isHidden());
     }
 
-    //------------------------------------------------------------------------------------------------------------------
+    private boolean isDirectoryAndNotHidden(File parent, String child){
+        var dir = new File(parent, child);
+        return (dir.isDirectory() && ! dir.isHidden());
+    }
+
+    private boolean notExistsOrDirectory(File pathDir){
+        return (! pathDir.exists() ) || (! pathDir.isDirectory());
+    }
+
+    /**
+     * Close files opened for read/write
+     */
+    private void closeOpenedReadFilesGl(){
+        if (openReadFileNameAndPath != null){
+            closeRAFandSplitReader();
+            openReadFileNameAndPath = null;
+            randAccessFile = null;
+            splitReader = null;
+        }
+    }
+    private void closeRAFandSplitReader(){
+        closeRAF();
+        try{
+            splitReader.close();
+        }
+        catch (IOException ioe_){
+            print("Unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
+        }
+        catch (Exception ignored){}
+    }
+    private void closeRAF(){
+        try{
+            randAccessFile.close();
+        }
+        catch (IOException ioe_){
+            print("Unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
+        }
+        catch (Exception ignored){}
+    }
     /*----------------------------------------------------*/
     /*           GL READ/WRITE USB SPECIFIC               */
     /*----------------------------------------------------*/

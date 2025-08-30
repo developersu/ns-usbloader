@@ -50,7 +50,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
         <javafx.version>19.0.2.1</javafx.version>
-        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
     <issueManagement>
@@ -205,7 +205,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
-                    <release>11</release>
+                    <release>17</release>
                 </configuration>
             </plugin>
             <!-- Don't generate default JAR without dependencies -->
@@ -274,7 +274,7 @@
                             <!-- <dontWrapJar>true</dontWrapJar> -->
                             <jre>
                                 <path>%PWD%/jdk</path>
-                                <minVersion>11.0.0</minVersion>
+                                <minVersion>17.0.0</minVersion>
                             </jre>
                             <versionInfo>
                                 <fileVersion>${project.version}.0.0</fileVersion>

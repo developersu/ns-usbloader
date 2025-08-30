@@ -24,6 +24,7 @@ import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
+import nsusbloader.com.usb.gl.GoldLeaf_111;
 import org.usb4java.*;
 
 import java.io.*;
