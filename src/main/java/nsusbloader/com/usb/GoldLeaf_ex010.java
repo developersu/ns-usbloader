@@ -39,7 +39,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * GoldLeaf 0.8 processing
  */
-class GoldLeaf_010 extends TransferModule {
+class GoldLeaf_ex010 extends TransferModule {
     private boolean nspFilterForGl;
 
     //                     CMD
@@ -71,11 +71,11 @@ class GoldLeaf_010 extends TransferModule {
 
     private final CancellableRunnable task;
 
-    GoldLeaf_010(DeviceHandle handler,
-                 LinkedHashMap<String, File> nspMap,
-                 CancellableRunnable task,
-                 ILogPrinter logPrinter,
-                 boolean nspFilter)
+    GoldLeaf_ex010(DeviceHandle handler,
+                   LinkedHashMap<String, File> nspMap,
+                   CancellableRunnable task,
+                   ILogPrinter logPrinter,
+                   boolean nspFilter)
     {
         super(handler, nspMap, task, logPrinter);
 

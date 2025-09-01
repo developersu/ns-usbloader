@@ -1,7 +1,7 @@
 steps:
   - name: test-standard
     when:
-      event: [tag, push]
+      event: [tag, push, manual]
     image: maven:3-openjdk-17
     commands:
       - mvn -B -DskipTests clean package
@@ -14,7 +14,7 @@ steps:
 
   - name: make-windows-installer
     when:
-      event: [tag, push]
+      event: [tag, push, manual]
     image: wheatstalk/makensis:3
     commands:
       - cp target/NS-USBloader.exe misc/windows/NSIS/
@@ -32,7 +32,7 @@ steps:
 
   - name: emerge-legacy-artifact
     when:
-      event: [tag, push]
+      event: [tag, push, manual]
     image: maven:3-openjdk-17
     commands:
       - . ./.make_legacy
@@ -44,7 +44,7 @@ steps:
 
   - name: make-legacy-windows-installer
     when:
-      event: [tag, push]
+      event: [tag, push, manual]
     image: wheatstalk/makensis:3
     commands:
       - cp target/NS-USBloader.exe misc/windows/NSIS/
@@ -60,7 +60,7 @@ steps:
   
   - name: emerge-mac-m1-artifact
     when:
-      event: [tag, push]
+      event: [tag, push, manual]
     image: maven:3-openjdk-17
     commands:
       - . ./.make_m1

@@ -24,6 +24,7 @@ import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
+import nsusbloader.com.usb.gl.GoldLeaf_010;
 import nsusbloader.com.usb.gl.GoldLeaf_111;
 import org.usb4java.*;
 
@@ -67,10 +68,10 @@ public class UsbCommunications extends CancellableRunnable {
             case "TinFoil":
                 module = new TinFoil(handler, nspMap, this, logPrinter);
                 break;
-            case "GoldLeafv1.1.1+":
+            case "GoldLeafv1.1.0+":
                 module = new GoldLeaf_111(handler, nspMap, this, logPrinter, nspFilterForGl);
                 break;
-            case "GoldLeafv0.10-1.1.0":
+            case "GoldLeafv0.10-1.0.0":
                 module = new GoldLeaf_010(handler, nspMap, this, logPrinter, nspFilterForGl);
                 break;
             case "GoldLeafv0.8-0.9":
