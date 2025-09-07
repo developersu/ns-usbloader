@@ -395,7 +395,7 @@ public class GamesController implements Initializable, ISubscriber {
         // If USB selected
         if (isGoldLeaf()){
             final SettingsBlockGoldleafController goldleafSettings = settings.getGoldleafSettings();
-            usbNetCommunications = new UsbCommunications(nspToUpload, "GoldLeaf" + goldleafSettings.getGlVer(), goldleafSettings.getNSPFileFilterForGL());
+            usbNetCommunications = new UsbCommunications(nspToUpload, "GoldLeaf " + goldleafSettings.getGlVer(), goldleafSettings.getNSPFileFilterForGL());
         }
         else {
             if (getSelectedNetUsb().equals("USB")){

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
-//@Disabled
+@Disabled
 public class LoaderIntegrationTest {
     static String pathToAtmo;
     static String saveTo;

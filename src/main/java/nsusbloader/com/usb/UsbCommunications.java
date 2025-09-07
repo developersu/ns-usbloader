@@ -68,16 +68,16 @@ public class UsbCommunications extends CancellableRunnable {
             case "TinFoil":
                 module = new TinFoil(handler, nspMap, this, logPrinter);
                 break;
-            case "GoldLeafv1.1.0+":
+            case "GoldLeaf v1.1.1":
                 module = new GoldLeaf_111(handler, nspMap, this, logPrinter, nspFilterForGl);
                 break;
-            case "GoldLeafv0.10-1.0.0":
+            case "GoldLeaf v0.10-1.0.0":
                 module = new GoldLeaf_010(handler, nspMap, this, logPrinter, nspFilterForGl);
                 break;
-            case "GoldLeafv0.8-0.9":
+            case "GoldLeaf v0.8-0.9":
                 module = new GoldLeaf_08(handler, nspMap, this, logPrinter, nspFilterForGl);
                 break;
-            case "GoldLeafv0.7.x":
+            case "GoldLeaf v0.7.x":
                 module = new GoldLeaf_07(handler, nspMap, this, logPrinter, nspFilterForGl);
                 break;
             default:

@@ -79,7 +79,8 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 | v0.7 - 0.7.3     | v0.7+                |
 | v0.8 - 0.9       | v1.0+                |
 | v0.10 - 1.0.0    | v6.0+                |
-| v1.0.0           | v7.3+                |
+| v1.1.0           | none                 |
+| v1.1.1           | v7.3+                |
 
 where '+' means 'any next NS-USBloader version'.
 

@@ -125,7 +125,7 @@ public class GoldLeafCli {
 
     private void runGoldLeafBackend() throws InterruptedException {
         Runnable task = new UsbCommunications(filesList,
-                "GoldLeaf"+goldLeafVersion,
+                "GoldLeaf "+goldLeafVersion,
                 filterForNsp);
         Thread thread = new Thread(task);
         thread.setDaemon(true);

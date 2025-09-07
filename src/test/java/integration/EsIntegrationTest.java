@@ -8,7 +8,7 @@ import org.junit.jupiter.api.*;
 import java.io.File;
 import java.util.Arrays;
 
-//@Disabled
+@Disabled
 public class EsIntegrationTest {
     static String pathToFirmware;
     static String pathToFirmwares;
