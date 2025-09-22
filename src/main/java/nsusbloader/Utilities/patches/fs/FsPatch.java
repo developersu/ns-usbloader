@@ -148,7 +148,7 @@ public class FsPatch {
     private void findAllOffsets() throws Exception{
         this.wizard = new HeuristicFsWizard(_textSection);
         String errorsAndNotes = wizard.getErrorsAndNotes();
-        if (errorsAndNotes.length() > 0)
+        if (! errorsAndNotes.isEmpty())
             logPrinter.print(errorsAndNotes, EMsgType.WARNING);
     }
     private void mkDirs(){

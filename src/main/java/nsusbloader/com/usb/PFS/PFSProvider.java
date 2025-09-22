@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2025 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -33,9 +33,9 @@ import java.util.*;
 public class PFSProvider {
     private static final byte[] PFS0 = new byte[]{0x50, 0x46, 0x53, 0x30};  // PFS0
 
-    private String nspFileName;
-    private NCAFile[] ncaFiles;
-    private long bodySize;
+    private final String nspFileName;
+    private final NCAFile[] ncaFiles;
+    private final long bodySize;
     private int ticketID = -1;
 
     public PFSProvider(File nspFile, ILogPrinter logPrinter) throws Exception{
@@ -141,7 +141,7 @@ public class PFSProvider {
         byte[] b = new byte[1];                 // Temporary
         for (int i=0; i<filesCount; i++){
             ncaFN = new ArrayList<>();
-            randAccessFile.seek(filesCount*24+16+ncaNameOffsets.get(i));          // Files cont * 24(bit for each meta-data) + 4 bytes goes after all of them  + 12 bit what were in the beginning
+            randAccessFile.seek(filesCount*24L+16L+ncaNameOffsets.get(i)); // Files cont * 24(bit for each meta-data) + 4 bytes goes after all of them  + 12 bit what were in the beginning
             while ((randAccessFile.read(b)) != -1){
                 if (b[0] == 0x00)
                     break;

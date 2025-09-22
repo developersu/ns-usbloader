@@ -28,14 +28,20 @@ import java.io.File;
 import java.util.*;
 
 public abstract class TransferModule {
-    EFileStatus status = EFileStatus.UNKNOWN;
+    protected static final byte IN_EP = (byte) 0x81;
+    protected static final byte OUT_EP = (byte) 0x01;
 
-    LinkedHashMap<String, File> nspMap;
-    ILogPrinter logPrinter;
-    DeviceHandle handlerNS;
-    CancellableRunnable task;
+    protected EFileStatus status = EFileStatus.UNKNOWN;
 
-    TransferModule(DeviceHandle handler, LinkedHashMap<String, File> nspMap, CancellableRunnable task, ILogPrinter printer){
+    protected LinkedHashMap<String, File> nspMap;
+    protected ILogPrinter logPrinter;
+    protected DeviceHandle handlerNS;
+    protected CancellableRunnable task;
+
+    protected TransferModule(DeviceHandle handler,
+                             LinkedHashMap<String, File> nspMap,
+                             CancellableRunnable task,
+                             ILogPrinter printer){
         this.handlerNS = handler;
         this.nspMap = nspMap;
         this.task = task;
@@ -78,7 +84,7 @@ public abstract class TransferModule {
     }
     public EFileStatus getStatus(){ return status; }
 
-    void print(String message, EMsgType type){
+    protected void print(String message, EMsgType type){
         try {
             logPrinter.print(message, type);
         }

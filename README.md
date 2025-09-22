@@ -60,13 +60,14 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Japanese by [kuragehime](https://github.com/kuragehimekurara1)
 * Ryukyuan languages by [kuragehime](https://github.com/kuragehimekurara1)
 * Turkish language by [Erimsaholut](https://github.com/Erimsaholut)
+* Serbian (Latin) translation [BlytheScythe](https://github.com/BlytheScythe)
 
 * Angelo Elias Dalzotto makes packages in AUR
 * Phoenix[Msc] provides his shiny Mac M1 for debug
 
 ### System requirements
 
-- JDK 11 for macOS and Linux
+- JDK 17 for macOS and Linux
 - libusb, if you have a Mac with Apple Silicon (install via `brew install libusb`)
 
 ### Supported Goldleaf versions
@@ -77,7 +78,9 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 | v0.6.1           | v0.6                 |
 | v0.7 - 0.7.3     | v0.7+                |
 | v0.8 - 0.9       | v1.0+                |
-| v0.10            | v6.0+                |
+| v0.10 - 1.0.0    | v6.0+                |
+| v1.1.0           | none                 |
+| v1.1.1           | v7.3+                |
 
 where '+' means 'any next NS-USBloader version'.
 
@@ -247,7 +250,7 @@ We have this situation because of weird behaviour inside usb4java library used i
 
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
 
-Upload somewhere (create PR, use pastebin/google drive/whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add.
+If you're familiar with pull request, go ahead and create it! No worries it you are not. Just upload somewhere (like pastebin/google drive/whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add.
 
 To convert files of any locale to readable format (and vise-versa) you can use this site [https://itpro.cz/juniconv/](https://itpro.cz/juniconv/)
 
