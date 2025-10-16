@@ -18,13 +18,16 @@
 */
 package nsusbloader.Controllers;
 
+import nsusbloader.AppPreferences;
 import nsusbloader.NSLDataTypes.EFileStatus;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class NSLRowModel {
-
+    private Locale userLocale = AppPreferences.getInstance().getLocale();
+    private ResourceBundle rb = ResourceBundle.getBundle("locale", userLocale);
     private String status;
     private File nspFile;
     private String nspFileName;
@@ -65,23 +68,23 @@ public class NSLRowModel {
         markForUpload = value;
     }
     public File getNspFile(){ return nspFile; }
-    public void setStatus(EFileStatus status){                               // TODO: Localization
+    public void setStatus(EFileStatus status){
         switch (status){
             case UPLOADED:
-                this.status = "Success";
+                this.status = rb.getString("tab1_table_Lbl_Success");
                 markForUpload = false;
                 break;
             case FAILED:
-                this.status = "Failed";
+                this.status = rb.getString("tab1_table_Lbl_Failed");
                 break;
             case INDETERMINATE:
                 this.status = "...";
                 break;
             case UNKNOWN:
-                this.status = "Unknown";
+                this.status = rb.getString("tab1_table_Lbl_Unknown");
                 break;
             case INCORRECT_FILE_FAILED:
-                this.status = "Failed: Bad file";
+                this.status = rb.getString("tab1_table_Lbl_BadFile");
                 markForUpload = false;
                 break;
         }
