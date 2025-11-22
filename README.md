@@ -80,7 +80,6 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 | v0.8 - 0.9       | v1.0+                |
 | v0.10 - 1.0.0    | v6.0+                |
 | v1.1.0           | none                 |
-| v1.1.1           | v7.3+                |
 
 where '+' means 'any next NS-USBloader version'.
 
@@ -250,7 +249,7 @@ We have this situation because of weird behaviour inside usb4java library used i
 
 If you want to see this app translated to your language, go grab [this file](https://github.com/developersu/ns-usbloader/blob/master/src/main/resources/locale.properties) and translate it.
 
-If you're familiar with pull request, go ahead and create it! No worries it you are not. Just upload somewhere (like pastebin/google drive/whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add.
+If you're familiar with pull request, go ahead and create it! No worries if you are not. Just upload somewhere (like pastebin/google drive/whatever else). [Create new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add.
 
 To convert files of any locale to readable format (and vise-versa) you can use this site [https://itpro.cz/juniconv/](https://itpro.cz/juniconv/)
 
