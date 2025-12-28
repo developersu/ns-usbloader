@@ -29,7 +29,7 @@ public class AppPreferences {
 
     private final Preferences preferences;
     private final Locale locale;
-    public static final String[] GOLDLEAF_SUPPORTED_VERSIONS = {"v0.5", "v0.7.x", "v0.8-0.9", "v0.10-1.0.0", "v1.1.1"};
+    public static final String[] GOLDLEAF_SUPPORTED_VERSIONS = {"v0.5", "v0.7.x", "v0.8-0.9", "v0.10+"};
     private static final Font DEFAULT_FONT = Font.getDefault();
 
     private AppPreferences(){
