@@ -82,11 +82,25 @@
 	!insertmacro MUI_LANGUAGE "Romanian"
 	!insertmacro MUI_LANGUAGE "French"
 	!insertmacro MUI_LANGUAGE "Swedish"
+	!insertmacro MUI_LANGUAGE "SerbianLatin"
+	!insertmacro MUI_LANGUAGE "Ukrainian"
+	!insertmacro MUI_LANGUAGE "Turkish"
 
 ;Language strings
   LangString l10n_CreateShortcut ${LANG_ENGLISH} "Create Desktop Shortcut"
   LangString l10n_CreateShortcut ${LANG_RUSSIAN} "Создать ярлык на Рабочем столе"
+  LangString l10n_CreateShortcut ${LANG_SPANISHINTERNATIONAL} "Crear un acceso directo en el escritorio"
+  LangString l10n_CreateShortcut ${LANG_TRADCHINESE} "建立桌面捷徑"
+  LangString l10n_CreateShortcut ${LANG_JAPANESE} "デスクトップにショートカットを作成する"
+  LangString l10n_CreateShortcut ${LANG_ITALIAN} "Crea icone sul desktop"
+  LangString l10n_CreateShortcut ${LANG_PORTUGUESEBR} "Criar Atalho no Desktop"
+  LangString l10n_CreateShortcut ${LANG_ARABIC} "وضع اختصار على سطح المكتب"
+  LangString l10n_CreateShortcut ${LANG_CZECH} "Vytvořit zástupce na ploše"
+  LangString l10n_CreateShortcut ${LANG_FRENCH} "Créer Raccourci Bureau"
+  LangString l10n_CreateShortcut ${LANG_UKRAINIAN} "Створити ярлик на Робочому столі"
+  LangString l10n_CreateShortcut ${LANG_TURKISH} "Masaüstü Kısayolu oluştur"
 
+  BrandingText "NS-USBloader"
 ;--------------------------------
 Section "NS-USBloader" Install
 
