@@ -2,7 +2,7 @@ steps:
   - name: test-standard
     when:
       event: [tag, push, manual]
-    image: maven:3-eclipse-temurin-25-alpine
+    image: maven:3-amazoncorretto-25-debian
     commands:
       - mvn -B -DskipTests clean package
       - mvn test -B
@@ -33,7 +33,7 @@ steps:
   - name: emerge-legacy-artifact
     when:
       event: [tag, push, manual]
-    image: maven:3-eclipse-temurin-25-alpine
+    image: maven:3-amazoncorretto-25-debian
     commands:
       - . ./.make_legacy
       - mvn -B -DskipTests clean package
