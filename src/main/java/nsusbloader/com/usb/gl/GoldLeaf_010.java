@@ -803,7 +803,11 @@ public class GoldLeaf_010 extends TransferModule {
         var readBufTransferred = IntBuffer.allocate(1);
 
         while (! task.isCancelled()) {
-            int result = LibUsb.bulkTransfer(handlerNS, IN_EP, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+            int result = LibUsb.bulkTransfer(handlerNS,
+                    IN_EP,
+                    readBuffer,
+                    readBufTransferred,
+                    1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
             switch (result) {
                 case LibUsb.SUCCESS:

@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2024 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -23,24 +23,26 @@ import javafx.stage.FileChooser;
 import nsusbloader.MediatorControl;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
-import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.com.helpers.NSSplitReader;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+
+import static java.nio.charset.StandardCharsets.UTF_16LE;
+import static nsusbloader.NSLDataTypes.EMsgType.*;
+import static nsusbloader.com.DataConvertUtils.*;
 
 /**
  * GoldLeaf 0.8 processing
  */
 class GoldLeaf_08 extends TransferModule {
-    private boolean nspFilterForGl;
+    private final static int PACKET_SIZE = 4096;
+    private final boolean nspFilterForGl;
 
     //                     CMD
     private final byte[] CMD_GLCO_SUCCESS = new byte[]{0x47, 0x4c, 0x43, 0x4F, 0x00, 0x00, 0x00, 0x00};         // used @ writeToUsb_GLCMD
@@ -54,15 +56,15 @@ class GoldLeaf_08 extends TransferModule {
     private String[] recentDirs = null;
     private String[] recentFiles = null;
 
-    private String[] nspMapKeySetIndexes;
+    private final String[] nspMapKeySetIndexes;
 
     private String openReadFileNameAndPath;
     private RandomAccessFile randAccessFile;
     private NSSplitReader splitReader;
 
-    private HashMap<String, BufferedOutputStream> writeFilesMap;
+    private final HashMap<String, BufferedOutputStream> writeFilesMap;
     private long virtDriveSize;
-    private HashMap<String, Long> splitFileSize;
+    private final HashMap<String, Long> splitFileSize;
 
     private final boolean isWindows;
     private final String homePath;
@@ -106,7 +108,7 @@ class GoldLeaf_08 extends TransferModule {
         print("=========== GoldLeaf v0.8-0.9 ===========\n\t" +
                 "VIRT:/ equals files added into the application\n\t" +
                 "HOME:/ equals "
-                +System.getProperty("user.home"), EMsgType.INFO);
+                +System.getProperty("user.home"), INFO);
 
         // Let's collect file names to the array to simplify our life
         writeFilesMap = new HashMap<>();
@@ -169,49 +171,49 @@ class GoldLeaf_08 extends TransferModule {
                         break;
                     case CMD_GetDirectoryCount:
                         someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
-                        if (getDirectoryOrFileCount(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), true))
+                        if (getDirectoryOrFileCount(new String(readByte, 12, someLength1, UTF_16LE), true))
                             break main_loop;
                         break;
                     case CMD_GetFileCount:
                         someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
-                        if (getDirectoryOrFileCount(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), false))
+                        if (getDirectoryOrFileCount(new String(readByte, 12, someLength1, UTF_16LE), false))
                             break main_loop;
                         break;
                     case CMD_GetDirectory:
                         someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
-                        if (getDirectory(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), arrToIntLE(readByte, someLength1+12)))
+                        if (getDirectory(new String(readByte, 12, someLength1, UTF_16LE), arrToIntLE(readByte, someLength1+12)))
                             break main_loop;
                         break;
                     case CMD_GetFile:
                         someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
-                        if (getFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), arrToIntLE(readByte, someLength1+12)))
+                        if (getFile(new String(readByte, 12, someLength1, UTF_16LE), arrToIntLE(readByte, someLength1+12)))
                             break main_loop;
                         break;
                     case CMD_StatPath:
                         someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
-                        if (statPath(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE)))
+                        if (statPath(new String(readByte, 12, someLength1, UTF_16LE)))
                             break main_loop;
                         break;
                     case CMD_Rename:
                         someLength1 = arrToIntLE(readByte, 12) * 2; // Since GL 0.7
                         someLength2 = arrToIntLE(readByte, 16+someLength1) * 2; // Since GL 0.7
-                        if (rename(new String(readByte, 16, someLength1, StandardCharsets.UTF_16LE),
-                                new String(readByte, 16+someLength1+4, someLength2, StandardCharsets.UTF_16LE)))
+                        if (rename(new String(readByte, 16, someLength1, UTF_16LE),
+                                new String(readByte, 16+someLength1+4, someLength2, UTF_16LE)))
                             break main_loop;
                         break;
                     case CMD_Delete:
                         someLength1 = arrToIntLE(readByte, 12) * 2; // Since GL 0.7
-                        if (delete(new String(readByte, 16, someLength1, StandardCharsets.UTF_16LE)))
+                        if (delete(new String(readByte, 16, someLength1, UTF_16LE)))
                             break main_loop;
                         break;
                     case CMD_Create:
                         someLength1 = arrToIntLE(readByte, 12) * 2; // Since GL 0.7
-                        if (create(new String(readByte, 16, someLength1, StandardCharsets.UTF_16LE), readByte[8]))
+                        if (create(new String(readByte, 16, someLength1, UTF_16LE), readByte[8]))
                             break main_loop;
                         break;
                     case CMD_ReadFile:
                         someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
-                        if (readFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE),
+                        if (readFile(new String(readByte, 12, someLength1, UTF_16LE),
                                 arrToLongLE(readByte, 12+someLength1),
                                 arrToLongLE(readByte, 12+someLength1+8)))
                             break main_loop;
@@ -219,7 +221,7 @@ class GoldLeaf_08 extends TransferModule {
                     case CMD_WriteFile:
                         someLength1 = arrToIntLE(readByte, 8) * 2; // Since GL 0.7
                         //if (writeFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE), arrToLongLE(readByte, 12+someLength1)))
-                        if (writeFile(new String(readByte, 12, someLength1, StandardCharsets.UTF_16LE)))
+                        if (writeFile(new String(readByte, 12, someLength1, UTF_16LE)))
                             break main_loop;
                         break;
                     case CMD_SelectFile:
@@ -237,7 +239,7 @@ class GoldLeaf_08 extends TransferModule {
             }
         }
         // Close (and flush) all opened streams.
-        if (writeFilesMap.size() != 0){
+        if (!writeFilesMap.isEmpty()){
             for (BufferedOutputStream fBufOutStream: writeFilesMap.values()){
                 try{
                     fBufOutStream.close();
@@ -273,7 +275,7 @@ class GoldLeaf_08 extends TransferModule {
      * */
     private boolean startOrEndFile(){
         if (writeGL_PASS()){
-            print("GL Handle 'StartFile' command", EMsgType.FAIL);
+            print("GL Handle 'StartFile' command", FAIL);
             return true;
         }
         return false;
@@ -288,7 +290,7 @@ class GoldLeaf_08 extends TransferModule {
         byte[] drivesCnt = intToArrLE(2);   //2
         // Write count of drives
         if (writeGL_PASS(drivesCnt)) {
-            print("GL Handle 'ListDrives' command", EMsgType.FAIL);
+            print("GL Handle 'ListDrives' command", FAIL);
             return true;
         }
         return false;
@@ -313,18 +315,18 @@ class GoldLeaf_08 extends TransferModule {
 
         // 0 == VIRTUAL DRIVE
         if (driveNo == 0){
-            driveLabel = "Virtual".getBytes(StandardCharsets.UTF_16LE);
+            driveLabel = "Virtual".getBytes(UTF_16LE);
             driveLabelLen = intToArrLE(driveLabel.length / 2); // since GL 0.7
-            driveLetter = "VIRT".getBytes(StandardCharsets.UTF_16LE);      // TODO: Consider moving to class field declaration
+            driveLetter = "VIRT".getBytes(UTF_16LE);      // TODO: Consider moving to class field declaration
             driveLetterLen = intToArrLE(driveLetter.length / 2);// since GL 0.7
             totalFreeSpace = new byte[4];
             totalSizeLong = virtDriveSize;
             totalSize = Arrays.copyOfRange(longToArrLE(totalSizeLong), 0, 4);  // Dirty hack; now for GL!
         }
         else { //1 == User home dir
-            driveLabel = "Home".getBytes(StandardCharsets.UTF_16LE);
+            driveLabel = "Home".getBytes(UTF_16LE);
             driveLabelLen = intToArrLE(driveLabel.length / 2);// since GL 0.7
-            driveLetter = "HOME".getBytes(StandardCharsets.UTF_16LE);
+            driveLetter = "HOME".getBytes(UTF_16LE);
             driveLetterLen = intToArrLE(driveLetter.length / 2);// since GL 0.7
             File userHomeDir = new File(System.getProperty("user.home"));
             long totalFreeSpaceLong = userHomeDir.getFreeSpace();
@@ -344,7 +346,7 @@ class GoldLeaf_08 extends TransferModule {
         command.add(totalSize);
 
         if (writeGL_PASS(command)) {
-            print("GL Handle 'GetDriveInfo' command", EMsgType.FAIL);
+            print("GL Handle 'GetDriveInfo' command", FAIL);
             return true;
         }
 
@@ -360,7 +362,7 @@ class GoldLeaf_08 extends TransferModule {
         byte[] specialPathCnt = intToArrLE(0);
         // Write count of special paths
         if (writeGL_PASS(specialPathCnt)) {
-            print("GL Handle 'SpecialPathCount' command", EMsgType.FAIL);
+            print("GL Handle 'SpecialPathCount' command", FAIL);
             return true;
         }
         return false;
@@ -382,13 +384,13 @@ class GoldLeaf_08 extends TransferModule {
         if (path.equals("VIRT:/")) {
             if (isGetDirectoryCount){
                 if (writeGL_PASS()) {
-                    print("GL Handle 'GetDirectoryCount' command", EMsgType.FAIL);
+                    print("GL Handle 'GetDirectoryCount' command", FAIL);
                     return true;
                 }
             }
             else {
                 if (writeGL_PASS(intToArrLE(nspMap.size()))) {
-                    print("GL Handle 'GetFileCount' command Count = "+nspMap.size(), EMsgType.FAIL);
+                    print("GL Handle 'GetFileCount' command Count = "+nspMap.size(), FAIL);
                     return true;
                 }
             }
@@ -429,7 +431,7 @@ class GoldLeaf_08 extends TransferModule {
             // If somehow there are no folders, let's say 0;
             if (filesOrDirs == null){
                 if (writeGL_PASS()) {
-                    print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.FAIL);
+                    print("GL Handle 'GetDirectoryOrFileCount' command", FAIL);
                     return true;
                 }
                 return false;
@@ -443,20 +445,20 @@ class GoldLeaf_08 extends TransferModule {
                 this.recentFiles = filesOrDirs;
             // Otherwise, let's tell how may folders are in there
             if (writeGL_PASS(intToArrLE(filesOrDirs.length))) {
-                print("GL Handle 'GetDirectoryOrFileCount' command", EMsgType.FAIL);
+                print("GL Handle 'GetDirectoryOrFileCount' command", FAIL);
                 return true;
             }
         }
         else if (path.startsWith("SPEC:/")){
             if (isGetDirectoryCount){       // If dir request then 0 dirs
                 if (writeGL_PASS()) {
-                    print("GL Handle 'GetDirectoryCount' command", EMsgType.FAIL);
+                    print("GL Handle 'GetDirectoryCount' command", FAIL);
                     return true;
                 }
             }
             else if (selectedFile != null){ // Else it's file request, if we have selected then we will report 1.
                 if (writeGL_PASS(intToArrLE(1))) {
-                    print("GL Handle 'GetFileCount' command Count = 1", EMsgType.FAIL);
+                    print("GL Handle 'GetFileCount' command Count = 1", FAIL);
                     return true;
                 }
             }
@@ -480,7 +482,7 @@ class GoldLeaf_08 extends TransferModule {
             List<byte[]> command = new LinkedList<>();
 
             if (dirName.equals(recentPath) && recentDirs != null && recentDirs.length != 0){
-                byte[] dirNameBytes = recentDirs[subDirNo].getBytes(StandardCharsets.UTF_16LE);
+                byte[] dirNameBytes = recentDirs[subDirNo].getBytes(UTF_16LE);
 
                 command.add(intToArrLE(dirNameBytes.length / 2)); // Since GL 0.7
                 command.add(dirNameBytes);
@@ -499,7 +501,7 @@ class GoldLeaf_08 extends TransferModule {
                 // Check that we still don't have any fuckups
                 if (this.recentDirs != null && this.recentDirs.length > subDirNo){
                     Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);
-                    byte[] dirBytesName = recentDirs[subDirNo].getBytes(StandardCharsets.UTF_16LE);
+                    byte[] dirBytesName = recentDirs[subDirNo].getBytes(UTF_16LE);
                     command.add(intToArrLE(dirBytesName.length / 2)); // Since GL 0.7
                     command.add(dirBytesName);
                 }
@@ -510,7 +512,7 @@ class GoldLeaf_08 extends TransferModule {
             //    return proxyGetDirFile(true);
 
             if (writeGL_PASS(command)) {
-                print("GL Handle 'GetDirectory' command.", EMsgType.FAIL);
+                print("GL Handle 'GetDirectory' command.", FAIL);
                 return true;
             }
             return false;
@@ -530,7 +532,7 @@ class GoldLeaf_08 extends TransferModule {
             dirName = updateHomePath(dirName);
 
             if (dirName.equals(recentPath) && recentFiles != null && recentFiles.length != 0){
-                byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_16LE);
+                byte[] fileNameBytes = recentFiles[subDirNo].getBytes(UTF_16LE);
 
                 command.add(intToArrLE(fileNameBytes.length / 2)); //Since GL 0.7
                 command.add(fileNameBytes);
@@ -557,7 +559,7 @@ class GoldLeaf_08 extends TransferModule {
                 // Check that we still don't have any fuckups
                 if (this.recentFiles != null && this.recentFiles.length > subDirNo){
                     Arrays.sort(recentFiles, String.CASE_INSENSITIVE_ORDER);        // TODO: NOTE: array sorting is an overhead for using poxy loops
-                    byte[] fileNameBytes = recentFiles[subDirNo].getBytes(StandardCharsets.UTF_16LE);
+                    byte[] fileNameBytes = recentFiles[subDirNo].getBytes(UTF_16LE);
                     command.add(intToArrLE(fileNameBytes.length / 2)); //Since GL 0.7
                     command.add(fileNameBytes);
                 }
@@ -567,18 +569,18 @@ class GoldLeaf_08 extends TransferModule {
             //if (proxyForGL) // TODO: NOTE: PROXY TAILS
             //    return proxyGetDirFile(false);
             if (writeGL_PASS(command)) {
-                print("GL Handle 'GetFile' command.", EMsgType.FAIL);
+                print("GL Handle 'GetFile' command.", FAIL);
                 return true;
             }
             return false;
         }
         else if (dirName.equals("VIRT:/")){
-            if (nspMap.size() != 0){    // therefore nspMapKeySetIndexes also != 0
-                byte[] fileNameBytes = nspMapKeySetIndexes[subDirNo].getBytes(StandardCharsets.UTF_16LE);
+            if (!nspMap.isEmpty()){    // therefore nspMapKeySetIndexes also != 0
+                byte[] fileNameBytes = nspMapKeySetIndexes[subDirNo].getBytes(UTF_16LE);
                 command.add(intToArrLE(fileNameBytes.length / 2)); // since GL 0.7
                 command.add(fileNameBytes);
                 if (writeGL_PASS(command)) {
-                    print("GL Handle 'GetFile' command.", EMsgType.FAIL);
+                    print("GL Handle 'GetFile' command.", FAIL);
                     return true;
                 }
                 return false;
@@ -586,11 +588,11 @@ class GoldLeaf_08 extends TransferModule {
         }
         else if (dirName.equals("SPEC:/")){
             if (selectedFile != null){
-                byte[] fileNameBytes = selectedFile.getName().getBytes(StandardCharsets.UTF_16LE);
+                byte[] fileNameBytes = selectedFile.getName().getBytes(UTF_16LE);
                 command.add(intToArrLE(fileNameBytes.length / 2)); // since GL 0.7
                 command.add(fileNameBytes);
                 if (writeGL_PASS(command)) {
-                    print("GL Handle 'GetFile' command.", EMsgType.FAIL);
+                    print("GL Handle 'GetFile' command.", FAIL);
                     return true;
                 }
                 return false;
@@ -621,7 +623,7 @@ class GoldLeaf_08 extends TransferModule {
                     command.add(longToArrLE(fileDirElement.length()));
                 }
                 if (writeGL_PASS(command)) {
-                    print("GL Handle 'StatPath' command.", EMsgType.FAIL);
+                    print("GL Handle 'StatPath' command.", FAIL);
                     return true;
                 }
                 return false;
@@ -638,7 +640,7 @@ class GoldLeaf_08 extends TransferModule {
                     command.add(longToArrLE(nspMap.get(filePath).length()));    // YES, THIS IS LONG!
 
                 if (writeGL_PASS(command)) {
-                    print("GL Handle 'StatPath' command.", EMsgType.FAIL);
+                    print("GL Handle 'StatPath' command.", FAIL);
                     return true;
                 }
                 return false;
@@ -651,7 +653,7 @@ class GoldLeaf_08 extends TransferModule {
                 command.add(GL_OBJ_TYPE_FILE);
                 command.add(longToArrLE(selectedFile.length()));
                 if (writeGL_PASS(command)) {
-                    print("GL Handle 'StatPath' command.", EMsgType.FAIL);
+                    print("GL Handle 'StatPath' command.", FAIL);
                     return true;
                 }
                 return false;
@@ -679,7 +681,7 @@ class GoldLeaf_08 extends TransferModule {
                 try {
                     if (currentFile.renameTo(newFile)){
                         if (writeGL_PASS()) {
-                            print("GL Handle 'Rename' command.", EMsgType.FAIL);
+                            print("GL Handle 'Rename' command.", FAIL);
                             return true;
                         }
                         return false;
@@ -704,7 +706,7 @@ class GoldLeaf_08 extends TransferModule {
             try {
                 if (fileToDel.delete()){
                     if (writeGL_PASS()) {
-                        print("GL Handle 'Rename' command.", EMsgType.FAIL);
+                        print("GL Handle 'Rename' command.", FAIL);
                         return true;
                     }
                     return false;
@@ -742,10 +744,9 @@ class GoldLeaf_08 extends TransferModule {
             }
             if (result){
                 if (writeGL_PASS()) {
-                    print("GL Handle 'Create' command.", EMsgType.FAIL);
+                    print("GL Handle 'Create' command.", FAIL);
                     return true;
                 }
-                //print("GL Handle 'Create' command.", EMsgType.PASS);
                 return false;
             }
         }
@@ -830,12 +831,12 @@ class GoldLeaf_08 extends TransferModule {
                             "\n         Received:  " + bytesRead);
                 // Let's tell as a command about our result.
                 if (writeGL_PASS(longToArrLE(size))) {
-                    print("GL Handle 'ReadFile' command [CMD]", EMsgType.FAIL);
+                    print("GL Handle 'ReadFile' command [CMD]", FAIL);
                     return true;
                 }
                 // Let's bypass bytes we read total
                 if (writeToUsb(chunk)) {
-                    print("GL Handle 'ReadFile' command", EMsgType.FAIL);
+                    print("GL Handle 'ReadFile' command", FAIL);
                     return true;
                 }
                 return false;
@@ -850,12 +851,12 @@ class GoldLeaf_08 extends TransferModule {
                     return writeGL_FAIL("GL Handle 'ReadFile' command [CMD] Requested = "+size+" Read from file = "+bytesRead);
                 // Let's tell as a command about our result.
                 if (writeGL_PASS(longToArrLE(size))) {
-                    print("GL Handle 'ReadFile' command [CMD]", EMsgType.FAIL);
+                    print("GL Handle 'ReadFile' command [CMD]", FAIL);
                     return true;
                 }
                 // Let's bypass bytes we read total
                 if (writeToUsb(chunk)) {
-                    print("GL Handle 'ReadFile' command", EMsgType.FAIL);
+                    print("GL Handle 'ReadFile' command", FAIL);
                     return true;
                 }
                 return false;
@@ -867,14 +868,14 @@ class GoldLeaf_08 extends TransferModule {
             }
             catch (NullPointerException ignored){}
             catch (IOException ioe_){
-                print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
+                print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), WARNING);
             }
             try{
                 splitReader.close();
             }
             catch (NullPointerException ignored){}
             catch (IOException ioe_){
-                print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), EMsgType.WARNING);
+                print("GL Handle 'ReadFile' command: unable to close: "+openReadFileNameAndPath+"\n\t"+ioe_.getMessage(), WARNING);
             }
             openReadFileNameAndPath = null;
             randAccessFile = null;
@@ -916,7 +917,7 @@ class GoldLeaf_08 extends TransferModule {
         byte[] transferredData;
 
         if ((transferredData = readGL_file()) == null){
-            print("GL Handle 'WriteFile' command [1/1]", EMsgType.FAIL);
+            print("GL Handle 'WriteFile' command [1/1]", FAIL);
             return true;
         }
         try{
@@ -927,7 +928,7 @@ class GoldLeaf_08 extends TransferModule {
         }
         // Report we're good
         if (writeGL_PASS()) {
-            print("GL Handle 'WriteFile' command", EMsgType.FAIL);
+            print("GL Handle 'WriteFile' command", FAIL);
             return true;
         }
         return false;
@@ -953,11 +954,11 @@ class GoldLeaf_08 extends TransferModule {
         }
 
         List<byte[]> command = new LinkedList<>();
-        byte[] selectedFileNameBytes = ("SPEC:/"+selectedFile.getName()).getBytes(StandardCharsets.UTF_16LE);
+        byte[] selectedFileNameBytes = ("SPEC:/"+selectedFile.getName()).getBytes(UTF_16LE);
         command.add(intToArrLE(selectedFileNameBytes.length / 2)); // since GL 0.7
         command.add(selectedFileNameBytes);
         if (writeGL_PASS(command)) {
-            print("GL Handle 'SelectFile' command", EMsgType.FAIL);
+            print("GL Handle 'SelectFile' command", FAIL);
             this.selectedFile = null;
             return true;
         }
@@ -965,9 +966,6 @@ class GoldLeaf_08 extends TransferModule {
         return false;
     }
 
-    /*----------------------------------------------------*/
-    /*                     GL HELPERS                     */
-    /*----------------------------------------------------*/
     /**
      * Convert path received from GL to normal
      */
@@ -977,124 +975,93 @@ class GoldLeaf_08 extends TransferModule {
         glPath = homePath+glPath.substring(6);    // Do not use replaceAll since it will consider \ as special directive
         return glPath;
     }
-    /**
-     * Convert INT (Little endian) value to bytes-array representation
-     * */
-    private byte[] intToArrLE(int value){
-        ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-        byteBuffer.putInt(value);
-        return byteBuffer.array();
-    }
-    /**
-     * Convert LONG (Little endian) value to bytes-array representation
-     * */
-    private byte[] longToArrLE(long value){
-        ByteBuffer byteBuffer = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-        byteBuffer.putLong(value);
-        return byteBuffer.array();
-    }
-    /**
-     * Convert bytes-array to INT value (Little endian)
-     * */
-    private int arrToIntLE(byte[] byteArrayWithInt, int intStartPosition){
-        return ByteBuffer.wrap(byteArrayWithInt).order(ByteOrder.LITTLE_ENDIAN).getInt(intStartPosition);
-    }
-    /**
-     * Convert bytes-array to LONG value (Little endian)
-     * */
-    private long arrToLongLE(byte[] byteArrayWithLong, int intStartPosition){
-        return ByteBuffer.wrap(byteArrayWithLong).order(ByteOrder.LITTLE_ENDIAN).getLong(intStartPosition);
-    }
-
-    //------------------------------------------------------------------------------------------------------------------
 
     /*----------------------------------------------------*/
     /*           GL READ/WRITE USB SPECIFIC               */
     /*----------------------------------------------------*/
 
     private byte[] readGL(){
-        ByteBuffer readBuffer;
-        readBuffer = ByteBuffer.allocateDirect(4096);    // GL really?
-
-        IntBuffer readBufTransferred = IntBuffer.allocate(1);
-
-        int result;
+        var readBuffer = ByteBuffer.allocateDirect(PACKET_SIZE);    // GL really?
+        var rBufferTransferred = IntBuffer.allocate(1);
 
         while (! task.isCancelled()) {
-            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+            var result = LibUsb.bulkTransfer(handlerNS,
+                    IN_EP,
+                    readBuffer,
+                    rBufferTransferred,
+                    1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
             switch (result) {
                 case LibUsb.SUCCESS:
-                    int trans = readBufTransferred.get();
-                    byte[] receivedBytes = new byte[trans];
+                    byte[] receivedBytes = new byte[rBufferTransferred.get()];
                     readBuffer.get(receivedBytes);
                     return receivedBytes;
                 case LibUsb.ERROR_TIMEOUT:
                     closeOpenedReadFilesGl();       // Could be a problem if GL glitches and slow down process. Or if user has extra-slow SD card. TODO: refactor
                     continue;
                 default:
-                    print("GL Data transfer issue [read]\n         Returned: " +
-                            LibUsb.errorName(result) +
-                            "\n         GL Execution stopped", EMsgType.FAIL);
+                    print("GL Data transfer issue [read]" +
+                            "\n         Returned: " + LibUsb.errorName(result) +
+                            "\n         GL Execution stopped", FAIL);
                     return null;
             }
         }
-        print("GL Execution interrupted", EMsgType.INFO);
+        print("GL Execution interrupted", INFO);
         return null;
     }
     private byte[] readGL_file(){
-        ByteBuffer readBuffer = ByteBuffer.allocateDirect(8388608); // Just don't ask..
-        IntBuffer readBufTransferred = IntBuffer.allocate(1);
-
-        int result;
+        var readBuffer = ByteBuffer.allocateDirect(8388608); // Just don't ask..
+        var rBufferTransferred = IntBuffer.allocate(1);
 
         while (! task.isCancelled() ) {
-            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+            var result = LibUsb.bulkTransfer(handlerNS,
+                    IN_EP,
+                    readBuffer,
+                    rBufferTransferred,
+                    1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
 
             switch (result) {
                 case LibUsb.SUCCESS:
-                    int trans = readBufTransferred.get();
-                    byte[] receivedBytes = new byte[trans];
+                    byte[] receivedBytes = new byte[rBufferTransferred.get()];
                     readBuffer.get(receivedBytes);
                     return receivedBytes;
                 case LibUsb.ERROR_TIMEOUT:
                     continue;
                 default:
-                    print("GL Data transfer issue [read]\n         Returned: " +
-                            LibUsb.errorName(result) +
-                            "\n         GL Execution stopped", EMsgType.FAIL);
+                    print("GL Data transfer issue [read]" +
+                            "\n         Returned: " + LibUsb.errorName(result) +
+                            "\n         GL Execution stopped", FAIL);
                     return null;
             }
         }
-        print("GL Execution interrupted", EMsgType.INFO);
+        print("GL Execution interrupted", INFO);
         return null;
     }
     /**
      * Write new command. Shitty implementation.
      * */
     private boolean writeGL_PASS(byte[] message){
-        ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
-        writeBuffer.put(CMD_GLCO_SUCCESS);
-        writeBuffer.put(message);
-        return writeToUsb(writeBuffer.array());
+        return writeToUsb(ByteBuffer.allocate(PACKET_SIZE)
+                .put(CMD_GLCO_SUCCESS)
+                .put(message)
+                .array());
     }
     private boolean writeGL_PASS(){
-        return writeToUsb(Arrays.copyOf(CMD_GLCO_SUCCESS, 4096));
+        return writeToUsb(Arrays.copyOf(CMD_GLCO_SUCCESS, PACKET_SIZE));
     }
     private boolean writeGL_PASS(List<byte[]> messages){
-        ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
-        writeBuffer.put(CMD_GLCO_SUCCESS);
-        for (byte[] arr : messages)
-            writeBuffer.put(arr);
+        var writeBuffer = ByteBuffer.allocate(PACKET_SIZE)
+                .put(CMD_GLCO_SUCCESS);
+        messages.forEach(writeBuffer::put);
         return writeToUsb(writeBuffer.array());
     }
 
     private boolean writeGL_FAIL(String reportToUImsg){
-        if (writeToUsb(Arrays.copyOf(CMD_GLCO_FAILURE, 4096))){
-            print(reportToUImsg, EMsgType.WARNING);
+        if (writeToUsb(Arrays.copyOf(CMD_GLCO_FAILURE, PACKET_SIZE))){
+            print(reportToUImsg, WARNING);
             return true;
         }
-        print(reportToUImsg, EMsgType.FAIL);
+        print(reportToUImsg, FAIL);
         return false;
     }
     /**
@@ -1103,34 +1070,32 @@ class GoldLeaf_08 extends TransferModule {
      *          'true' if errors happened
      * */
     private boolean writeToUsb(byte[] message){
-        ByteBuffer writeBuffer = ByteBuffer.allocateDirect(message.length);   //writeBuffer.order() equals BIG_ENDIAN;
-        writeBuffer.put(message);                                             // Don't do writeBuffer.rewind();
-        IntBuffer writeBufTransferred = IntBuffer.allocate(1);
-        int result;
+        var wBufferTransferred = IntBuffer.allocate(1);
 
         while (! task.isCancelled()) {
-            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
+            var result = LibUsb.bulkTransfer(handlerNS,
+                    OUT_EP,
+                    ByteBuffer.allocateDirect(message.length).put(message),
+                    wBufferTransferred,
+                    1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
 
             switch (result){
                 case LibUsb.SUCCESS:
-                    if (writeBufTransferred.get() == message.length)
+                    if (wBufferTransferred.get() == message.length)
                         return false;
-                    else {
-                        print("GL Data transfer issue [write]\n         Requested: " +
-                                message.length +
-                                "\n         Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
-                        return true;
-                    }
+                    print("Data transfer issue [write]" +
+                            "\n         Requested: "+message.length+
+                            "\n         Transferred: "+wBufferTransferred.get(), FAIL);
+                    return true;
                 case LibUsb.ERROR_TIMEOUT:
                     continue;
                 default:
-                    print("GL Data transfer issue [write]\n         Returned: " +
-                            LibUsb.errorName(result) +
-                            "\n         GL Execution stopped", EMsgType.FAIL);
+                    print("GL Data transfer issue [write]\n  Returned: "+ LibUsb.errorName(result), FAIL);
+                    print("GL Execution stopped", FAIL);
                     return true;
             }
         }
-        print("GL Execution interrupted", EMsgType.INFO);
+        print("GL Execution interrupted", INFO);
         return true;
     }
 }
