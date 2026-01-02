@@ -61,7 +61,7 @@ steps:
   - name: emerge-mac-m1-artifact
     when:
       event: [tag, push, manual]
-    image: maven:3-eclipse-temurin-25-alpine
+    image: maven:3-amazoncorretto-25-debian
     commands:
       - . ./.make_m1
       - mvn -B -DskipTests clean package
