@@ -351,7 +351,7 @@ public class GoldLeaf_05 extends TransferModule {
                 case LibUsb.ERROR_TIMEOUT:
                     continue;
                 default:
-                    print("GL Data transfer issue [write]\n  Returned: "+ UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
+                    print("GL Data transfer issue [write]\n  Returned: "+ LibUsb.errorName(result), EMsgType.FAIL);
                     print("GL Execution stopped", EMsgType.FAIL);
                     return true;
             }
@@ -382,7 +382,7 @@ public class GoldLeaf_05 extends TransferModule {
                 case LibUsb.ERROR_TIMEOUT:
                     continue;
                 default:
-                    print("GL Data transfer issue [read]\n  Returned: " + UsbErrorCodes.getErrCode(result), EMsgType.FAIL);
+                    print("GL Data transfer issue [read]\n  Returned: " + LibUsb.errorName(result), EMsgType.FAIL);
                     print("GL Execution stopped", EMsgType.FAIL);
                     return null;
             }

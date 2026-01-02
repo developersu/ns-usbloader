@@ -24,13 +24,12 @@ import nsusbloader.AppPreferences;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.Locale;
-import java.util.jar.JarEntry;
+import java.util.Objects;
 import java.util.jar.JarFile;
 
 public class SettingsLanguagesSetup {
@@ -53,45 +52,36 @@ public class SettingsLanguagesSetup {
     }
 
     private boolean isApplicationIsJar() {
-        getThisApplicationFile();
-        return thisApplicationFile != null && thisApplicationFile.isFile();
-    }
-
-    private void getThisApplicationFile() {
-        try {
-            String encodedJarLocation =
-                    getClass().getProtectionDomain().getCodeSource().getLocation().getPath().replace("+", "%2B");
-            this.thisApplicationFile = new File(URLDecoder.decode(encodedJarLocation, "UTF-8"));
-        } catch (UnsupportedEncodingException uee) {
-            uee.printStackTrace();
-            this.thisApplicationFile = null;
-        }
+        var encodedJarLocation =
+                getClass().getProtectionDomain().getCodeSource().getLocation().getPath().replace("+", "%2B");
+        thisApplicationFile = new File(URLDecoder.decode(encodedJarLocation, StandardCharsets.UTF_8));
+        return thisApplicationFile.isFile();
     }
 
     private void parseFilesInsideJar() {
-        try {
-            JarFile jar = new JarFile(thisApplicationFile);
-            Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
-            while (entries.hasMoreElements()) {
-                String name = entries.nextElement().getName();
-                if (name.startsWith("locale_")) {
-                    languages.add(new LocaleHolder(name));
-                }
-            }
-            jar.close();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+        try (var jar = new JarFile(thisApplicationFile)) {
+            jar.stream()
+                    .filter(entry -> entry.getName().startsWith("locale_"))
+                    .map(entry -> new LocaleHolder(entry.getName()))
+                    .forEach(languages::add);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     private void parseFilesInFilesystem() {
-        URL resourceURL = this.getClass().getResource("/");
-        String[] filesList = new File(resourceURL.getFile()).list(); // Screw it. This WON'T produce NullPointerException
-
-        for (String jarFileName : filesList) {
-            if (jarFileName.startsWith("locale_")) {
-                languages.add(new LocaleHolder(jarFileName));
-            }
+        var pathToResource = Objects.requireNonNull(getClass().getResource("/"))
+                .getPath();
+        try (var streamDirs = Files.newDirectoryStream(Path.of(pathToResource))) {
+            streamDirs.forEach(jarFileName -> {
+                var fileName = ""+jarFileName.getFileName();
+                if (fileName.startsWith("locale_"))
+                    languages.add(new LocaleHolder(fileName));
+            });
+        }
+        catch (Exception e){
+            e.printStackTrace();
         }
     }
 
@@ -100,22 +90,17 @@ public class SettingsLanguagesSetup {
     }
 
     private void defineRecentlyUsedLanguageHolder() {
-        Locale localeFromPreferences = AppPreferences.getInstance().getLocale();
+        recentlyUsedLanguageHolder = languages.stream()
+                .filter(localeHolder -> localeHolder.getLocale().equals(
+                        AppPreferences.getInstance().getLocale()))
+                .findFirst()
+                .orElse(null);
 
-        for (LocaleHolder holder : languages) {
-            Locale holderLocale = holder.getLocale();
-
-            if (holderLocale.equals(localeFromPreferences)) {
-                this.recentlyUsedLanguageHolder = holder;
-                return;
-            }
-        }
-        // Otherwise define default one that is "en_US"
-        for (LocaleHolder holder : languages) {
-            if (holder.getLocaleCode().equals("en_US")) {
-                this.recentlyUsedLanguageHolder = holder;
-                return;
-            }
+        if (recentlyUsedLanguageHolder == null) {
+            recentlyUsedLanguageHolder = languages.stream()
+                    .filter(localeHolder -> localeHolder.getLocaleCode().equals("en_US"))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Unable to get default locale (en_US)"));
         }
     }
 

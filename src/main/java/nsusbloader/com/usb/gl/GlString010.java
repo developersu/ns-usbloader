@@ -20,7 +20,7 @@ package nsusbloader.com.usb.gl;
 
 import java.nio.charset.StandardCharsets;
 
-import static nsusbloader.com.usb.gl.Converters.arrToIntLE;
+import static nsusbloader.com.DataConvertUtils.arrToIntLE;
 
 /* Separated from interface for easier fixes/replacement in future  */
 public class GlString010 implements GlString {

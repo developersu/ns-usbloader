@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2025 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
      
     This file is part of NS-USBloader.
 
@@ -16,17 +16,18 @@
     You should have received a copy of the GNU General Public License
     along with NS-USBloader.  If not, see <https://www.gnu.org/licenses/>.
  */
-package nsusbloader.com.usb.gl;
+package nsusbloader.com;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
-public class Converters {
+import static java.nio.ByteOrder.LITTLE_ENDIAN;
+
+public class DataConvertUtils {
     /**
      * Convert INT (Little endian) value to bytes-array representation
      * */
     public static byte[] intToArrLE(int value){
-        return ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN)
+        return ByteBuffer.allocate(Integer.BYTES).order(LITTLE_ENDIAN)
                 .putInt(value)
                 .array();
     }
@@ -34,7 +35,7 @@ public class Converters {
      * Convert LONG (Little endian) value to bytes-array representation
      * */
     public static byte[] longToArrLE(long value){
-        return ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN)
+        return ByteBuffer.allocate(Long.BYTES).order(LITTLE_ENDIAN)
                 .putLong(value)
                 .array();
     }
@@ -42,12 +43,14 @@ public class Converters {
      * Convert bytes-array to INT value (Little endian)
      * */
     public static int arrToIntLE(byte[] byteArrayWithInt, int intStartPosition){
-        return ByteBuffer.wrap(byteArrayWithInt).order(ByteOrder.LITTLE_ENDIAN).getInt(intStartPosition);
+        return ByteBuffer.wrap(byteArrayWithInt).order(LITTLE_ENDIAN)
+                .getInt(intStartPosition);
     }
     /**
      * Convert bytes-array to LONG value (Little endian)
      * */
     public static long arrToLongLE(byte[] byteArrayWithLong, int intStartPosition){
-        return ByteBuffer.wrap(byteArrayWithLong).order(ByteOrder.LITTLE_ENDIAN).getLong(intStartPosition);
+        return ByteBuffer.wrap(byteArrayWithLong).order(LITTLE_ENDIAN)
+                .getLong(intStartPosition);
     }
 }

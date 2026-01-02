@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -20,58 +20,58 @@ package nsusbloader.com.helpers;
 
 import java.io.*;
 
+import static java.io.File.separator;
+
 /**
  *  Handle Split files
  * */
-public class NSSplitReader implements Closeable  {
+public class NSSplitReader extends InputStream  {
 
     private final String splitFileDir;
     private final long referenceSplitChunkSize;
 
     private byte subFileNum;
     private long curPosition;
-    private BufferedInputStream biStream;
+    private BufferedInputStream inStream;
 
     public NSSplitReader(File file, long seekToPosition) throws IOException, NullPointerException {
-        this.splitFileDir = file.getAbsolutePath()+File.separator;
-        File subFile = new File(file.getAbsolutePath()+File.separator+"00");
+        this.splitFileDir = file.getAbsolutePath()+ separator;
+        var subFile = new File(file.getAbsolutePath()+separator+"00");
         if (! file.exists())
-            throw new FileNotFoundException("File not found on "+file.getAbsolutePath()+File.separator+"00");
+            throw new FileNotFoundException("File not found on "+file.getAbsolutePath()+separator+"00");
         this.referenceSplitChunkSize = subFile.length();
         this.subFileNum = (byte) (seekToPosition / referenceSplitChunkSize);
-        this.biStream = new BufferedInputStream(new FileInputStream(splitFileDir + String.format("%02d", subFileNum)));
+        this.inStream = new BufferedInputStream(new FileInputStream(splitFileDir + String.format("%02d", subFileNum)));
         this.curPosition = seekToPosition;
 
         seekToPosition -= referenceSplitChunkSize * subFileNum;
 
-        if (seekToPosition != biStream.skip(seekToPosition))
+        if (seekToPosition != inStream.skip(seekToPosition))
             throw new IOException("Unable to seek to requested position of "+seekToPosition+" for file "+splitFileDir+String.format("%02d", subFileNum));
     }
 
     public long seek(long position) throws IOException{
-
         byte subFileRequested = (byte) (position / referenceSplitChunkSize);
 
         if ((subFileRequested != this.subFileNum) || (curPosition > position)) {
-            biStream.close();
-            biStream = new BufferedInputStream(new FileInputStream(splitFileDir + String.format("%02d", subFileRequested)));
-            this.subFileNum = subFileRequested;
-            this.curPosition = referenceSplitChunkSize * subFileRequested;
+            inStream.close();
+            inStream = new BufferedInputStream(new FileInputStream(splitFileDir + String.format("%02d", subFileRequested)));
+            subFileNum = subFileRequested;
+            curPosition = referenceSplitChunkSize * subFileRequested;
         }
 
-        long retVal = biStream.skip(position - curPosition);
-
-        retVal += curPosition;
-        this.curPosition = position;
-        return retVal;
+        long retVal = inStream.skip(position - curPosition);
+        curPosition = position;
+        return retVal+curPosition;
     }
 
+    @Override
     public int read(byte[] readBuffer) throws IOException, NullPointerException {
-        final int requested = readBuffer.length;
+        var requested = readBuffer.length;
         int readPrtOne;
 
         if ( (curPosition + requested) <= (referenceSplitChunkSize * (subFileNum+1))) {
-            if ((readPrtOne = biStream.read(readBuffer)) < 0 )
+            if ((readPrtOne = inStream.read(readBuffer)) < 0 )
                 return readPrtOne;
             curPosition += readPrtOne;
             return readPrtOne;
@@ -81,7 +81,7 @@ public class NSSplitReader implements Closeable  {
         int partTwo = requested - partOne;
         int readPrtTwo;
 
-        if ( (readPrtOne = biStream.read(readBuffer, 0, partOne)) < 0)
+        if ( (readPrtOne = inStream.read(readBuffer, 0, partOne)) < 0)
             return readPrtOne;
 
         curPosition += readPrtOne;
@@ -89,11 +89,11 @@ public class NSSplitReader implements Closeable  {
         if (readPrtOne != partOne)
             return readPrtOne;
 
-        biStream.close();
+        inStream.close();
         subFileNum += 1;
-        biStream = new BufferedInputStream(new FileInputStream(splitFileDir + String.format("%02d", subFileNum)));
+        inStream = new BufferedInputStream(new FileInputStream(splitFileDir + String.format("%02d", subFileNum)));
 
-        if ( (readPrtTwo = biStream.read(readBuffer, partOne, partTwo) ) < 0)
+        if ( (readPrtTwo = inStream.read(readBuffer, partOne, partTwo) ) < 0)
             return readPrtTwo;
 
         curPosition += readPrtTwo;
@@ -103,7 +103,47 @@ public class NSSplitReader implements Closeable  {
 
     @Override
     public void close() throws IOException {
-        if (biStream != null)
-            biStream.close();
+        if (inStream != null)
+            inStream.close();
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+        throw new IOException("Not supported, try using seek(...) instead");
+    }
+
+    @Override
+    public int read() throws IOException {
+        throw new IOException("Not supported");
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        throw new IOException("Not supported");
+    }
+
+    @Override
+    public byte[] readNBytes(int len) throws IOException {
+        throw new IOException("Not supported");
+    }
+
+    @Override
+    public int readNBytes(byte[] b, int off, int len) throws IOException {
+        throw new IOException("Not supported");
+    }
+
+    @Override
+    public void skipNBytes(long n) throws IOException {
+        throw new IOException("Not supported");
+    }
+
+    @Override
+    public int available() throws IOException {
+        throw new IOException("Not supported");
+    }
+
+    @Override
+    public long transferTo(OutputStream out) throws IOException {
+        throw new IOException("Not supported");
     }
 }

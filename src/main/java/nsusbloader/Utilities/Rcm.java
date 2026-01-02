@@ -25,7 +25,6 @@
 package nsusbloader.Utilities;
 
 import nsusbloader.com.usb.UsbConnect;
-import nsusbloader.com.usb.UsbErrorCodes;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.ModelControllers.Log;
 import nsusbloader.NSLDataTypes.EModule;
@@ -285,7 +284,7 @@ public class Rcm implements Runnable{
             return true;
         }
         print("RCM Data transfer issue [write]" +
-                "\n         Returned: " + UsbErrorCodes.getErrCode(result) +
+                "\n         Returned: " + LibUsb.errorName(result) +
                 "\n\n         Execution stopped.", EMsgType.FAIL);
         return true;
     }

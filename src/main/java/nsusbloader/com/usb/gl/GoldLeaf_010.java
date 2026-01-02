@@ -36,7 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static nsusbloader.com.usb.gl.Converters.*;
+import static nsusbloader.com.DataConvertUtils.*;
 
 /**
  * GoldLeaf v0.10 processing

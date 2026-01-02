@@ -1011,7 +1011,7 @@ class GoldLeaf_07 extends TransferModule {
                     continue;
                 default:
                     print("GL Data transfer issue [read]\n         Returned: " +
-                            UsbErrorCodes.getErrCode(result) +
+                            LibUsb.errorName(result) +
                             "\n         GL Execution stopped", EMsgType.FAIL);
                     return null;
             }
@@ -1040,7 +1040,7 @@ class GoldLeaf_07 extends TransferModule {
                     continue;
                 default:
                     print("GL Data transfer issue [read]\n         Returned: " +
-                            UsbErrorCodes.getErrCode(result) +
+                            LibUsb.errorName(result) +
                             "\n         GL Execution stopped", EMsgType.FAIL);
                     return null;
             }
@@ -1105,7 +1105,7 @@ class GoldLeaf_07 extends TransferModule {
                     continue;
                 default:
                     print("GL Data transfer issue [write]\n         Returned: " +
-                            UsbErrorCodes.getErrCode(result) +
+                            LibUsb.errorName(result) +
                             "\n         GL Execution stopped", EMsgType.FAIL);
                     return true;
             }
@@ -1113,96 +1113,4 @@ class GoldLeaf_07 extends TransferModule {
         print("GL Execution interrupted", EMsgType.INFO);
         return true;
     }
-
-    /*----------------------------------------------------*/
-    /*                  GL EXPERIMENTAL PART              */
-    /*                  (left for better times)           */
-    /*----------------------------------------------------*/
-        /*
-        private boolean proxyStatPath(String path) {
-            ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
-            List<byte[]> fileBytesSize = new LinkedList<>();
-            if ((recentDirs.length == 0) && (recentFiles.length == 0)) {
-                return writeGL_FAIL("proxyStatPath");
-            }
-            if (recentDirs.length > 0){
-                writeBuffer.put(CMD_GLCO_SUCCESS);
-                writeBuffer.put(GL_OBJ_TYPE_DIR);
-                byte[] resultingDir = writeBuffer.array();
-                writeToUsb(resultingDir);
-                for (int i = 1; i < recentDirs.length; i++) {
-                    readGL();
-                    writeToUsb(resultingDir);
-                }
-            }
-            if (recentFiles.length > 0){
-                path = path.replaceAll(recentDirs[0]+"$", "");  // Remove the name from path
-                for (String fileName : recentFiles){
-                    File f = new File(path+fileName);
-                    fileBytesSize.add(longToArrLE(f.length()));
-                }
-                writeBuffer.clear();
-                for (int i = 0; i < recentFiles.length; i++){
-                    readGL();
-                    writeBuffer.clear();
-                    writeBuffer.put(CMD_GLCO_SUCCESS);
-                    writeBuffer.put(GL_OBJ_TYPE_FILE);
-                    writeBuffer.put(fileBytesSize.get(i));
-                    writeToUsb(writeBuffer.array());
-                }
-            }
-            return false;
-        }
-
-        private boolean proxyGetDirFile(boolean forDirs){
-            ByteBuffer writeBuffer = ByteBuffer.allocate(4096);
-            List<byte[]> dirBytesNameSize = new LinkedList<>();
-            List<byte[]> dirBytesName = new LinkedList<>();
-            if (forDirs) {
-                if (recentDirs.length <= 0)
-                    return writeGL_FAIL("proxyGetDirFile");
-                for (String dirName : recentDirs) {
-                    byte[] name = dirName.getBytes(StandardCharsets.UTF_16LE);
-                    dirBytesNameSize.add(intToArrLE(name.length));
-                    dirBytesName.add(name);
-                }
-                writeBuffer.put(CMD_GLCO_SUCCESS);
-                writeBuffer.put(dirBytesNameSize.get(0));
-                writeBuffer.put(dirBytesName.get(0));
-                writeToUsb(writeBuffer.array());
-                writeBuffer.clear();
-                for (int i = 1; i < recentDirs.length; i++){
-                    readGL();
-                    writeBuffer.put(CMD_GLCO_SUCCESS);
-                    writeBuffer.put(dirBytesNameSize.get(i));
-                    writeBuffer.put(dirBytesName.get(i));
-                    writeToUsb(writeBuffer.array());
-                    writeBuffer.clear();
-                }
-            }
-            else {
-                if (recentDirs.length <= 0)
-                    return writeGL_FAIL("proxyGetDirFile");
-                for (String dirName : recentFiles){
-                    byte[] name = dirName.getBytes(StandardCharsets.UTF_16LE);
-                    dirBytesNameSize.add(intToArrLE(name.length));
-                    dirBytesName.add(name);
-                }
-                writeBuffer.put(CMD_GLCO_SUCCESS);
-                writeBuffer.put(dirBytesNameSize.get(0));
-                writeBuffer.put(dirBytesName.get(0));
-                writeToUsb(writeBuffer.array());
-                writeBuffer.clear();
-                for (int i = 1; i < recentFiles.length; i++){
-                    readGL();
-                    writeBuffer.put(CMD_GLCO_SUCCESS);
-                    writeBuffer.put(dirBytesNameSize.get(i));
-                    writeBuffer.put(dirBytesName.get(i));
-                    writeToUsb(writeBuffer.array());
-                    writeBuffer.clear();
-                }
-            }
-            return false;
-        }
-        */
 }

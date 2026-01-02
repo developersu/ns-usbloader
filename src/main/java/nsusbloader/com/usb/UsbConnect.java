@@ -114,14 +114,14 @@ public class UsbConnect {
 
         returningValue = LibUsb.init(contextNS);
         if (returningValue != LibUsb.SUCCESS)
-            throw new Exception("LibUSB initialization failed: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("LibUSB initialization failed: "+LibUsb.errorName(returningValue));
     }
 
     private void getDeviceList() throws Exception{
         deviceList = new DeviceList();
         returningValue = LibUsb.getDeviceList(contextNS, deviceList);
         if (returningValue < 0)
-            throw new Exception("Can't get device list: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Can't get device list: "+LibUsb.errorName(returningValue));
     }
 
     private void findDevice() throws Exception{
@@ -149,7 +149,7 @@ public class UsbConnect {
 
         if (returningValue != LibUsb.SUCCESS){
             this.freeDeviceList();
-            throw new Exception("Get USB device descriptor failure: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Get USB device descriptor failure: "+LibUsb.errorName(returningValue));
         }
         return descriptor;
     }
@@ -170,10 +170,10 @@ public class UsbConnect {
                     "Steps to set 'udev' rules:\n" +
                     "root # vim /etc/udev/rules.d/99-NS" + ((RCM_VID == VENDOR_ID) ? "RCM" : "") + ".rules\n" +
                     "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"%04x\", ATTRS{idProduct}==\"%04x\", MODE=\"0666\"\n" +
-                    "root # udevadm control --reload-rules && udevadm trigger\n", UsbErrorCodes.getErrCode(returningValue), VENDOR_ID, PRODUCT_ID));
+                    "root # udevadm control --reload-rules && udevadm trigger\n", LibUsb.errorName(returningValue), VENDOR_ID, PRODUCT_ID));
         }
         else
-            throw new Exception("Can't open NS USB device: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Can't open NS USB device: "+LibUsb.errorName(returningValue));
     }
 
     private void freeDeviceList(){
@@ -184,7 +184,7 @@ public class UsbConnect {
         // Actually, there are no drivers in Linux kernel which uses this device.
         returningValue = LibUsb.setAutoDetachKernelDriver(handlerNS, true);
         if (returningValue != LibUsb.SUCCESS)
-            print("Skip kernel driver attach & detach ("+UsbErrorCodes.getErrCode(returningValue)+")", EMsgType.INFO);
+            print("Skip kernel driver attach & detach ("+LibUsb.errorName(returningValue)+")", EMsgType.INFO);
     }
 
     /*
@@ -197,12 +197,12 @@ public class UsbConnect {
     private void setConfiguration(int configuration) throws Exception{
         returningValue = LibUsb.setConfiguration(handlerNS, configuration);
         if (returningValue != LibUsb.SUCCESS)
-            throw new Exception("Unable to set active configuration on device: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Unable to set active configuration on device: "+LibUsb.errorName(returningValue));
     }
     private void claimInterface() throws Exception{
         returningValue = LibUsb.claimInterface(handlerNS, DEFAULT_INTERFACE);
         if (returningValue != LibUsb.SUCCESS)
-            throw new Exception("Claim interface failure: "+UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Claim interface failure: "+LibUsb.errorName(returningValue));
     }
     /**
      * Get USB status
@@ -237,7 +237,7 @@ public class UsbConnect {
 
             if (returningValue != LibUsb.SUCCESS) {
                 print("Release interface failure: " +
-                        UsbErrorCodes.getErrCode(returningValue) +
+                        LibUsb.errorName(returningValue) +
                         " (sometimes it's not an issue)", EMsgType.WARNING);
             }
 

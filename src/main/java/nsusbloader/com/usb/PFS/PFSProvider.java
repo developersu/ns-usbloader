@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2025 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -19,163 +19,151 @@
 package nsusbloader.com.usb.PFS;
 
 import nsusbloader.ModelControllers.ILogPrinter;
-import nsusbloader.NSLDataTypes.EMsgType;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static java.io.File.separator;
+import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static nsusbloader.NSLDataTypes.EMsgType.*;
+import static nsusbloader.com.DataConvertUtils.*;
 
 /**
  * Used in GoldLeaf USB protocol
  * */
 public class PFSProvider {
-    private static final byte[] PFS0 = new byte[]{0x50, 0x46, 0x53, 0x30};  // PFS0
-
     private final String nspFileName;
     private final NCAFile[] ncaFiles;
     private final long bodySize;
     private int ticketID = -1;
 
-    public PFSProvider(File nspFile, ILogPrinter logPrinter) throws Exception{
+    public PFSProvider(File nspFile, ILogPrinter log) throws Exception {
+        nspFileName = nspFile.getName();
         if (nspFile.isDirectory()) {
-            nspFileName = nspFile.getName();
-            nspFile = new File(nspFile.getAbsolutePath() + File.separator + "00");
+            nspFile = new File(nspFile.getAbsolutePath() + separator + "00");
         }
-        else
-            nspFileName = nspFile.getName();
 
-        RandomAccessFile randAccessFile = new RandomAccessFile(nspFile, "r");
+        var randAccessFile = new RandomAccessFile(nspFile, "r");
 
-        int filesCount;
-        int header;
+        log.print("PFS Start NSP file analyze for ["+nspFileName+"]", INFO);
 
-        logPrinter.print("PFS Start NSP file analyze for ["+nspFileName+"]", EMsgType.INFO);
-
-        byte[] fileStartingBytes = new byte[12];
+        var fileStartingBytes = new byte[12];
         // Read PFS0, files count, header, padding (4 zero bytes)
         if (randAccessFile.read(fileStartingBytes) == 12)
-            logPrinter.print("PFS Read file starting bytes.", EMsgType.PASS);
+            log.print("PFS Read file starting bytes.", PASS);
         else {
-            logPrinter.print("PFS Read file starting bytes.", EMsgType.FAIL);
+            log.print("PFS Read file starting bytes.", FAIL);
             randAccessFile.close();
             throw new Exception("Unable to read file starting bytes");
         }
         // Check PFS0
-        if (Arrays.equals(PFS0, Arrays.copyOfRange(fileStartingBytes, 0, 4)))
-            logPrinter.print("PFS Read 'PFS0'.", EMsgType.PASS);
+        if ("PFS0".equals(new String(fileStartingBytes, 0, 4, US_ASCII)))
+            log.print("PFS Read 'PFS0'.", PASS);
         else
-            logPrinter.print("PFS Read 'PFS0': this file looks wired.", EMsgType.WARNING);
+            log.print("PFS Read 'PFS0': this file looks wired.", WARNING);
         // Get files count
-        filesCount = ByteBuffer.wrap(Arrays.copyOfRange(fileStartingBytes, 4, 8)).order(ByteOrder.LITTLE_ENDIAN).getInt();
-        if (filesCount > 0 ) {
-            logPrinter.print("PFS Read files count [" + filesCount + "]", EMsgType.PASS);
-        }
+        int filesCount = arrToIntLE(fileStartingBytes, 4);
+        if (filesCount > 0 )
+            log.print("PFS Read files count [" + filesCount + "]", PASS);
         else {
-            logPrinter.print("PFS Read files count", EMsgType.FAIL);
+            log.print("PFS Read files count", FAIL);
             randAccessFile.close();
             throw new Exception("Unable to read file count");
         }
         // Get header
-        header = ByteBuffer.wrap(Arrays.copyOfRange(fileStartingBytes, 8, 12)).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        int header = arrToIntLE(fileStartingBytes, 8);
         if (header > 0 )
-            logPrinter.print("PFS Read header ["+header+"]", EMsgType.PASS);
+            log.print("PFS Read header ["+header+"]", PASS);
         else {
-            logPrinter.print("PFS Read header ", EMsgType.FAIL);
+            log.print("PFS Read header ", FAIL);
             randAccessFile.close();
             throw new Exception("Unable to read header");
         }
         //*********************************************************************************************
         // Create NCA set
-        this.ncaFiles = new NCAFile[filesCount];
+        ncaFiles = new NCAFile[filesCount];
         // Collect files from NSP
-        byte[] ncaInfoArr = new byte[24];   // should be unsigned long, but.. java.. u know my pain man
+        var ncaInfoArr = new byte[24];   // should be unsigned long
+        var ncaNameOffsets = new LinkedHashMap<Integer, Long>();
 
-        HashMap<Integer, Long> ncaNameOffsets = new LinkedHashMap<>();
-
-        int offset;
-        long nca_offset;
-        long nca_size;
-        long nca_name_offset;
-
-        for (int i=0; i<filesCount; i++){
+        for (int i = 0; i < filesCount; i++){
             if (randAccessFile.read(ncaInfoArr) == 24) {
-                logPrinter.print("PFS Read NCA inside NSP: " + i, EMsgType.PASS);
+                log.print("PFS Read NCA inside NSP: "+i, PASS);
             }
             else {
-                logPrinter.print("PFS Read NCA inside NSP: "+i, EMsgType.FAIL);
+                log.print("PFS Read NCA inside NSP: "+i, FAIL);
                 randAccessFile.close();
                 throw new Exception("Unable to read NCA inside NSP");
             }
-            offset =  ByteBuffer.wrap(Arrays.copyOfRange(ncaInfoArr, 0, 4)).order(ByteOrder.LITTLE_ENDIAN).getInt();
-            nca_offset = ByteBuffer.wrap(Arrays.copyOfRange(ncaInfoArr, 4, 12)).order(ByteOrder.LITTLE_ENDIAN).getLong();
-            nca_size = ByteBuffer.wrap(Arrays.copyOfRange(ncaInfoArr, 12, 20)).order(ByteOrder.LITTLE_ENDIAN).getLong();
-            nca_name_offset = ByteBuffer.wrap(Arrays.copyOfRange(ncaInfoArr, 20, 24)).order(ByteOrder.LITTLE_ENDIAN).getInt(); // yes, cast from int to long.
+            int offset = arrToIntLE(ncaInfoArr, 0);
+            long nca_offset = arrToLongLE(ncaInfoArr, 4);
+            long nca_size = arrToLongLE(ncaInfoArr, 12);
+            long nca_name_offset = arrToIntLE(ncaInfoArr, 20); // cast from int → long.
 
-            logPrinter.print("  Padding check", offset == 0?EMsgType.PASS:EMsgType.WARNING);
-            logPrinter.print("  NCA offset check: "+nca_offset, nca_offset >= 0?EMsgType.PASS:EMsgType.WARNING);
-            logPrinter.print("  NCA size check: "+nca_size, nca_size >= 0?EMsgType.PASS: EMsgType.WARNING);
-            logPrinter.print("  NCA name offset check: "+nca_name_offset, nca_name_offset >= 0?EMsgType.PASS:EMsgType.WARNING);
+            log.print("  Padding check", offset == 0? PASS: WARNING);
+            log.print("  NCA offset check: "+nca_offset, nca_offset >= 0? PASS: WARNING);
+            log.print("  NCA size check: "+nca_size, nca_size >= 0? PASS: WARNING);
+            log.print("  NCA name offset check: "+nca_name_offset, nca_name_offset >= 0? PASS: WARNING);
 
-            NCAFile ncaFile = new NCAFile();
+            var ncaFile = new NCAFile();
             ncaFile.setNcaOffset(nca_offset);
             ncaFile.setNcaSize(nca_size);
-            this.ncaFiles[i] = ncaFile;
+            ncaFiles[i] = ncaFile;
 
             ncaNameOffsets.put(i, nca_name_offset);
         }
         // Final offset
         byte[] bufForInt = new byte[4];
-        if ((randAccessFile.read(bufForInt) == 4) && (Arrays.equals(bufForInt, new byte[4])))
-            logPrinter.print("PFS Final padding check", EMsgType.PASS);
-        else
-            logPrinter.print("PFS Final padding check", EMsgType.WARNING);
+        log.print("PFS Final padding check",
+                ((randAccessFile.read(bufForInt) == 4) && Arrays.equals(bufForInt, new byte[4]))? PASS: WARNING);
 
         // Calculate position including header for body size offset
         bodySize = randAccessFile.getFilePointer()+header;
         //*********************************************************************************************
         // Collect file names from NCAs
-        logPrinter.print("PFS Collecting file names", EMsgType.INFO);
-        List<Byte> ncaFN;                 // Temporary
+        log.print("PFS Collecting file names", INFO);
+
+        // Files cont * 24 (bit per each meta-data) + 4 bytes (goes after all of them)  + 12 bit were at the beginning
+        long seekIncrement = filesCount*24L+16L;
         byte[] b = new byte[1];                 // Temporary
-        for (int i=0; i<filesCount; i++){
-            ncaFN = new ArrayList<>();
-            randAccessFile.seek(filesCount*24L+16L+ncaNameOffsets.get(i)); // Files cont * 24(bit for each meta-data) + 4 bytes goes after all of them  + 12 bit what were in the beginning
-            while ((randAccessFile.read(b)) != -1){
+        for (int i = 0; i < filesCount; i++){
+            var ncaFN = new ArrayList<Byte>();
+            randAccessFile.seek(seekIncrement+ncaNameOffsets.get(i));
+            while ((randAccessFile.read(b)) != -1) {
                 if (b[0] == 0x00)
                     break;
                 else
                     ncaFN.add(b[0]);
             }
             byte[] exchangeTempArray = new byte[ncaFN.size()];
-            for (int j=0; j < ncaFN.size(); j++)
+            for (int j = 0; j < ncaFN.size(); j++)
                 exchangeTempArray[j] = ncaFN.get(j);
             // Find and store ticket (.tik)
-            if (new String(exchangeTempArray, StandardCharsets.UTF_8).toLowerCase().endsWith(".tik"))
-                this.ticketID = i;
-            this.ncaFiles[i].setNcaFileName(Arrays.copyOf(exchangeTempArray, exchangeTempArray.length));
+            if (new String(exchangeTempArray, UTF_8).toLowerCase().endsWith(".tik"))
+                ticketID = i;
+            ncaFiles[i].setNcaFileName(Arrays.copyOf(exchangeTempArray, exchangeTempArray.length));
         }
         randAccessFile.close();
-        logPrinter.print("PFS Finished NSP file analyze for ["+nspFileName+"]", EMsgType.PASS);
+        log.print("PFS Finished NSP file analyze for ["+nspFileName+"]", PASS);
     }
     /**
      * Return file name as byte array
      * */
     public byte[] getBytesNspFileName(){
-        return nspFileName.getBytes(StandardCharsets.UTF_8);
+        return nspFileName.getBytes(UTF_8);
     }
     /**
      * Return file name length as byte array
      * */
     public byte[] getBytesNspFileNameLength(){
-        return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(getBytesNspFileName().length).array();
+        return intToArrLE(getBytesNspFileName().length);
     }
     /**
      * Return NCA count inside of file as byte array
      * */
     public byte[] getBytesCountOfNca(){
-        return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(ncaFiles.length).array();
+        return intToArrLE(ncaFiles.length);
     }
     /**
      * Return NCA count inside of file as int

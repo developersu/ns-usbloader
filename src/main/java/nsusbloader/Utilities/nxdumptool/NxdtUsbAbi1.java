@@ -18,7 +18,6 @@
 */
 package nsusbloader.Utilities.nxdumptool;
 
-import nsusbloader.com.usb.UsbErrorCodes;
 import nsusbloader.com.usb.common.DeviceInformation;
 import nsusbloader.com.usb.common.NsUsbEndpointDescriptor;
 import nsusbloader.ModelControllers.ILogPrinter;
@@ -431,7 +430,7 @@ class NxdtUsbAbi1 {
                     "\n         Transferred: " + writeBufTransferred.get());
         }
         throw new Exception("Data transfer issue [write]" +
-                "\n         Returned: " + UsbErrorCodes.getErrCode(result) +
+                "\n         Returned: " + LibUsb.errorName(result) +
                 "\n         (execution stopped)");
     }
     /**
@@ -457,7 +456,7 @@ class NxdtUsbAbi1 {
                     break;
                 default:
                     throw new Exception("Data transfer issue [read command]" +
-                            "\n         Returned: " + UsbErrorCodes.getErrCode(result)+
+                            "\n         Returned: " + LibUsb.errorName(result)+
                             "\n         (execution stopped)");
             }
         }
@@ -487,7 +486,7 @@ class NxdtUsbAbi1 {
                     break;
                 default:
                     throw new Exception("Data transfer issue [read file]" +
-                            "\n         Returned: " + UsbErrorCodes.getErrCode(result)+
+                            "\n         Returned: " + LibUsb.errorName(result)+
                             "\n         (execution stopped)");
             }
         }
@@ -509,7 +508,7 @@ class NxdtUsbAbi1 {
             return receivedBytes;
         }
         throw new Exception("Data transfer issue [read file]" +
-                "\n         Returned: " + UsbErrorCodes.getErrCode(result) +
+                "\n         Returned: " + LibUsb.errorName(result) +
                 "\n         (execution stopped)");
     }
 

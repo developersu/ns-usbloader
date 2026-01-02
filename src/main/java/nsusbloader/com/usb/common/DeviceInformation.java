@@ -18,7 +18,6 @@
 */
 package nsusbloader.com.usb.common;
 
-import nsusbloader.com.usb.UsbErrorCodes;
 import org.usb4java.*;
 
 import java.util.ArrayList;
@@ -52,7 +51,7 @@ public class DeviceInformation {
         int returningValue = LibUsb.getActiveConfigDescriptor(device, configDescriptor);
 
         if (returningValue != LibUsb.SUCCESS)
-            throw new Exception("Get Active config descriptor failed: "+ UsbErrorCodes.getErrCode(returningValue));
+            throw new Exception("Get Active config descriptor failed: "+ LibUsb.errorName(returningValue));
     }
 
     private void collectInterfaces(){

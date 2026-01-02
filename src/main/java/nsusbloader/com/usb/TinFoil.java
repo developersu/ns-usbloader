@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -21,336 +21,260 @@ package nsusbloader.com.usb;
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
-import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.com.helpers.NSSplitReader;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
+import org.usb4java.LibUsbException;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static nsusbloader.NSLDataTypes.EMsgType.*;
+import static nsusbloader.com.DataConvertUtils.arrToLongLE;
+import static nsusbloader.com.DataConvertUtils.intToArrLE;
+
 /**
- * Tinfoil processing
+ * Awoo processing
  * */
 class TinFoil extends TransferModule {
-    // "TUL0".getBytes(StandardCharsets.US_ASCII)
-    private static final byte[] TUL0  = new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x4c, (byte) 0x30};
-    private static final byte[] MAGIC = new byte[]{(byte) 0x54, (byte) 0x55, (byte) 0x43, (byte) 0x30};  // aka 'TUC0' ASCII
+    private static final int CHUNK_SIZE = 0x800000;  // = 8Mb;
+    private static final byte[] TUL0  = "TUL0".getBytes(UTF_8);
+    private static final String MAGIC = "TUC0";
+
+    private static final byte[] STANDARD_REPLY = new byte[] { 0x54, 0x55, 0x43, 0x30,    // 'TUC0'
+                                                              0x01, 0x00, 0x00, 0x00,    // CMD_TYPE_RESPONSE = 1 (Int in LE-format)
+                                                              0x01, 0x00, 0x00, 0x00 };
+    private static final byte[] TWELVE_ZERO_BYTES = new byte[12];
+    private static final byte[] PADDING = new byte[8];
 
     private static final byte CMD_EXIT = 0x00;
     private static final byte CMD_FILE_RANGE_DEFAULT = 0x01;
     private static final byte CMD_FILE_RANGE_ALTERNATIVE = 0x02;
-    /*  byte[] magic = new byte[4];
-        ByteBuffer bb = StandardCharsets.UTF_8.encode("TUC0").rewind().get(magic); // Let's rephrase this 'string' */
 
-    TinFoil(DeviceHandle handler, LinkedHashMap<String, File> nspMap, CancellableRunnable task, ILogPrinter logPrinter){
+    TinFoil(DeviceHandle handler,
+            LinkedHashMap<String, File> nspMap,
+            CancellableRunnable task,
+            ILogPrinter logPrinter) {
         super(handler, nspMap, task, logPrinter);
-        print("======== Awoo Installer and compatibles ========", EMsgType.INFO);
+        print("======== Awoo Installer and compatibles ========", INFO);
 
-        if (! sendListOfFiles())
-            return;
-
-        if (proceedCommands())                              // REPORT SUCCESS
-            status = EFileStatus.UPLOADED;     // Don't change status that is already set to FAILED
+        workLoop();
+    }
+    private void workLoop(){
+        try {
+            sendListOfFiles();
+            proceedCommands();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
     /**
      * Send what NSP will be transferred
      * */
-    private boolean sendListOfFiles(){
-        final String fileNamesListToSend = getFileNamesToSend();
+    private void sendListOfFiles() throws LibUsbException {
+        var fileNames = buildFileNamesToSend();
+        var fileNamesSize = intToArrLE(fileNames.length);
 
-        byte[] nspListNames = getFileNamesToSendAsBytes(fileNamesListToSend);
-        byte[] nspListNamesSize = getFileNamesLengthToSendAsBytes(nspListNames);
-        byte[] padding = new byte[8];
+        writeUsb(TUL0, "[1/4] Send list of files: handshake");
+        writeUsb(fileNamesSize, "[2/4] Send list of files: list length"); // size of the list we can transfer
+        writeUsb(PADDING, "[3/4] Send list of files: padding");
+        writeUsb(fileNames, "[4/4] Send list of files: list itself");
 
-        if (writeUsb(TUL0)) {
-            print("Send list of files: handshake   [1/4]", EMsgType.FAIL);
-            return false;
-        }
-
-        if (writeUsb(nspListNamesSize)) {                                 // size of the list we can transfer
-            print("Send list of files: list length [2/4]", EMsgType.FAIL);
-            return false;
-        }
-
-        if (writeUsb(padding)) {
-            print("Send list of files: padding     [3/4]", EMsgType.FAIL);
-            return false;
-        }
-
-        if (writeUsb(nspListNames)) {
-            print("Send list of files: list itself [4/4]", EMsgType.FAIL);
-            return false;
-        }
-        print("Send list of files complete.", EMsgType.PASS);
-
-        return true;
+        print("Send list of files complete.", PASS);
     }
 
-    private String getFileNamesToSend(){
-        StringBuilder fileNamesListBuilder = new StringBuilder();
-        for(String nspFileName: nspMap.keySet()) {
-            fileNamesListBuilder.append(nspFileName);   // And here we come with java string default encoding (UTF-16)
-            fileNamesListBuilder.append('\n');
-        }
-        return fileNamesListBuilder.toString();
+    private byte[] buildFileNamesToSend() {
+        var fileNamesListBuilder = new StringBuilder();
+        nspMap.keySet().forEach(fileName -> fileNamesListBuilder
+                .append(fileName)
+                .append('\n'));
+        return fileNamesListBuilder.toString().getBytes(UTF_8);
     }
 
-    private byte[] getFileNamesToSendAsBytes(String fileNamesListToSend){
-        return fileNamesListToSend.getBytes(StandardCharsets.UTF_8);
-    }
-
-    private byte[] getFileNamesLengthToSendAsBytes(byte[] fileNamesListToSendAsBytes){
-        ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);         // integer = 4 bytes; BTW Java is stored in big-endian format
-        byteBuffer.putInt(fileNamesListToSendAsBytes.length);                                                             // This way we obtain length in int converted to byte array in correct Big-endian order. Trust me.
-        return byteBuffer.array();
-    }
     /**
      * After we sent commands to NS, this chain starts
      * */
-    private boolean proceedCommands(){
-        print("Awaiting for NS commands.", EMsgType.INFO);
+    private void proceedCommands() {
+        print("Awaiting for NS commands", INFO);
         try{
-            byte[] deviceReply;
-            byte command;
+            while (true) {
+                var deviceReply = readUsb();
 
-            while (true){
-                deviceReply = readUsb();
-                if (! isReplyValid(deviceReply))
+                if (isInvalidReply(deviceReply))
                     continue;
-                command = getCommandFromReply(deviceReply);
 
-                switch (command){
+                switch (deviceReply[8]){
                     case CMD_EXIT:
-                        print("Transfer complete.", EMsgType.PASS);
-                        return true;
+                        print("Transfer complete", PASS);
+                        status = EFileStatus.UPLOADED;
+                        return;
                     case CMD_FILE_RANGE_DEFAULT:
                     case CMD_FILE_RANGE_ALTERNATIVE:
-                        //print("Received 'FILE RANGE' command [0x0"+command+"].", EMsgType.PASS);
-                        if (fileRangeCmd())
-                            return false;      // catches exception
+                        fileRangeCmd();
                 }
             }
+        } catch (ArithmeticException ae){
+            print("Unable to cast huge offsets to int ('offset end' - 'offsets current'):\n" +
+                    "         "+ae.getMessage(), FAIL);
+            ae.printStackTrace();
+        } catch (NullPointerException npe){
+            print("Something missed. Make sure you have enough space on medium!\n" +
+                    "         "+npe.getMessage(), FAIL);
+            npe.printStackTrace();
         }
         catch (Exception e){
-            print(e.getMessage(), EMsgType.INFO);
-            return false;
+            print(e.getMessage(), FAIL);
+            e.printStackTrace();
         }
     }
 
-    private boolean isReplyValid(byte[] reply){
-        return Arrays.equals(Arrays.copyOfRange(reply, 0,4), MAGIC);
-    }
-
-    private byte getCommandFromReply(byte[] reply){
-        return reply[8];
+    private boolean isInvalidReply(byte[] reply) {
+        return ! MAGIC.equals(new String(reply, 0,4, UTF_8));
     }
     /**
      * This is what returns requested file (files)
      * Executes multiple times
-     * @return 'false' if everything is ok
-     *          'true' is error/exception occurs
      * */
-    private boolean fileRangeCmd(){
-        try {
-            byte[] receivedArray = readUsb();
+    private void fileRangeCmd() throws Exception {
+        byte[] readData = readUsb();
 
-            byte[] sizeAsBytes = Arrays.copyOfRange(receivedArray, 0,8);
-            long size = ByteBuffer.wrap(sizeAsBytes).order(ByteOrder.LITTLE_ENDIAN).getLong();          // could be unsigned long. This app won't support files greater then 8796093022208 Gb
-            long offset = ByteBuffer.wrap(Arrays.copyOfRange(receivedArray, 8,16)).order(ByteOrder.LITTLE_ENDIAN).getLong();      // could be unsigned long. This app doesn't support files greater then 8796093022208 Gb
+        var sizeAsBytes = Arrays.copyOfRange(readData, 0,8);
+        var size = arrToLongLE(readData, 0);    // could be unsigned long. Files greater than 8796093022208 Gb r not supported
+        var offset = arrToLongLE(readData, 8);  // could be unsigned long
 
-            // Requesting UTF-8 file name required:
-            receivedArray = readUsb();
+        // Requesting UTF-8 file name required:
+        readData = readUsb();
 
-            String nspFileName = new String(receivedArray, StandardCharsets.UTF_8);
+        var fileName = new String(readData, UTF_8);
 
-            print(String.format("Reply to: %s" +
-                    "\n         Offset: %-20d 0x%x" +
-                    "\n         Size:   %-20d 0x%x",
-                    nspFileName,
-                    offset, offset,
-                    size, size), EMsgType.INFO);
+        print(String.format("Reply to: %s" +
+                "%n         Offset: %-20d 0x%x" +
+                "%n         Size:   %-20d 0x%x",
+                fileName,
+                offset, offset,
+                size, size), INFO);
 
-            File nspFile = nspMap.get(nspFileName);
-            boolean isSplitFile = nspFile.isDirectory();
+        var file = nspMap.get(fileName);
+        var isSplitFile = file.isDirectory();
 
-            // Sending response 'header'
-            if (sendMetaInfoForFile(sizeAsBytes))   // Get size in 'RAW' format exactly as it has been received to simplify the process.
-                return true;
+        // Sending response 'header'
+        sendFileMetadata(sizeAsBytes);   // Size in format as received
 
-            if (isSplitFile)
-                sendSplitFile(nspFile, size, offset);
-            else
-                sendNormalFile(nspFile, size, offset);
-        } catch (IOException ioe){
-            print("IOException:\n         "+ioe.getMessage(), EMsgType.FAIL);
-            ioe.printStackTrace();
-            return true;
-        } catch (ArithmeticException ae){
-            print("ArithmeticException (can't cast 'offset end' - 'offsets current' to 'integer'):" +
-                    "\n         "+ae.getMessage(), EMsgType.FAIL);
-            ae.printStackTrace();
-            return true;
-        } catch (NullPointerException npe){
-            print("Application didn't find something important. Make sure you have enough space on medium!" +
-                    "\n         "+npe.getMessage(), EMsgType.FAIL);
-            npe.printStackTrace();
-            return true;
-        }
-        catch (Exception defe){
-            print(defe.getMessage(), EMsgType.FAIL);
-            return true;
-        }
-        return false;
+        if (isSplitFile)
+            sendSplitFile(file, size, offset);
+        else
+            sendNormalFile(file, size, offset);
     }
 
-    void sendSplitFile(File nspFile, long size, long offset) throws Exception {
-        byte[] readBuffer;
-        long currentOffset = 0;
-        int chunk = 8388608; // = 8Mb;
+    private void sendSplitFile(File file, long size, long offset) throws Exception {
+        try (var inStream = new NSSplitReader(file, size)) {
+            if (inStream.seek(offset) != offset)
+                throw new IOException("Requested offset is out of file size. Nothing to transmit.");
 
-        NSSplitReader nsSplitReader = new NSSplitReader(nspFile, size);
-        if (nsSplitReader.seek(offset) != offset)
-            throw new IOException("Requested offset is out of file size. Nothing to transmit.");
-
-        while (currentOffset < size){
-            if ((currentOffset + chunk) >= size )
-                chunk = Math.toIntExact(size - currentOffset);
-            //System.out.println("CO: "+currentOffset+"\t\tEO: "+size+"\t\tRP: "+chunk);  // NOTE: DEBUG
-
-            readBuffer = new byte[chunk];     // TODO: not perfect moment, consider refactoring.
-
-            if (nsSplitReader.read(readBuffer) != chunk)
-                throw new IOException("Reading from stream suddenly ended.");
-
-            if (writeUsb(readBuffer))
-                throw new IOException("Failure during file transfer.");
-            currentOffset += chunk;
-            logPrinter.updateProgress((double)currentOffset / (double)size);
+            sendFile(size, inStream);
         }
-        nsSplitReader.close();
         logPrinter.updateProgress(1.0);
     }
 
-    void sendNormalFile(File nspFile, long size, long offset) throws Exception {
-        byte[] readBuffer;
-        long currentOffset = 0;
-        int chunk = 8388608;
+    private void sendNormalFile(File file, long size, long offset) throws Exception {
+        try (var inStream = new BufferedInputStream(new FileInputStream(file))) {
+            if (inStream.skip(offset) != offset)
+                throw new IOException("Requested offset is out of file size. Nothing to transmit.");
 
-        BufferedInputStream bufferedInStream = new BufferedInputStream(new FileInputStream(nspFile));
+            sendFile(size, inStream);
+        }
+        logPrinter.updateProgress(1.0);
+    }
 
-        if (bufferedInStream.skip(offset) != offset)
-            throw new IOException("Requested offset is out of file size. Nothing to transmit.");
+    private void sendFile(long size, InputStream inStream) throws Exception {
+        var currentOffset = 0L;
+        var chunk = CHUNK_SIZE;
 
         while (currentOffset < size) {
-            if ((currentOffset + chunk) >= size)
+            if (currentOffset + chunk >= size)
                 chunk = Math.toIntExact(size - currentOffset);
-            //System.out.println("CO: "+currentOffset+"\t\tEO: "+receivedRangeSize+"\t\tRP: "+chunk);  // NOTE: DEBUG
 
-            readBuffer = new byte[chunk];
+            var readBuffer = new byte[chunk];
 
-            if (bufferedInStream.read(readBuffer) != chunk)
-                throw new IOException("Reading from stream suddenly ended.");
+            if (inStream.read(readBuffer) != chunk)
+                throw new IOException("Reading from stream suddenly ended");
 
-            if (writeUsb(readBuffer))
-                throw new IOException("Failure during file transfer.");
+            writeUsb(readBuffer, "Failure during file transfer");
+
             currentOffset += chunk;
             logPrinter.updateProgress((double)currentOffset / (double)size);
         }
-        bufferedInStream.close();
-        logPrinter.updateProgress(1.0);
     }
-    /**
-     * Send response header.
-     * @return false if everything OK
-     *         true if failed
-     * */
-    private boolean sendMetaInfoForFile(byte[] sizeAsBytes){
-        final byte[] standardReplyBytes = new byte[] { 0x54, 0x55, 0x43, 0x30,    // 'TUC0'
-                                                       0x01, 0x00, 0x00, 0x00,    // CMD_TYPE_RESPONSE = 1
-                                                       0x01, 0x00, 0x00, 0x00 };
 
-        final byte[] twelveZeroBytes = new byte[12];
-
-        if (writeUsb(standardReplyBytes)){       // Send integer value of '1' in Little-endian format.
-            print("Sending response failed [1/3]", EMsgType.FAIL);
-            return true;
-        }
-
-        if(writeUsb(sizeAsBytes)) {                                                          // Send EXACTLY what has been received
-            print("Sending response failed [2/3]", EMsgType.FAIL);
-            return true;
-        }
-
-        if(writeUsb(twelveZeroBytes)) {                                                       // kinda another one padding
-            print("Sending response failed [3/3]", EMsgType.FAIL);
-            return true;
-        }
-        return false;
+    private void sendFileMetadata(byte[] sizeAsBytes) throws LibUsbException{
+        writeUsb(STANDARD_REPLY, "Sending response [1/3]");
+        writeUsb(sizeAsBytes, "Sending response [2/3]");       // Send EXACTLY what received
+        writeUsb(TWELVE_ZERO_BYTES, "Sending response [3/3]"); // kinda another one padding
     }
 
     /**
-     * Sending any byte array to USB device
-     * @return 'false' if no issues
-     *          'true' if errors happened
+     * Sending anything to USB device
+     * @param message is payload
+     * @param operation is operation description
      * */
-    private boolean writeUsb(byte[] message) {
-        ByteBuffer writeBuffer = ByteBuffer.allocateDirect(message.length);   //writeBuffer.order() equals BIG_ENDIAN;
-        writeBuffer.put(message);                                             // Don't do writeBuffer.rewind();
-        IntBuffer writeBufTransferred = IntBuffer.allocate(1);
-        int result;
-        //int varVar = 0; //todo:remove
-        while (! task.isCancelled() ) {
-            /*
-            if (varVar != 0)
-                print("writeUsb() retry cnt: "+varVar, EMsgType.INFO); //NOTE: DEBUG
-            varVar++;
-            */
-            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x01, writeBuffer, writeBufTransferred, 5050);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
+    private void writeUsb(byte[] message, String operation) throws LibUsbException {
+        var wBufferTransferred = IntBuffer.allocate(1);
+
+        while (! task.isCancelled()) {
+            int result = LibUsb.bulkTransfer(handlerNS,
+                    OUT_EP,
+                    ByteBuffer.allocateDirect(message.length).put(message), //writeBuffer.order() equals BIG_ENDIAN; Don't writeBuffer.rewind();
+                    wBufferTransferred,
+                    5050);  // TIMEOUT. 0 stands for unlimited
 
             switch (result){
                 case LibUsb.SUCCESS:
-                    if (writeBufTransferred.get() == message.length)
-                        return false;
-                    print("Data transfer issue [write]" +
+                    if (wBufferTransferred.get() == message.length)
+                        return;
+                    print(operation +
+                            "\n         Data transfer issue [write]" +
                             "\n         Requested: "+message.length+
-                            "\n         Transferred: "+writeBufTransferred.get(), EMsgType.FAIL);
-                    return true;
+                            "\n         Transferred: "+wBufferTransferred.get(), FAIL);
+                    throw new LibUsbException("Transferred amount of data mismatch", LibUsb.SUCCESS);
                 case LibUsb.ERROR_TIMEOUT:
-                    //System.out.println("writeBuffer position: "+writeBuffer.position()+" "+writeBufTransferred.get());
-                    //writeBufTransferred.clear();    // MUST BE HERE IF WE 'GET()' IT
+                    //wBufferTransferred.clear();    // MUST BE HERE IF WE 'GET()' IT
                     continue;
                 default:
-                    print("Data transfer issue [write]" +
-                            "\n         Returned: "+ UsbErrorCodes.getErrCode(result) +
-                            "\n         (execution stopped)", EMsgType.FAIL);
-                    return true;
+                    print(operation +
+                            "\n         Data transfer issue [write]" +
+                            "\n         Returned: "+ LibUsb.errorName(result) +
+                            "\n         (execution stopped)", FAIL);
+                    throw new LibUsbException(result);
             }
         }
-        print("Execution interrupted", EMsgType.INFO);
-        return true;
+        print(operation +
+                "\n         Execution has been interrupted", INFO);
     }
     /**
-     * Reading what USB device responded.
+     * Read USB response
      * @return byte array if data read successful
-     *         'null' if read failed
+     *         'null' on failure
      * */
     private byte[] readUsb() throws Exception{
-        ByteBuffer readBuffer = ByteBuffer.allocateDirect(512);
+        var readBuffer = ByteBuffer.allocateDirect(512);
         // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
-        IntBuffer readBufTransferred = IntBuffer.allocate(1);
-        int result;
+        var rBufferTransferred = IntBuffer.allocate(1);
+
         while (! task.isCancelled()) {
-            result = LibUsb.bulkTransfer(handlerNS, (byte) 0x81, readBuffer, readBufTransferred, 1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
+            var result = LibUsb.bulkTransfer(handlerNS,
+                    IN_EP,
+                    readBuffer,
+                    rBufferTransferred,
+                    1000);
 
             switch (result) {
                 case LibUsb.SUCCESS:
-                    int trans = readBufTransferred.get();
+                    int trans = rBufferTransferred.get();
                     byte[] receivedBytes = new byte[trans];
                     readBuffer.get(receivedBytes);
                     return receivedBytes;
@@ -358,7 +282,7 @@ class TinFoil extends TransferModule {
                     continue;
                 default:
                     throw new Exception("Data transfer issue [read]" +
-                            "\n         Returned: " + UsbErrorCodes.getErrCode(result)+
+                            "\n         Returned: " + LibUsb.errorName(result)+
                             "\n         (execution stopped)");
             }
         }

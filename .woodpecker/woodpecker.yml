@@ -2,7 +2,7 @@ steps:
   - name: test-standard
     when:
       event: [tag, push, manual]
-    image: maven:3-openjdk-17
+    image: maven:3-eclipse-temurin-25-alpine
     commands:
       - mvn -B -DskipTests clean package
       - mvn test -B
@@ -33,7 +33,7 @@ steps:
   - name: emerge-legacy-artifact
     when:
       event: [tag, push, manual]
-    image: maven:3-openjdk-17
+    image: maven:3-eclipse-temurin-25-alpine
     commands:
       - . ./.make_legacy
       - mvn -B -DskipTests clean package
@@ -55,13 +55,13 @@ steps:
       - cp Installer-*.exe "../../../artifacts"
       - cd ../../../
     volumes:
-      - /home/docker/woodpecker/files/assembly/openjdk-19.0.2:/assembly/jdk
+      - /home/docker/woodpecker/files/assembly/openjdk-25.0.1:/assembly/jdk
       - /home/docker/woodpecker/files/assembly/Drivers_set.exe:/assembly/Drivers_set.exe
   
   - name: emerge-mac-m1-artifact
     when:
       event: [tag, push, manual]
-    image: maven:3-openjdk-17
+    image: maven:3-eclipse-temurin-25-alpine
     commands:
       - . ./.make_m1
       - mvn -B -DskipTests clean package

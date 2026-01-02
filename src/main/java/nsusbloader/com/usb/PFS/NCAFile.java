@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -18,26 +18,33 @@
 */
 package nsusbloader.com.usb.PFS;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import static nsusbloader.com.DataConvertUtils.intToArrLE;
 
 /**
- * Data class to hold NCA, tik, xml etc. meta-information
+ * Data class to hold NCA, tik, XML etc. meta-information
  * */
 public class NCAFile {
     //private int ncaNumber;
     private byte[] ncaFileName;
+    private byte[] ncaFileNameLength;
     private long ncaOffset;
     private long ncaSize;
 
     //public void setNcaNumber(int ncaNumber){ this.ncaNumber = ncaNumber; }
-    void setNcaFileName(byte[] ncaFileName) { this.ncaFileName = ncaFileName; }
-    void setNcaOffset(long ncaOffset) { this.ncaOffset = ncaOffset; }
-    void setNcaSize(long ncaSize) { this.ncaSize = ncaSize; }
+    void setNcaFileName(byte[] ncaFileName) {
+        this.ncaFileName = ncaFileName;
+        this.ncaFileNameLength = intToArrLE(ncaFileName.length);
+    }
+    void setNcaOffset(long ncaOffset) {
+        this.ncaOffset = ncaOffset;
+    }
+    void setNcaSize(long ncaSize) {
+        this.ncaSize = ncaSize;
+    }
 
     //public int getNcaNumber() {return this.ncaNumber; }
     public byte[] getNcaFileName() { return ncaFileName; }
-    public byte[] getNcaFileNameLength() { return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(ncaFileName.length).array(); }
+    public byte[] getNcaFileNameLength() { return ncaFileNameLength; }
     public long getNcaOffset() { return ncaOffset; }
     public long getNcaSize() { return ncaSize; }
 }
