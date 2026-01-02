@@ -1,5 +1,5 @@
-sed -z -i -e 's/<groupId>org.usb4java<\/groupId>\n<artifactId>usb4java<\/artifactId>\n<version>1.2.0<\/version>/<groupId>org.usb4java<\/groupId>\n<artifactId>usb4java<\/artifactId>\n<version>1.3.0<\/version>/g' pom.xml
-sed -z -i -e 's/<classifier>mac<\/classifier>/<classifier>mac-aarch64<\/classifier>/g' pom.xml
-sed -z -i -e 's/<finalName>${project.artifactId}-${project.version}-legacy-${maven.build.timestamp}<\/finalName>/<finalName>${project.artifactId}-${project.version}-m1-${maven.build.timestamp}<\/finalName>/g' pom.xml
+sed -i -e 's/<groupId>org.usb4java<\/groupId>\n<artifactId>usb4java<\/artifactId>\n<version>1.2.0<\/version>/<groupId>org.usb4java<\/groupId>\n<artifactId>usb4java<\/artifactId>\n<version>1.3.0<\/version>/g' pom.xml
+sed -i -e 's/<classifier>mac<\/classifier>/<classifier>mac-aarch64<\/classifier>/g' pom.xml
+sed -i -e 's/<finalName>${project.artifactId}-${project.version}-legacy-${maven.build.timestamp}<\/finalName>/<finalName>${project.artifactId}-${project.version}-m1-${maven.build.timestamp}<\/finalName>/g' pom.xml
 sed -i -e '/<groupId>com.akathist.maven.plugins.launch4j/,/<\/executions>/d' pom.xml
-sed -z -i -e 's/<plugin>\n\s*<\/plugin>//g' pom.xml
+sed -i -e 's/<plugin>\n\s*<\/plugin>//g' pom.xml
