@@ -76,7 +76,7 @@ class TinFoil extends TransferModule {
     /**
      * Send what NSP will be transferred
      * */
-    private void sendListOfFiles() throws LibUsbException {
+    private void sendListOfFiles() throws Exception {
         var fileNames = buildFileNamesToSend();
         var fileNamesSize = intToArrLE(fileNames.length);
 
@@ -146,11 +146,7 @@ class TinFoil extends TransferModule {
         var sizeAsBytes = Arrays.copyOfRange(readData, 0,8);
         var size = arrToLongLE(readData, 0);    // could be unsigned long. Files greater than 8796093022208 Gb r not supported
         var offset = arrToLongLE(readData, 8);  // could be unsigned long
-
-        // Requesting UTF-8 file name required:
-        readData = readUsb();
-
-        var fileName = new String(readData, UTF_8);
+        var fileName = new String(readUsb(), UTF_8); // Requesting UTF-8 file name required
 
         print(String.format("Reply to: %s" +
                 "%n         Offset: %-20d 0x%x" +
@@ -211,7 +207,7 @@ class TinFoil extends TransferModule {
         }
     }
 
-    private void sendFileMetadata(byte[] sizeAsBytes) throws LibUsbException{
+    private void sendFileMetadata(byte[] sizeAsBytes) throws Exception{
         writeUsb(STANDARD_REPLY, "Sending response [1/3]");
         writeUsb(sizeAsBytes, "Sending response [2/3]");       // Send EXACTLY what received
         writeUsb(TWELVE_ZERO_BYTES, "Sending response [3/3]"); // kinda another one padding
@@ -222,7 +218,7 @@ class TinFoil extends TransferModule {
      * @param message is payload
      * @param operation is operation description
      * */
-    private void writeUsb(byte[] message, String operation) throws LibUsbException {
+    private void writeUsb(byte[] message, String operation) throws Exception {
         var wBufferTransferred = IntBuffer.allocate(1);
 
         while (! task.isCancelled()) {
@@ -242,7 +238,6 @@ class TinFoil extends TransferModule {
                             "\n         Transferred: "+wBufferTransferred.get(), FAIL);
                     throw new LibUsbException("Transferred amount of data mismatch", LibUsb.SUCCESS);
                 case LibUsb.ERROR_TIMEOUT:
-                    //wBufferTransferred.clear();    // MUST BE HERE IF WE 'GET()' IT
                     continue;
                 default:
                     print(operation +
@@ -252,8 +247,7 @@ class TinFoil extends TransferModule {
                     throw new LibUsbException(result);
             }
         }
-        print(operation +
-                "\n         Execution has been interrupted", INFO);
+        throw new InterruptedException("Execution interrupted");
     }
     /**
      * Read USB response
@@ -274,8 +268,7 @@ class TinFoil extends TransferModule {
 
             switch (result) {
                 case LibUsb.SUCCESS:
-                    int trans = rBufferTransferred.get();
-                    byte[] receivedBytes = new byte[trans];
+                    var receivedBytes = new byte[rBufferTransferred.get()];
                     readBuffer.get(receivedBytes);
                     return receivedBytes;
                 case LibUsb.ERROR_TIMEOUT:

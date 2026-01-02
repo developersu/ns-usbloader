@@ -25,12 +25,13 @@ import nsusbloader.AppPreferences;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.jar.JarFile;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class SettingsLanguagesSetup {
     private final ObservableList<LocaleHolder> languages;
@@ -54,7 +55,7 @@ public class SettingsLanguagesSetup {
     private boolean isApplicationIsJar() {
         var encodedJarLocation =
                 getClass().getProtectionDomain().getCodeSource().getLocation().getPath().replace("+", "%2B");
-        thisApplicationFile = new File(URLDecoder.decode(encodedJarLocation, StandardCharsets.UTF_8));
+        thisApplicationFile = new File(URLDecoder.decode(encodedJarLocation, UTF_8));
         return thisApplicationFile.isFile();
     }
 

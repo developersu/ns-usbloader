@@ -27,16 +27,18 @@ import org.usb4java.DeviceHandle;
 import java.io.File;
 import java.util.*;
 
+import static java.util.Comparator.comparingInt;
+
 public abstract class TransferModule {
     protected static final byte IN_EP = (byte) 0x81;
     protected static final byte OUT_EP = (byte) 0x01;
 
     protected EFileStatus status = EFileStatus.UNKNOWN;
 
-    protected LinkedHashMap<String, File> nspMap;
-    protected ILogPrinter logPrinter;
-    protected DeviceHandle handlerNS;
-    protected CancellableRunnable task;
+    protected final LinkedHashMap<String, File> nspMap;
+    protected final ILogPrinter logPrinter;
+    protected final DeviceHandle handlerNS;
+    protected final CancellableRunnable task;
 
     protected TransferModule(DeviceHandle handler,
                              LinkedHashMap<String, File> nspMap,
@@ -54,14 +56,14 @@ public abstract class TransferModule {
             if (f.isFile())
                 return false;
 
-            File[] subFiles = f.listFiles((file, name) -> name.matches("[0-9]{2}"));
+            var subFiles = f.listFiles((file, name) -> name.matches("[0-9]{2}"));
 
             if (subFiles == null || subFiles.length == 0) {
                 print("TransferModule: Exclude folder: " + f.getName(), EMsgType.WARNING);
                 return true;
             }
 
-            Arrays.sort(subFiles, Comparator.comparingInt(file -> Integer.parseInt(file.getName())));
+            Arrays.sort(subFiles, comparingInt(file -> Integer.parseInt(file.getName())));
 
             for (int i = subFiles.length - 2; i > 0 ; i--){
                 if (subFiles[i].length() != subFiles[i-1].length()) {

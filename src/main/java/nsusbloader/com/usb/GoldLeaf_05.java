@@ -56,7 +56,6 @@ public class GoldLeaf_05 extends TransferModule {
     GoldLeaf_05(DeviceHandle handler, LinkedHashMap<String, File> nspMap, CancellableRunnable task, ILogPrinter logPrinter){
         super(handler, nspMap, task, logPrinter);
 
-        this.task = task;
         status = EFileStatus.FAILED;
 
         print("============= GoldLeaf v0.5 =============\n" +
