@@ -78,8 +78,8 @@ steps:
       - cd artifacts/
       - sha512sum ./* > ./sha512.txt
       - cd ..
-      - export ARTIFACTS_DIR="$(date -d @$CI_PIPELINE_CREATED +'%Y-%m-%d %H:%m %Z')"
-      - mkdir -p /builds/ns-usbloader/
-      - mv artifacts "/builds/ns-usbloader/$ARTIFACTS_DIR"
+      - export ARTIFACTS_DIR="$(date -d @$CI_PIPELINE_CREATED +'%Y-%m-%d %H:%M %Z')"
+      - mkdir -p /builds/$CI_REPO_NAME
+      - mv -v artifacts "/builds/$CI_REPO_NAME/$ARTIFACTS_DIR"
     volumes:
       - /home/www/builds:/builds

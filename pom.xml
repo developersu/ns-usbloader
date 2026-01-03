@@ -268,7 +268,7 @@
                             <headerType>gui</headerType>
                             <icon>appicon.ico</icon>
                             <outfile>target/${project.name}.exe</outfile>
-                            <jar>target/${project.artifactId}-${project.version}-${maven.build.timestamp}.jar</jar>
+                            <jar>target/${project.artifactId}-${project.version}.jar</jar>
                             <!-- <downloadUrl>https://download.oracle.com/java/17/archive/jdk-17.0.1_windows-x64_bin.msi</downloadUrl> -->
                             <errTitle>Launching error</errTitle>
                             <!-- <dontWrapJar>true</dontWrapJar> -->
