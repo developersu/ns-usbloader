@@ -49,7 +49,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
-        <javafx.version>19.0.2.1</javafx.version>
+        <javafx.version>25</javafx.version>
         <maven.compiler.release>23</maven.compiler.release>
     </properties>
 
@@ -166,7 +166,7 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>${project.artifactId}-${project.version}-${maven.build.timestamp}</finalName>
+        <finalName>${project.artifactId}-${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

@@ -1,5 +1,5 @@
 steps:
-  - name: test-standard
+  - name: build-standard-jar
     when:
       event: [tag, push, manual]
     image: maven:3-amazoncorretto-25-debian
@@ -12,7 +12,7 @@ steps:
     volumes:
       - /home/docker/woodpecker/files/m2:/root/.m2
 
-  - name: make-windows-installer
+  - name: build-windows-installer
     when:
       event: [tag, push, manual]
     image: wheatstalk/makensis:3
@@ -30,7 +30,7 @@ steps:
       - /home/docker/woodpecker/files/assembly/openjdk-19.0.2:/assembly/jdk
       - /home/docker/woodpecker/files/assembly/Drivers_set.exe:/assembly/Drivers_set.exe
 
-  - name: emerge-legacy-artifact
+  - name: build-legacy-jar
     when:
       event: [tag, push, manual]
     image: maven:3-amazoncorretto-25-debian
@@ -42,7 +42,7 @@ steps:
     volumes:
       - /home/docker/woodpecker/files/m2:/root/.m2
 
-  - name: make-legacy-windows-installer
+  - name: build-legacy-windows-installer
     when:
       event: [tag, push, manual]
     image: wheatstalk/makensis:3
@@ -58,12 +58,12 @@ steps:
       - /home/docker/woodpecker/files/assembly/openjdk-25.0.1:/assembly/jdk
       - /home/docker/woodpecker/files/assembly/Drivers_set.exe:/assembly/Drivers_set.exe
   
-  - name: emerge-mac-m1-artifact
+  - name: build-mac+linux-aarch64-jar
     when:
       event: [tag, push, manual]
     image: maven:3-amazoncorretto-25-debian
     commands:
-      - . ./.make_m1
+      - . ./.make_aarch64
       - mvn -B -DskipTests clean package
       - echo target/ns-usbloader-*jar
       - cp target/ns-usbloader-*jar artifacts
@@ -75,6 +75,9 @@ steps:
       event: [tag, push]
     image: alpine:latest
     commands:
+      - cd artifacts/
+      - sha512sum ./* > ./sha512.txt
+      - cd ..
       - export ARTIFACTS_DIR="$(date -d @$CI_PIPELINE_CREATED +'%Y-%m-%d %H:%m %Z')"
       - mkdir -p /builds/ns-usbloader/
       - mv artifacts "/builds/ns-usbloader/$ARTIFACTS_DIR"
