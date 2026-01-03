@@ -24,21 +24,29 @@ import java.util.Locale;
 import java.util.prefs.Preferences;
 
 public class AppPreferences {
-    private static final AppPreferences INSTANCE = new AppPreferences();
-    public static AppPreferences getInstance() { return INSTANCE; }
+    private static AppPreferences INSTANCE;
+    public static AppPreferences getInstance() {
+        if (INSTANCE == null)
+            INSTANCE = new AppPreferences();
+        return INSTANCE;
+    }
 
     private final Preferences preferences;
     private final Locale locale;
+    private final Font defaultFont;
     public static final String[] GOLDLEAF_SUPPORTED_VERSIONS = {"v0.5", "v0.7.x", "v0.8-0.9", "v0.10+"};
-    private static final Font DEFAULT_FONT = Font.getDefault();
 
     private AppPreferences(){
         this.preferences = Preferences.userRoot().node("NS-USBloader");
-        String localeCode = preferences.get("locale", Locale.getDefault().toString());
+        var localeCode = preferences.get("locale", Locale.getDefault().toString());
         if (localeCode.length() < 5)
-            this.locale = new Locale("en", "EN");
+            this.locale = Locale.of("en", "US");
         else
             this.locale = new Locale(localeCode.substring(0, 2), localeCode.substring(3));
+        // Avoid initialization of the JavaFX in case of headless execution
+        this.defaultFont = NSLMain.isCli?
+                null:
+                Font.getDefault();
     }
 
     public String getTheme(){
@@ -156,11 +164,11 @@ public class AppPreferences {
     public String getPatchPattern(String type, int moduleNumber, int offsetId){ return preferences.get(String.format("%s_%02x_%02x", type, moduleNumber, offsetId), ""); }
     public void setPatchPattern(String fullTypeSpecifier, String offset){ preferences.put(fullTypeSpecifier, offset); }
 
-    public String getFontFamily(){ return preferences.get("font_family", DEFAULT_FONT.getFamily()); }
-    public double getFontSize(){ return preferences.getDouble("font_size", DEFAULT_FONT.getSize()); }
+    public String getFontFamily(){ return preferences.get("font_family", defaultFont.getFamily()); }
+    public double getFontSize(){ return preferences.getDouble("font_size", defaultFont.getSize()); }
     public String getFontStyle(){
-        final String fontFamily = preferences.get("font_family", DEFAULT_FONT.getFamily());
-        final double fontSize = preferences.getDouble("font_size", DEFAULT_FONT.getSize());
+        final String fontFamily = preferences.get("font_family", defaultFont.getFamily());
+        final double fontSize = preferences.getDouble("font_size", defaultFont.getSize());
 
         return String.format("-fx-font-family: \"%s\"; -fx-font-size: %.0f;", fontFamily, fontSize);
     }
