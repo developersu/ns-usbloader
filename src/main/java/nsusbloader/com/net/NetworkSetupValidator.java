@@ -155,7 +155,7 @@ public class NetworkSetupValidator {
         }
     }
 
-    private boolean findIpLocally() throws InterruptedException {
+    private boolean findIpLocally() throws InterruptedException{
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
@@ -172,7 +172,8 @@ public class NetworkSetupValidator {
                     }
                 }
             }
-        } catch (SocketException e) {
+        }
+        catch (SocketException e){
             logPrinter.print("NET: Error scanning local adapters: " + e.getMessage(), EMsgType.INFO);
         }
         return false;
