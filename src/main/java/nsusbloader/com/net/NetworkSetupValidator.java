@@ -124,6 +124,9 @@ public class NetworkSetupValidator {
             return;
         }
 
+        if (findIpLocally())
+            return;
+        
         if (findIpUsingHost("google.com"))
             return;
 
@@ -150,6 +153,30 @@ public class NetworkSetupValidator {
                     + " server (InetSocketAddress). Returned:\n\t"+e.getMessage(), EMsgType.INFO);
             return false;
         }
+    }
+
+    private boolean findIpLocally() throws InterruptedException{
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iface = interfaces.nextElement();
+                if (iface.isLoopback() || !iface.isUp()) continue;
+
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
+                        hostIP = addr.getHostAddress();
+                        logPrinter.print("NET: Host IP detected locally as: " + hostIP, EMsgType.PASS);
+                        return true;
+                    }
+                }
+            }
+        }
+        catch (SocketException e){
+            logPrinter.print("NET: Error scanning local adapters: " + e.getMessage(), EMsgType.INFO);
+        }
+        return false;
     }
 
     private String getAvaliableIpExamples(){
