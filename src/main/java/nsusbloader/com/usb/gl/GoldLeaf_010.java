@@ -220,8 +220,7 @@ public class GoldLeaf_010 extends TransferModule {
 
     /**
      * Handle StartFile & EndFile
-     * NOTE: It's something internal for GL and used somehow by GL-PC-app, so just ignore this, at least for v0.8.
-     * @return true - failed, false - passed
+     * NOTE: It's something internal for GL and used somehow by GL-PC-app, so just ignore this, at least for v0.8
      * */
     protected void startOrEndFile() throws Exception {
         writeGL_PASS("GL Handle 'StartFile' command");
@@ -229,14 +228,12 @@ public class GoldLeaf_010 extends TransferModule {
     /**
      * Handle GetDriveCount
      * 2 drives declared in current implementation
-     * @return true - failed, false - passed
      */
     protected void getDriveCount() throws Exception {
         writeGL_PASS(intToArrLE(2),"GL Handle 'ListDrives' command");
     }
     /**
      * Handle GetDriveInfo
-     * @return true - failed, false - passed
      */
     protected void getDriveInfo(int driveNo) throws Exception {
         if (driveNo < 0 || driveNo > 1) {
@@ -270,7 +267,7 @@ public class GoldLeaf_010 extends TransferModule {
         }
         var totalSize = Arrays.copyOfRange(longToArrLE(totalSizeLong), 0, 4);
 
-        var command = Arrays.asList(
+        var command = List.of(
                 driveLabelLen,
                 driveLabel,
                 driveLetterLen,
@@ -283,21 +280,18 @@ public class GoldLeaf_010 extends TransferModule {
     /**
      * Handle SpecialPathCount
      * Let's declare nothing. Write count of special paths
-     * @return true - failed, false - passed
      * */
     protected void getSpecialPathCount() throws Exception {
         writeGL_PASS(intToArrLE(0), "GL Handle 'SpecialPathCount' command");
     }
     /**
      * Handle SpecialPath
-     * @return true - failed, false - passed
      * */
     protected void getSpecialPath(int specialPathNo) throws Exception {
         writeGL_FAIL(INVALID_INDEX, "GL Handle 'SpecialPath' command [not supported]");
     }
     /**
      * Handle GetDirectoryCount & GetFileCount
-     * @return true - failed, false - passed
      * */
     protected void getDirectoryOrFileCount(String glFileName, boolean isGetDirectoryCount) throws Exception {
         if (glFileName.equals("VIRT:/")) {
@@ -355,7 +349,6 @@ public class GoldLeaf_010 extends TransferModule {
 
     /**
      * Handle GetDirectory
-     * @return true - failed, false - passed
      * */
     protected void getDirectory(String dirName, int subDirNo) throws Exception{
         if (dirName.startsWith("HOME:/")) {
@@ -398,7 +391,6 @@ public class GoldLeaf_010 extends TransferModule {
     }
     /**
      * Handle GetFile
-     * @return true - failed, false - passed
      * */
     protected void getFile(String glDirName, int subDirNo) throws Exception {
         var command = new LinkedList<byte[]>();
@@ -453,7 +445,6 @@ public class GoldLeaf_010 extends TransferModule {
     }
     /**
      * Handle StatPath
-     * @return true - failed, false - passed
      * */
     protected void statPath(String glFileName) throws Exception {
         var command = new ArrayList<byte[]>();
@@ -498,7 +489,6 @@ public class GoldLeaf_010 extends TransferModule {
     }
     /**
      * Handle 'Rename' that is actually 'mv'
-     * @return true - failed, false - passed
      * */
     protected void rename(String glFileName, String glNewFileName) throws Exception {
         if (glFileName.startsWith("HOME:/")){
@@ -527,7 +517,6 @@ public class GoldLeaf_010 extends TransferModule {
     }
     /**
      * Handle 'Delete'
-     * @return true - failed, false - passed
      * */
     protected void delete(String glFileName) throws Exception {
         if (! glFileName.startsWith("HOME:/")) {
@@ -550,7 +539,6 @@ public class GoldLeaf_010 extends TransferModule {
      * Handle 'Create'
      * @param type 1 → file,  2 → folder
      * @param glFileName full path including new file name in the end
-     * @return true - failed, false - passed
      * */
     protected void create(String glFileName, byte type) throws Exception {
         if (! glFileName.startsWith("HOME:/")) {    // For VIRT:/ and others we don't serve requests
@@ -581,13 +569,12 @@ public class GoldLeaf_010 extends TransferModule {
      * @param glFileName full path including new file name in the end in format of Goldleaf
      * @param offset requested offset
      * @param size requested size
-     * @return true - failed, false - passed
      * */
     protected void readFile(String glFileName, long offset, long size) throws Exception {
         var fileName = glFileName.replaceFirst("^.*?:/", "");
         if (glFileName.startsWith("VIRT:/")){                                              // Could have split-file
             // Let's find out which file requested
-            var fNamePath = nspMap.get(fileName).getAbsolutePath(); // NOTE: 6 = "VIRT:/".length
+            var fNamePath = nspMap.get(fileName).getAbsolutePath();
             // If we don't have this file opened, let's open it
             if (openReadFileNameAndPath == null || (! openReadFileNameAndPath.equals(fNamePath))) {
                 if (openReadFileNameAndPath != null)                                      // (Try to) close what opened
@@ -669,7 +656,6 @@ public class GoldLeaf_010 extends TransferModule {
     /**
      * Handle 'WriteFile'
      * @param glFileName full path including new file name in the end
-     * @return true - failed, false - passed
      * */
     void writeFile(String glFileName) throws Exception{
         if (glFileName.startsWith("VIRT:/")) {
@@ -708,7 +694,6 @@ public class GoldLeaf_010 extends TransferModule {
 
     /**
      * Handle 'SelectFile'
-     * @return true - failed, false - passed
      * */
     protected void selectFile() throws Exception {
         var selectedFile = CompletableFuture.supplyAsync(() -> {

@@ -108,7 +108,7 @@ class TinFoil extends TransferModule {
                 if (isInvalidReply(deviceReply))
                     continue;
 
-                switch (deviceReply[8]){
+                switch (deviceReply[8]) {
                     case CMD_EXIT:
                         print("Transfer complete", PASS);
                         status = EFileStatus.UPLOADED;
@@ -118,16 +118,16 @@ class TinFoil extends TransferModule {
                         fileRangeCmd();
                 }
             }
-        } catch (ArithmeticException ae){
+        } catch (ArithmeticException ae) {
             print("Unable to cast huge offsets to int ('offset end' - 'offsets current'):\n" +
                     "         "+ae.getMessage(), FAIL);
             ae.printStackTrace();
-        } catch (NullPointerException npe){
+        } catch (NullPointerException npe) {
             print("Something missed. Make sure you have enough space on medium!\n" +
                     "         "+npe.getMessage(), FAIL);
             npe.printStackTrace();
         }
-        catch (Exception e){
+        catch (Exception e) {
             print(e.getMessage(), FAIL);
             e.printStackTrace();
         }
