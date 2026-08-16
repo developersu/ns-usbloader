@@ -24,12 +24,12 @@ import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.com.helpers.NSSplitReader;
 import nsusbloader.com.usb.PFS.PFSProvider;
 import org.usb4java.DeviceHandle;
-import org.usb4java.LibUsb;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 
@@ -53,7 +53,7 @@ public class GoldLeaf_05 extends TransferModule {
     private static final byte[] CMD_Finish =             new byte[]{0x07, 0x00, 0x00, 0x00};
 
     private RandomAccessFile raf;   // NSP File
-    private NSSplitReader nsr;      // It'a also NSP File
+    private NSSplitReader nsr;      // Split NSP File
 
     GoldLeaf_05(DeviceHandle handler, LinkedHashMap<String, File> nspMap, CancellableRunnable task, ILogPrinter logPrinter){
         super(handler, nspMap, task, logPrinter);
@@ -101,12 +101,12 @@ public class GoldLeaf_05 extends TransferModule {
         byte[] readByte;
 
         // Go connect to GoldLeaf
-        if (writeUsb(CMD_GLUC)) {
+        if (writeToUsb(CMD_GLUC)) {
             print("GL Initiating GoldLeaf connection [1/2]", FAIL);
             return;
         }
         print("GL Initiating GoldLeaf connection: [1/2]", PASS);
-        if (writeUsb(CMD_ConnectionRequest)){
+        if (writeToUsb(CMD_ConnectionRequest)){
             print("GL Initiating GoldLeaf connection: [2/2]", FAIL);
             return;
         }
@@ -168,24 +168,24 @@ public class GoldLeaf_05 extends TransferModule {
      * */
     private boolean handleConnectionResponse(PFSProvider pfsElement){
         print("GL 'ConnectionResponse' command:", INFO);
-        if (writeUsb(CMD_GLUC)) {
+        if (writeToUsb(CMD_GLUC)) {
             print("  [1/4]", FAIL);
             return true;
         }
         print("  [1/4]", PASS);
-        if (writeUsb(CMD_NSPName)) {
+        if (writeToUsb(CMD_NSPName)) {
             print("  [2/4]", FAIL);
             return true;
         }
         print("  [2/4]", PASS);
 
-        if (writeUsb(pfsElement.getBytesNspFileNameLength())) {
+        if (writeToUsb(pfsElement.getBytesNspFileNameLength())) {
             print("  [3/4]", FAIL);
             return true;
         }
         print("  [3/4]", PASS);
 
-        if (writeUsb(pfsElement.getBytesNspFileName())) {
+        if (writeToUsb(pfsElement.getBytesNspFileName())) {
             print("  [4/4]", FAIL);
             return true;
         }
@@ -200,19 +200,19 @@ public class GoldLeaf_05 extends TransferModule {
      * */
     private boolean handleStart(PFSProvider pfsElement){
         print("GL Handle 'Start' command:", INFO);
-        if (writeUsb(CMD_GLUC)) {
+        if (writeToUsb(CMD_GLUC)) {
             print("  [Prefix]", FAIL);
             return true;
         }
         print("  [Prefix]", PASS);
 
-        if (writeUsb(CMD_NSPData)) {
+        if (writeToUsb(CMD_NSPData)) {
             print("  [Command]", FAIL);
             return true;
         }
         print("  [Command]", PASS);
 
-        if (writeUsb(pfsElement.getBytesCountOfNca())) {
+        if (writeToUsb(pfsElement.getBytesCountOfNca())) {
             print("  [Sub-files count]", FAIL);
             return true;
         }
@@ -222,23 +222,23 @@ public class GoldLeaf_05 extends TransferModule {
         print("  [Information for "+ncaCount+" sub-files]", INFO);
         for (int i = 0; i < ncaCount; i++){
             print("File #"+i, INFO);
-            if (writeUsb(pfsElement.getNca(i).getNcaFileNameLength())) {
+            if (writeToUsb(pfsElement.getNca(i).getNcaFileNameLength())) {
                 print("  [1/4] Name length", FAIL);
                 return true;
             }
             print("  [1/4] Name length", PASS);
 
-            if (writeUsb(pfsElement.getNca(i).getNcaFileName())) {
+            if (writeToUsb(pfsElement.getNca(i).getNcaFileName())) {
                 print("  [2/4] Name", FAIL);
                 return true;
             }
             print("  [2/4] Name", PASS);
-            if (writeUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getBodySize()+pfsElement.getNca(i).getNcaOffset()).array())) {   // offset. real.
+            if (writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getBodySize()+pfsElement.getNca(i).getNcaOffset()).array())) {   // offset. real.
                 print("  [3/4] Offset", FAIL);
                 return true;
             }
             print("  [3/4] Offset", PASS);
-            if (writeUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getNca(i).getNcaSize()).array())) {  // size
+            if (writeToUsb(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(pfsElement.getNca(i).getNcaSize()).array())) {  // size
                 print("  [4/4] Size", FAIL);
                 return true;
             }
@@ -287,7 +287,7 @@ public class GoldLeaf_05 extends TransferModule {
                     readBuf = new byte[readPice];
                     if (nsr.read(readBuf) != readPice)
                         return true;
-                    if (writeUsb(readBuf))
+                    if (writeToUsb(readBuf))
                         return true;
                     logPrinter.updateProgress((readFrom+readPice)/(realNcaSize/100.0) / 100.0);
                     readFrom += readPice;
@@ -302,7 +302,7 @@ public class GoldLeaf_05 extends TransferModule {
                     readBuf = new byte[readPice];
                     if (raf.read(readBuf) != readPice)
                         return true;
-                    if (writeUsb(readBuf))
+                    if (writeToUsb(readBuf))
                         return true;
                     logPrinter.updateProgress((readFrom+readPice)/(realNcaSize/100.0) / 100.0);
                     readFrom += readPice;
@@ -318,74 +318,32 @@ public class GoldLeaf_05 extends TransferModule {
         return false;
     }
 
-
-    /**
-     * Sending any byte array to USB device
-     * @return 'false' if no issues
-     *          'true' if errors happened
-     * */
-    private boolean writeUsb(byte[] message){
-        var wBufferTransferred = IntBuffer.allocate(1);
-
-        while (! task.isCancelled()) {
-            var result = LibUsb.bulkTransfer(handlerNS,
-                    OUT_EP,
-                    ByteBuffer.allocateDirect(message.length).put(message),
-                    wBufferTransferred,
-                    1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
-
-            switch (result){
-                case LibUsb.SUCCESS:
-                    if (wBufferTransferred.get() == message.length)
-                        return false;
-                    print("Data transfer issue [write]" +
-                            "\n         Requested: "+message.length+
-                            "\n         Transferred: "+wBufferTransferred.get(), FAIL);
-                    return true;
-                case LibUsb.ERROR_TIMEOUT:
-                    continue;
-                default:
-                    print("GL Data transfer issue [write]\n  Returned: "+ LibUsb.errorName(result), FAIL);
-                    print("GL Execution stopped", FAIL);
-                    return true;
-            }
-        }
-        print("GL Execution interrupted", INFO);
-        return true;
-    }
     /**
      * Reading what USB device responded.
      * @return byte array if data read successful
-     *         'null' if read failed
+     *         'null' if failed
      * */
     private byte[] readUsb(){
-        var readBuffer = ByteBuffer.allocateDirect(512);
-        // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
-        var rBufferTransferred = IntBuffer.allocate(1);
-
-        while (! task.isCancelled()) {
-            var result = LibUsb.bulkTransfer(handlerNS,
-                    IN_EP,
-                    readBuffer,
-                    rBufferTransferred,
-                    1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
-
-            switch (result) {
-                case LibUsb.SUCCESS:
-                    var receivedBytes = new byte[rBufferTransferred.get()];
-                    readBuffer.get(receivedBytes);
-                    return receivedBytes;
-                case LibUsb.ERROR_TIMEOUT:
-                    continue;
-                default:
-                    print("Data transfer issue [read]" +
-                            "\n         Returned: " + LibUsb.errorName(result)+
-                            "\n         (execution stopped)", FAIL);
-                    print("GL Execution stopped", FAIL);
-                    return null;
-            }
+        try {
+            return readUsb(512);
         }
-        print("GL Execution interrupted", INFO);
-        return null;
+        catch (Exception ignored) {
+            return null;
+        }
+    }
+    
+    /**
+     * Legacy wrapper
+     * Sending any byte array to USB device
+     * @return 'false' if no issues
+     */
+    private boolean writeToUsb(byte[] message) {
+        try {
+            writeUsb(message, "");
+            return false;
+        }
+        catch (Exception e) {
+            return true;
+        }
     }
 }

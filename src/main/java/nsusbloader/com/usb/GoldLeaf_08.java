@@ -25,11 +25,9 @@ import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.com.helpers.NSSplitReader;
 import org.usb4java.DeviceHandle;
-import org.usb4java.LibUsb;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,6 +40,7 @@ import static nsusbloader.com.DataConvertUtils.*;
  */
 class GoldLeaf_08 extends TransferModule {
     private final static int PACKET_SIZE = 4096;
+    private final static int FILE_PACKET_SIZE = 8388608;
     private final boolean nspFilterForGl;
 
     //                     CMD
@@ -243,7 +242,8 @@ class GoldLeaf_08 extends TransferModule {
             for (BufferedOutputStream fBufOutStream: writeFilesMap.values()){
                 try{
                     fBufOutStream.close();
-                }catch (IOException | NullPointerException ignored){}
+                }
+                catch (IOException | NullPointerException ignored){}
             }
         }
         closeOpenedReadFilesGl();
@@ -979,63 +979,21 @@ class GoldLeaf_08 extends TransferModule {
     /*----------------------------------------------------*/
     /*           GL READ/WRITE USB SPECIFIC               */
     /*----------------------------------------------------*/
-
-    private byte[] readGL(){
-        var readBuffer = ByteBuffer.allocateDirect(PACKET_SIZE);    // GL really?
-        var rBufferTransferred = IntBuffer.allocate(1);
-
-        while (! task.isCancelled()) {
-            var result = LibUsb.bulkTransfer(handlerNS,
-                    IN_EP,
-                    readBuffer,
-                    rBufferTransferred,
-                    1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
-
-            switch (result) {
-                case LibUsb.SUCCESS:
-                    byte[] receivedBytes = new byte[rBufferTransferred.get()];
-                    readBuffer.get(receivedBytes);
-                    return receivedBytes;
-                case LibUsb.ERROR_TIMEOUT:
-                    closeOpenedReadFilesGl();       // Could be a problem if GL glitches and slow down process. Or if user has extra-slow SD card. TODO: refactor
-                    continue;
-                default:
-                    print("GL Data transfer issue [read]" +
-                            "\n         Returned: " + LibUsb.errorName(result) +
-                            "\n         GL Execution stopped", FAIL);
-                    return null;
-            }
+    private byte[] readGL() {
+        try {
+            return readUsb(PACKET_SIZE);
         }
-        print("GL Execution interrupted", INFO);
-        return null;
+        catch (Exception ignored) {
+            return null;
+        }
     }
     private byte[] readGL_file(){
-        var readBuffer = ByteBuffer.allocateDirect(8388608); // Just don't ask..
-        var rBufferTransferred = IntBuffer.allocate(1);
-
-        while (! task.isCancelled() ) {
-            var result = LibUsb.bulkTransfer(handlerNS,
-                    IN_EP,
-                    readBuffer,
-                    rBufferTransferred,
-                    1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint IN = 0x81
-
-            switch (result) {
-                case LibUsb.SUCCESS:
-                    byte[] receivedBytes = new byte[rBufferTransferred.get()];
-                    readBuffer.get(receivedBytes);
-                    return receivedBytes;
-                case LibUsb.ERROR_TIMEOUT:
-                    continue;
-                default:
-                    print("GL Data transfer issue [read]" +
-                            "\n         Returned: " + LibUsb.errorName(result) +
-                            "\n         GL Execution stopped", FAIL);
-                    return null;
-            }
+        try {
+            return readUsb(FILE_PACKET_SIZE);
         }
-        print("GL Execution interrupted", INFO);
-        return null;
+        catch (Exception ignored) {
+            return null;
+        }
     }
     /**
      * Write new command. Shitty implementation.
@@ -1065,37 +1023,17 @@ class GoldLeaf_08 extends TransferModule {
         return false;
     }
     /**
+     * Legacy wrapper
      * Sending any byte array to USB device
      * @return 'false' if no issues
-     *          'true' if errors happened
      * */
-    private boolean writeToUsb(byte[] message){
-        var wBufferTransferred = IntBuffer.allocate(1);
-
-        while (! task.isCancelled()) {
-            var result = LibUsb.bulkTransfer(handlerNS,
-                    OUT_EP,
-                    ByteBuffer.allocateDirect(message.length).put(message),
-                    wBufferTransferred,
-                    1000);  // last one is TIMEOUT. 0 stands for unlimited. Endpoint OUT = 0x01
-
-            switch (result){
-                case LibUsb.SUCCESS:
-                    if (wBufferTransferred.get() == message.length)
-                        return false;
-                    print("Data transfer issue [write]" +
-                            "\n         Requested: "+message.length+
-                            "\n         Transferred: "+wBufferTransferred.get(), FAIL);
-                    return true;
-                case LibUsb.ERROR_TIMEOUT:
-                    continue;
-                default:
-                    print("GL Data transfer issue [write]\n  Returned: "+ LibUsb.errorName(result), FAIL);
-                    print("GL Execution stopped", FAIL);
-                    return true;
-            }
+    private boolean writeToUsb(byte[] message) {
+        try {
+            writeUsb(message, "");
+            return false;
         }
-        print("GL Execution interrupted", INFO);
-        return true;
+        catch (Exception e) {
+            return true;
+        }
     }
 }

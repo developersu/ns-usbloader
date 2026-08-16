@@ -23,12 +23,8 @@ import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.com.helpers.NSSplitReader;
 import org.usb4java.DeviceHandle;
-import org.usb4java.LibUsb;
-import org.usb4java.LibUsbException;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 
@@ -213,72 +209,7 @@ class TinFoil extends TransferModule {
         writeUsb(TWELVE_ZERO_BYTES, "Sending response [3/3]"); // kinda another one padding
     }
 
-    /**
-     * Sending anything to USB device
-     * @param message is payload
-     * @param operation is operation description
-     * */
-    private void writeUsb(byte[] message, String operation) throws Exception {
-        var wBufferTransferred = IntBuffer.allocate(1);
-
-        while (! task.isCancelled()) {
-            int result = LibUsb.bulkTransfer(handlerNS,
-                    OUT_EP,
-                    ByteBuffer.allocateDirect(message.length).put(message), //writeBuffer.order() equals BIG_ENDIAN; Don't writeBuffer.rewind();
-                    wBufferTransferred,
-                    5050);  // TIMEOUT. 0 stands for unlimited
-
-            switch (result){
-                case LibUsb.SUCCESS:
-                    if (wBufferTransferred.get() == message.length)
-                        return;
-                    print(operation +
-                            "\n         Data transfer issue [write]" +
-                            "\n         Requested: "+message.length+
-                            "\n         Transferred: "+wBufferTransferred.get(), FAIL);
-                    throw new LibUsbException("Transferred amount of data mismatch", LibUsb.SUCCESS);
-                case LibUsb.ERROR_TIMEOUT:
-                    continue;
-                default:
-                    print(operation +
-                            "\n         Data transfer issue [write]" +
-                            "\n         Returned: "+ LibUsb.errorName(result) +
-                            "\n         (execution stopped)", FAIL);
-                    throw new LibUsbException(result);
-            }
-        }
-        throw new InterruptedException("Execution interrupted");
-    }
-    /**
-     * Read USB response
-     * @return byte array if data read successful
-     *         'null' on failure
-     * */
-    private byte[] readUsb() throws Exception{
-        var readBuffer = ByteBuffer.allocateDirect(512);
-        // We can limit it to 32 bytes, but there is a non-zero chance to got OVERFLOW from libusb.
-        var rBufferTransferred = IntBuffer.allocate(1);
-
-        while (! task.isCancelled()) {
-            var result = LibUsb.bulkTransfer(handlerNS,
-                    IN_EP,
-                    readBuffer,
-                    rBufferTransferred,
-                    1000);
-
-            switch (result) {
-                case LibUsb.SUCCESS:
-                    var receivedBytes = new byte[rBufferTransferred.get()];
-                    readBuffer.get(receivedBytes);
-                    return receivedBytes;
-                case LibUsb.ERROR_TIMEOUT:
-                    continue;
-                default:
-                    throw new Exception("Data transfer issue [read]" +
-                            "\n         Returned: " + LibUsb.errorName(result)+
-                            "\n         (execution stopped)");
-            }
-        }
-        throw new InterruptedException("Execution interrupted");
+    private byte[] readUsb() throws Exception {
+        return readUsb(512);
     }
 }

@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -23,21 +23,29 @@ import nsusbloader.ModelControllers.ILogPrinter;
 import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
 import org.usb4java.DeviceHandle;
+import org.usb4java.LibUsb;
+import org.usb4java.LibUsbException;
 
 import java.io.File;
-import java.util.*;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 
+import static java.nio.ByteBuffer.allocateDirect;
 import static java.util.Comparator.comparingInt;
+import static nsusbloader.NSLDataTypes.EMsgType.FAIL;
+import static nsusbloader.NSLDataTypes.EMsgType.WARNING;
 
 public abstract class TransferModule {
-    protected static final byte IN_EP = (byte) 0x81;
-    protected static final byte OUT_EP = (byte) 0x01;
+    private static final byte IN_EP = (byte) 0x81;
+    private static final byte OUT_EP = (byte) 0x01;
+    private final DeviceHandle handlerNS;
 
     protected EFileStatus status = EFileStatus.UNKNOWN;
 
     protected final LinkedHashMap<String, File> nspMap;
     protected final ILogPrinter logPrinter;
-    protected final DeviceHandle handlerNS;
     protected final CancellableRunnable task;
 
     protected TransferModule(DeviceHandle handler,
@@ -93,5 +101,77 @@ public abstract class TransferModule {
         catch (InterruptedException ie){
             ie.printStackTrace();
         }
+    }
+
+    /**
+     * Read USB response
+     * @param bufferSize — count of bytes to read
+     * @return byte array if data read successful
+     *         'null' on failure
+     */
+    protected byte[] readUsb(int bufferSize) throws Exception {
+        var readBuffer = ByteBuffer.allocateDirect(bufferSize);
+        var rBufferTransferred = IntBuffer.allocate(1);
+
+        while (! task.isCancelled()) {
+            var result = LibUsb.bulkTransfer(handlerNS,
+                    IN_EP,
+                    readBuffer,
+                    rBufferTransferred,
+                    1000);
+
+            switch (result) {
+                case LibUsb.SUCCESS:
+                    var receivedBytes = new byte[rBufferTransferred.get()];
+                    readBuffer.get(receivedBytes);
+                    return receivedBytes;
+                case LibUsb.ERROR_TIMEOUT:
+                    continue;
+                default:
+                    print("Data transfer issue [read]" +
+                            "\n         Returned: "+ LibUsb.errorName(result) +
+                            "\n         (execution stopped)", FAIL);
+                    throw new LibUsbException(result);
+            }
+        }
+        throw new InterruptedException("Execution interrupted");
+    }
+
+    /**
+     * Sending anything to USB device
+     * @param message is payload
+     * @param operation is operation/error description
+     */
+    protected void writeUsb(byte[] message, String operation) throws Exception {
+        var wBufferTransferred = IntBuffer.allocate(1);
+
+        while (! task.isCancelled()) {
+            int result = LibUsb.bulkTransfer(handlerNS,
+                    OUT_EP,
+                    allocateDirect(message.length).put(message), //.order() is BIG_ENDIAN; Don't .rewind();
+                    wBufferTransferred,
+                    1000);
+
+            switch (result) {
+                case LibUsb.SUCCESS:
+                    if (wBufferTransferred.get() == message.length)
+                        return;
+                    print(operation +
+                            "\n         Data transfer issue [write]" +
+                            "\n         Requested: "+message.length+
+                            "\n         Transferred: "+wBufferTransferred.get(), FAIL);
+                    throw new LibUsbException("Transferred amount of data mismatch", LibUsb.SUCCESS);
+                case LibUsb.ERROR_TIMEOUT:
+                    print("Data transfer issue [write]: Timeout error. Keep trying", WARNING);
+                    continue;
+                default:
+                    print(operation +
+                            "\n         Data transfer issue [write]" +
+                            "\n         Returned: "+ LibUsb.errorName(result) +
+                            "\n         (execution stopped)", FAIL);
+                    throw new LibUsbException(result);
+            }
+        }
+        throw new InterruptedException("Execution interrupted");
     }
 }
