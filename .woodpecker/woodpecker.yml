@@ -27,7 +27,7 @@ steps:
       - rm ./Installer-*.exe
       - cd ../../../
     volumes:
-      - /home/docker/woodpecker/files/assembly/openjdk-19.0.2:/assembly/jdk
+      - /home/docker/woodpecker/files/assembly/openjdk-25.0.1:/assembly/jdk
       - /home/docker/woodpecker/files/assembly/Drivers_set.exe:/assembly/Drivers_set.exe
 
   - name: build-legacy-jar
