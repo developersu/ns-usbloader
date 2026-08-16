@@ -43,6 +43,7 @@ public class NetworkSetupValidator {
                                           boolean doNotServe,
                                           String hostIP,
                                           String hostPortNum,
+                                          String remoteIP,
                                           ILogPrinter logPrinter) {
         this.files = new HashMap<>();
         this.logPrinter = logPrinter;
@@ -51,7 +52,7 @@ public class NetworkSetupValidator {
         try {
             validateFiles(filesList);
             encodeAndAddFilesToMap(filesList);
-            resolveIp(hostIP);
+            resolveIp(hostIP, remoteIP);
             resolvePort(hostPortNum);
         }
         catch (Exception e){
@@ -117,16 +118,16 @@ public class NetworkSetupValidator {
         }
     }
 
-    private void resolveIp(String hostIPaddr) throws IOException, InterruptedException{
+    private void resolveIp(String hostIPaddr, String remoteIP) throws IOException, InterruptedException{
         if (! hostIPaddr.isEmpty()){
             this.hostIP = hostIPaddr;
             logPrinter.print("NET: Host IP defined as: " + hostIP, EMsgType.PASS);
             return;
         }
 
-        if (findIpLocally())
+        if (findIpLocally(remoteIP))
             return;
-        
+
         if (findIpUsingHost("google.com"))
             return;
 
@@ -155,7 +156,7 @@ public class NetworkSetupValidator {
         }
     }
 
-    private boolean findIpLocally() throws InterruptedException{
+    private boolean findIpLocally(String remoteIP) throws InterruptedException{
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
@@ -166,9 +167,13 @@ public class NetworkSetupValidator {
                 while (addresses.hasMoreElements()) {
                     InetAddress addr = addresses.nextElement();
                     if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
-                        hostIP = addr.getHostAddress();
-                        logPrinter.print("NET: Host IP detected locally as: " + hostIP, EMsgType.PASS);
-                        return true;
+                        // Test if this interface can reach the remote IP
+                        if (isAddressReachable(iface, remoteIP)) {
+                            hostIP = addr.getHostAddress();
+                            logPrinter.print("NET: Host IP verified as: " + hostIP +
+                                    " (can reach " + remoteIP + ")", EMsgType.PASS);
+                            return true;
+                        }
                     }
                 }
             }
@@ -177,6 +182,19 @@ public class NetworkSetupValidator {
             logPrinter.print("NET: Error scanning local adapters: " + e.getMessage(), EMsgType.INFO);
         }
         return false;
+    }
+
+    private boolean isAddressReachable(NetworkInterface iface, String remoteIP)
+    {
+        try {
+            InetAddress remoteAddr = InetAddress.getByName(remoteIP);
+            // Test if remoteIP is reachable via this specific network interface
+            boolean reachable = remoteAddr.isReachable(iface, 64, 5000);
+            return reachable;
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 
     private String getAvaliableIpExamples(){
