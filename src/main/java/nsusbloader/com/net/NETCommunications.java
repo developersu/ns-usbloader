@@ -73,7 +73,7 @@ public class NETCommunications extends CancellableRunnable {
         this.logPrinter = Log.getPrinter(EModule.USB_NET_TRANSFERS);
 
         NetworkSetupValidator validator =
-                new NetworkSetupValidator(filesList, doNotServe, hostIP, hostPortNum, switchIP, logPrinter);
+                new NetworkSetupValidator(filesList, doNotServe, hostIP, hostPortNum, logPrinter);
 
         this.hostIP = validator.getHostIP();
         this.hostPort = validator.getHostPort();
