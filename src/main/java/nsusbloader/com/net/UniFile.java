@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -19,26 +19,34 @@
 package nsusbloader.com.net;
 
 import java.io.File;
+import java.util.Arrays;
 
 class UniFile {
+    private static final String SUB_FILE_PATTERN = "[0-9]{2}";
+
     private final long size;
     private final File file;
 
     UniFile(File file) {
         this.file = file;
-
-        if (file.isFile()) {
-            size = file.length();
-        }
-        else {
-            long fSize = 0;
-            File[] subFiles = file.listFiles((myFile, name) -> name.matches("[0-9]{2}"));
-            for (File subFile : subFiles)
-                fSize += subFile.length();
-            size = fSize;
-        }
+        this.size = file.isFile() ?
+                file.length() :
+                sumSubFiles();
+    }
+    private long sumSubFiles() {
+        var subFiles = file.listFiles((myFile, name) -> name.matches(SUB_FILE_PATTERN));
+        if (subFiles == null)
+            return 0L;
+        return Arrays.stream(subFiles)
+                .mapToLong(File::length)
+                .sum();
     }
 
-    public long getSize() { return size; }
-    public File getFile() { return file; }
+    public long getSize() {
+        return size;
+    }
+
+    public File getFile() {
+        return file;
+    }
 }
