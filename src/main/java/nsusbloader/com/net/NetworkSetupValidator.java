@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -24,13 +24,14 @@ import nsusbloader.NSLDataTypes.EMsgType;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class NetworkSetupValidator {
 
-    private String hostIP;
+    private String hostIp;
     private int hostPort;
     private final HashMap<String, UniFile> files;
     private ServerSocket serverSocket;
@@ -40,51 +41,48 @@ public class NetworkSetupValidator {
     private final boolean doNotServe;
 
     NetworkSetupValidator(List<File> filesList,
-                                          boolean doNotServe,
-                                          String hostIP,
-                                          String hostPortNum,
-                                          ILogPrinter logPrinter) {
+                          boolean doNotServe,
+                          String hostIp,
+                          String hostPortNum,
+                          ILogPrinter logPrinter) {
         this.files = new HashMap<>();
         this.logPrinter = logPrinter;
         this.doNotServe = doNotServe;
 
         try {
-            validateFiles(filesList);
+            filesList.removeIf(this::fileValidate);
             encodeAndAddFilesToMap(filesList);
-            resolveIp(hostIP);
+            resolveIp(hostIp);
             resolvePort(hostPortNum);
         }
-        catch (Exception e){
+        catch (Exception e) {
             try {
                 logPrinter.print(e.getMessage(), EMsgType.FAIL);
             }
-            catch (InterruptedException ignore){}
+            catch (InterruptedException ignore) {}
             valid = false;
             return;
         }
         valid = true;
     }
 
-    private void validateFiles(List<File> filesList){
-        filesList.removeIf(this::validator);
-    }
-    private boolean validator(File f){
+    private boolean fileValidate(File file) {
         try {
-            if (f.isFile())
+            if (file.isFile())
                 return false;
 
-            File[] subFiles = f.listFiles((file, name) -> name.matches("[0-9]{2}"));
+            var subFiles = file.listFiles((myFile, name) -> name.matches("[0-9]{2}"));
 
             if (subFiles == null || subFiles.length == 0) {
-                logPrinter.print("NET: Exclude folder: " + f.getName(), EMsgType.WARNING);
+                logPrinter.print("NET: Exclude folder: " + file.getName(), EMsgType.WARNING);
                 return true;
             }
 
-            Arrays.sort(subFiles, Comparator.comparingInt(file -> Integer.parseInt(file.getName())));
+            Arrays.sort(subFiles, Comparator.comparingInt(myFile -> Integer.parseInt(myFile.getName())));
 
             for (int i = subFiles.length - 2; i > 0; i--) {
                 if (subFiles[i].length() != subFiles[i - 1].length()) {
-                    logPrinter.print("NET: Exclude split file: " + f.getName() +
+                    logPrinter.print("NET: Exclude split file: " + file.getName() +
                             "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
                     return true;
                 }
@@ -94,33 +92,33 @@ public class NetworkSetupValidator {
             long lastFileLength = subFiles[subFiles.length - 1].length();
 
             if (lastFileLength > firstFileLength) {
-                logPrinter.print("NET: Exclude split file: " + f.getName() +
+                logPrinter.print("NET: Exclude split file: " + file.getName() +
                         "\n      Chunk sizes of the split file are not the same, but has to be.", EMsgType.WARNING);
                 return true;
             }
             return false;
         }
-        catch (InterruptedException ie){
+        catch (Exception ignored) {
             return false;
         }
     }
 
-    private void encodeAndAddFilesToMap(List<File> filesList) throws UnsupportedEncodingException, FileNotFoundException {
-        for (File file : filesList){
-            String encodedName = URLEncoder.encode(file.getName(), "UTF-8").replaceAll("\\+", "%20"); // replace '+' to '%20'
-            UniFile uniFile = new UniFile(file);
-            files.put(encodedName, uniFile);
-        }
+    private void encodeAndAddFilesToMap(List<File> filesList) throws FileNotFoundException {
+        filesList.forEach(file -> files.put(encodeUri(file), new UniFile(file)));
 
-        if (files.size() == 0) {
+        if (files.isEmpty()) {
             throw new FileNotFoundException("NET: No files to send.");
         }
     }
 
-    private void resolveIp(String hostIPaddr) throws IOException, InterruptedException{
-        if (! hostIPaddr.isEmpty()){
-            this.hostIP = hostIPaddr;
-            logPrinter.print("NET: Host IP defined as: " + hostIP, EMsgType.PASS);
+    private String encodeUri(File file) {
+        return URLEncoder.encode(file.getName(), UTF_8).replaceAll("\\+", "%20"); // replace '+' to '%20'
+    }
+
+    private void resolveIp(String hostIpAddr) throws IOException, InterruptedException {
+        if (!hostIpAddr.isEmpty()) {
+            hostIp = hostIpAddr;
+            logPrinter.print("NET: Host IP defined as: " + hostIp, EMsgType.PASS);
             return;
         }
 
@@ -130,50 +128,45 @@ public class NetworkSetupValidator {
         if (findIpUsingHost("people.com.cn"))
             return;
 
-        throw new IOException("Try using 'Expert mode' and set IP manually. " + getAvaliableIpExamples());
+        throw new IOException("Try using 'Expert mode' and set IP manually.\n"+getAvailableIpExamples());
     }
 
-    private boolean findIpUsingHost(String host) throws InterruptedException{
-        try {
-            Socket scoketK;
-            scoketK = new Socket();
-            scoketK.connect(new InetSocketAddress(host, 80));
-            hostIP = scoketK.getLocalAddress().getHostAddress();
-            scoketK.close();
-
-            logPrinter.print("NET: Host IP detected as: " + hostIP, EMsgType.PASS);
+    private boolean findIpUsingHost(String host) throws InterruptedException {
+        try (var socket = new Socket()) {
+            socket.connect(new InetSocketAddress(host, 80));
+            hostIp = socket.getLocalAddress().getHostAddress();
+            logPrinter.print("NET: Host IP detected as: " + hostIp, EMsgType.PASS);
             return true;
         }
-        catch (IOException e){
+        catch (IOException e) {
             logPrinter.print("NET: Can't get your computer IP using "
                     + host
-                    + " server (InetSocketAddress). Returned:\n\t"+e.getMessage(), EMsgType.INFO);
+                    + " server (InetSocketAddress). Returned:\n\t" + e.getMessage(), EMsgType.INFO);
             return false;
         }
     }
 
-    private String getAvaliableIpExamples(){
+    private String getAvailableIpExamples() {
         try {
-            StringBuilder builder = new StringBuilder("Check for:\n");
-            Enumeration<NetworkInterface> enumeration = NetworkInterface.getNetworkInterfaces();
-            while (enumeration.hasMoreElements()) {
-                NetworkInterface n = enumeration.nextElement();
-                Enumeration<InetAddress> enumeration1 = n.getInetAddresses();
-                while (enumeration1.hasMoreElements()){
+            var builder = new StringBuilder("Check for:\n");
+            var netInterfaces = NetworkInterface.getNetworkInterfaces();
+            while (netInterfaces.hasMoreElements()) {
+                var inetAddresses = netInterfaces.nextElement().getInetAddresses();
+                while (inetAddresses.hasMoreElements()) {
                     builder.append("- ");
-                    builder.append(enumeration1.nextElement().getHostAddress());
+                    builder.append(inetAddresses.nextElement().getHostAddress());
                     builder.append("\n");
                 }
             }
             return builder.toString();
         }
-        catch (SocketException socketException) {
-            return "";
+        catch (SocketException ignored) {
+            return "¯\\_(ツ)_/¯";
         }
     }
 
-    private void resolvePort(String hostPortNum) throws Exception{
-        if (! hostPortNum.isEmpty()) {
+    private void resolvePort(String hostPortNum) throws Exception {
+        if (!hostPortNum.isEmpty()) {
             parsePort(hostPortNum);
             return;
         }
@@ -184,44 +177,55 @@ public class NetworkSetupValidator {
         findPort();
     }
 
-    private void findPort() throws Exception{
-        Random portRandomizer = new Random();
+    private void findPort() throws Exception {
+        var portRandom = new Random();
         for (int i = 0; i < 5; i++) {
             try {
-                this.hostPort = portRandomizer.nextInt(999) + 6000;
+                hostPort = portRandom.nextInt(999) + 6000;
                 serverSocket = new ServerSocket(hostPort);  //System.out.println(serverSocket.getInetAddress()); 0.0.0.0
                 logPrinter.print("NET: Your port detected as: " + hostPort, EMsgType.PASS);
                 break;
             }
             catch (IOException ioe) {
                 if (i == 4) {
-                    throw new Exception("NET: Can't find good port\n"
-                            + "Set port by in settings ('Expert mode').");
+                    throw new Exception("NET: Can't find good port\nSet port by in settings ('Expert mode').");
                 }
-
-                logPrinter.print("NET: Can't use port " + hostPort + "\nLooking for another one.", EMsgType.WARNING);
+                logPrinter.print("NET: Can't use port %s\nLooking for another one.".formatted(hostPort), EMsgType.WARNING);
             }
         }
     }
 
-    private void parsePort(String hostPortNum) throws Exception{
+    private void parsePort(String hostPortNum) throws Exception {
         try {
-            this.hostPort = Integer.parseInt(hostPortNum);
+            hostPort = Integer.parseInt(hostPortNum);
 
             if (doNotServe)
                 return;
 
             serverSocket = new ServerSocket(hostPort);
             logPrinter.print("NET: Using defined port number: " + hostPort, EMsgType.PASS);
-        }
-        catch (IllegalArgumentException | IOException eee){
-            throw new Exception("NET: Can't use port defined in settings: " + hostPortNum + "\n\t"+eee.getMessage());
+        } catch (IllegalArgumentException | IOException e) {
+            throw new Exception("NET: Can't use port defined in settings: %s\n\t%s".formatted(hostPortNum, e.getMessage()));
         }
     }
 
-    String getHostIP() { return hostIP; }
-    int getHostPort() { return hostPort; }
-    HashMap<String, UniFile> getFiles() { return files; }
-    ServerSocket getServerSocket() { return serverSocket; }
-    boolean isValid() { return valid; }
+    String getHostIP() {
+        return hostIp;
+    }
+
+    int getHostPort() {
+        return hostPort;
+    }
+
+    HashMap<String, UniFile> getFiles() {
+        return files;
+    }
+
+    ServerSocket getServerSocket() {
+        return serverSocket;
+    }
+
+    boolean isValid() {
+        return valid;
+    }
 }

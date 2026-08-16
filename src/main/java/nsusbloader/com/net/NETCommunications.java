@@ -62,8 +62,7 @@ public class NETCommunications extends CancellableRunnable {
                              boolean doNotServe,
                              String hostIP,
                              String hostPortNum,
-                             String extras)
-    {
+                             String extras) {
         this.doNotServe = doNotServe;
         if (doNotServe)
             this.extras = extras;
