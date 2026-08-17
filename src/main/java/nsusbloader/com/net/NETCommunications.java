@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -20,24 +20,29 @@ package nsusbloader.com.net;
 
 import nsusbloader.ModelControllers.CancellableRunnable;
 import nsusbloader.ModelControllers.ILogPrinter;
-import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.ModelControllers.Log;
+import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EModule;
 import nsusbloader.NSLDataTypes.EMsgType;
 import nsusbloader.com.helpers.NSSplitReader;
 
 import java.io.*;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 public class NETCommunications extends CancellableRunnable {
+
+    private final static int SWITCH_PORT = 2000;
 
     private final ILogPrinter logPrinter;
 
     private final String switchIP;
-    private final static int SWITCH_PORT = 2000;
     private final String hostIP;
     private final int hostPort;
     private final String extras;
@@ -71,8 +76,7 @@ public class NETCommunications extends CancellableRunnable {
         this.switchIP = switchIP;
         this.logPrinter = Log.getPrinter(EModule.USB_NET_TRANSFERS);
 
-        NetworkSetupValidator validator =
-                new NetworkSetupValidator(filesList, doNotServe, hostIP, hostPortNum, logPrinter);
+        var validator = new NetworkSetupValidator(filesList, doNotServe, hostIP, hostPortNum, logPrinter);
 
         this.hostIP = validator.getHostIP();
         this.hostPort = validator.getHostPort();
@@ -140,9 +144,9 @@ public class NETCommunications extends CancellableRunnable {
 
             handshakeSocket.close();
         }
-        catch (IOException uhe){
+        catch (IOException ioe){
             print("Unable to connect to NS and send files list:\n         "
-                    + uhe.getMessage(), EMsgType.FAIL);
+                    + ioe.getMessage(), EMsgType.FAIL);
             close(EFileStatus.UNKNOWN);
             return true;
         }
@@ -152,16 +156,14 @@ public class NETCommunications extends CancellableRunnable {
         try {
             while (jobInProgress){
                 clientSocket = serverSocket.accept();
-                BufferedReader br = new BufferedReader(
-                        new InputStreamReader(clientSocket.getInputStream())
-                );
+                var reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
                 currSockOS = clientSocket.getOutputStream();
                 currSockPW = new PrintWriter(new OutputStreamWriter(currSockOS));
 
                 String line;
-                LinkedList<String> tcpPacket = new LinkedList<>();
-                while ((line = br.readLine()) != null) {
+                var tcpPacket = new LinkedList<String>();
+                while ((line = reader.readLine()) != null) {
                     if (line.trim().isEmpty()) {          // If TCP packet is ended
                         handleRequest(tcpPacket);     // Proceed required things
                         tcpPacket.clear();                // Clear data and wait for next TCP packet
@@ -170,6 +172,8 @@ public class NETCommunications extends CancellableRunnable {
                         tcpPacket.add(line);              // Otherwise collect data
                 }
                 clientSocket.close();
+
+                //TODO: close BufferedReader? reader.close();
             }
         }
         catch (Exception e){
@@ -188,13 +192,13 @@ public class NETCommunications extends CancellableRunnable {
      * @return true if failed
      * */
     private void handleRequest(LinkedList<String> packet) throws Exception{
-        if (packet.get(0).startsWith("DROP")){
+        if (packet.getFirst().startsWith("DROP")) {
             jobInProgress = false;
             return;
         }
 
         File requestedFile;
-        String reqFileName = packet.get(0).replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", "");
+        var reqFileName = packet.getFirst().replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", "");
 
         if (! files.containsKey(reqFileName)){
             writeToSocket(NETPacket.getCode404());
@@ -247,7 +251,7 @@ public class NETCommunications extends CancellableRunnable {
             }
 
             if (! rangeStr[0].isEmpty()) { // If only START defined: Read all
-                writeToSocket(fileName, Long.parseLong(rangeStr[0]), fileSize);
+                writeToSocket(fileName, Long.parseLong(rangeStr[0]), fileSize - 1);
                 return;
             }
 
