@@ -24,6 +24,7 @@ import nsusbloader.NSLDataTypes.EMsgType;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -82,7 +83,7 @@ public class LogPrinterGui implements ILogPrinter {
      * When we're done - update status
      * */
     @Override
-    public void update(HashMap<String, File> nspMap, EFileStatus status){
+    public void update(Map<String, File> nspMap, EFileStatus status){
         for (File file: nspMap.values())
             statusMap.putIfAbsent(file.getName(), status);
     }

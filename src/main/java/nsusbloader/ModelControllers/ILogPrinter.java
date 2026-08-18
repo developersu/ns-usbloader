@@ -23,12 +23,12 @@ import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.Map;
 
 public interface ILogPrinter {
     void print(String message, EMsgType type) throws InterruptedException;
     void updateProgress(Double value) throws InterruptedException;
-    void update(HashMap<String, File> nspMap, EFileStatus status);
+    void update(Map<String, File> nspMap, EFileStatus status);
     void update(File file, EFileStatus status);
     void updateOneLinerStatus(boolean status);
     void close();

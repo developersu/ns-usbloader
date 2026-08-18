@@ -5,7 +5,7 @@ import nsusbloader.NSLDataTypes.EFileStatus;
 import nsusbloader.NSLDataTypes.EMsgType;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.Map;
 
 public class NoLogPrinter implements ILogPrinter {
     @Override
@@ -15,7 +15,7 @@ public class NoLogPrinter implements ILogPrinter {
     public void updateProgress(Double value) { }
 
     @Override
-    public void update(HashMap<String, File> nspMap, EFileStatus status) { }
+    public void update(Map<String, File> nspMap, EFileStatus status) { }
 
     @Override
     public void update(File file, EFileStatus status) { }

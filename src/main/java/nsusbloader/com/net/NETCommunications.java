@@ -31,18 +31,22 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static nsusbloader.com.net.NETPacket.*;
 
 public class NETCommunications extends CancellableRunnable {
 
     private final static int SWITCH_PORT = 2000;
+    private final static int CHUNK_SIZE = 1024;  // keep it small for better speed
 
     private final ILogPrinter logPrinter;
 
-    private final String switchIP;
+    private final String switchIp;
     private final String hostIP;
     private final int hostPort;
     private final String extras;
@@ -63,7 +67,7 @@ public class NETCommunications extends CancellableRunnable {
      * Simple constructor that everybody uses
      * */
     public NETCommunications(List<File> filesList,
-                             String switchIP,
+                             String switchIp,
                              boolean doNotServe,
                              String hostIP,
                              String hostPortNum,
@@ -73,7 +77,7 @@ public class NETCommunications extends CancellableRunnable {
             this.extras = extras;
         else
             this.extras = "";
-        this.switchIP = switchIP;
+        this.switchIp = switchIp;
         this.logPrinter = Log.getPrinter(EModule.USB_NET_TRANSFERS);
 
         var validator = new NetworkSetupValidator(filesList, doNotServe, hostIP, hostPortNum, logPrinter);
@@ -90,93 +94,73 @@ public class NETCommunications extends CancellableRunnable {
 
     @Override
     public void run() {
-        if (! isValid || isCancelled() )
+        if (! isValid || isCancelled())
             return;
 
         print("\tStart chain", EMsgType.INFO);
 
-        final String handshakeContent = buildHandshakeContent();
-
-        byte[] handshakeCommand = handshakeContent.getBytes(StandardCharsets.UTF_8);
-        byte[] handshakeCommandSize = ByteBuffer.allocate(Integer.BYTES).putInt(handshakeCommand.length).array();
-
-        if (sendHandshake(handshakeCommandSize, handshakeCommand))
+        if (sendListOfFiles())
             return;
 
-        // Check if we should serve requests
-        if (this.doNotServe){
+        if (doNotServe) {
             print("List of files transferred. Replies won't be served.", EMsgType.PASS);
             close(EFileStatus.UNKNOWN);
             return;
         }
         print("Initiation files list has been sent to NS.", EMsgType.PASS);
 
-        // Go transfer
         serveRequestsLoop();
     }
-    /**
-    * Create string that we'll send to TF/AW and which initiates chain
-    * */
-    private String buildHandshakeContent(){
-        StringBuilder builder = new StringBuilder();
-
-        for (String fileNameEncoded : files.keySet()) {
-            builder.append(hostIP);
-            builder.append(':');
-            builder.append(hostPort);
-            builder.append('/');
-            builder.append(extras);
-            builder.append(fileNameEncoded);
-            builder.append('\n');
-        }
-
-        return builder.toString();
-    }
-
-    private boolean sendHandshake(byte[] handshakeCommandSize, byte[] handshakeCommand){
+    private boolean sendListOfFiles() {
         try {
-            Socket handshakeSocket = new Socket(InetAddress.getByName(switchIP), SWITCH_PORT);
-            OutputStream os = handshakeSocket.getOutputStream();
+            final var prefix = hostIP + ':' + hostPort + '/' + extras;
+            var payload = files.keySet().stream()
+                    .map(fileName -> prefix + fileName)
+                    .collect(Collectors.joining("\n", "", "\n"))
+                    .getBytes(UTF_8);
+            var payloadSize = ByteBuffer.allocate(Integer.BYTES)
+                    .putInt(payload.length)
+                    .array();
 
-            os.write(handshakeCommandSize);
-            os.write(handshakeCommand);
-            os.flush();
-
-            handshakeSocket.close();
+            var switchSocket = new Socket(InetAddress.getByName(switchIp), SWITCH_PORT);
+            var switchStream = switchSocket.getOutputStream();
+            switchStream.write(payloadSize);
+            switchStream.write(payload);
+            switchStream.flush();
+            switchSocket.close();
+            return false;
         }
-        catch (IOException ioe){
-            print("Unable to connect to NS and send files list:\n         "
-                    + ioe.getMessage(), EMsgType.FAIL);
+        catch (Exception e) {
+            print("Unable to connect to NS or send files list:%n         "+e.getMessage(), EMsgType.FAIL);
             close(EFileStatus.UNKNOWN);
             return true;
         }
-        return false;
     }
-    private void serveRequestsLoop(){
+    private void serveRequestsLoop() {
         try {
-            while (jobInProgress){
+            while (jobInProgress) {
                 clientSocket = serverSocket.accept();
-                var reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
                 currSockOS = clientSocket.getOutputStream();
                 currSockPW = new PrintWriter(new OutputStreamWriter(currSockOS));
 
-                String line;
-                var tcpPacket = new LinkedList<String>();
-                while ((line = reader.readLine()) != null) {
-                    if (line.trim().isEmpty()) {          // If TCP packet is ended
-                        handleRequest(tcpPacket);     // Proceed required things
-                        tcpPacket.clear();                // Clear data and wait for next TCP packet
+                try (var reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+                    String line;
+                    var tcpPacket = new ArrayList<String>();
+                    while ((line = reader.readLine()) != null) {
+                        if (line.trim().isEmpty()) {          // If TCP packet is ended
+                            handleRequest(tcpPacket);         // Proceed required things
+                            tcpPacket.clear();                // Clear data and wait for next TCP packet
+                        }
+                        else {
+                            tcpPacket.add(line);              // Otherwise collect data
+                        }
                     }
-                    else
-                        tcpPacket.add(line);              // Otherwise collect data
+                    clientSocket.close();
                 }
-                clientSocket.close();
-
-                //TODO: close BufferedReader? reader.close();
             }
         }
-        catch (Exception e){
+        catch (Exception e) {
             if (isCancelled())
                 print("Interrupted by user.", EMsgType.INFO);
             else
@@ -191,58 +175,57 @@ public class NETCommunications extends CancellableRunnable {
      * Handle requests
      * @return true if failed
      * */
-    private void handleRequest(LinkedList<String> packet) throws Exception{
+    private void handleRequest(List<String> packet) throws Exception {
         if (packet.getFirst().startsWith("DROP")) {
             jobInProgress = false;
             return;
         }
+        
+        var fileName = packet.getFirst().replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", "");
 
-        File requestedFile;
-        var reqFileName = packet.getFirst().replaceAll("(^[A-z\\s]+/)|(\\s+?.*$)", "");
-
-        if (! files.containsKey(reqFileName)){
-            writeToSocket(NETPacket.getCode404());
-            print("File "+reqFileName+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
+        if (! files.containsKey(fileName)) {
+            writeToSocket(getCode404());
+            print("File "+fileName+" doesn't exists or have 0 size. Reply 404", EMsgType.FAIL);
             return;
         }
 
-        long reqFileSize = files.get(reqFileName).getSize();
-        requestedFile = files.get(reqFileName).getFile();
+        var file = files.get(fileName).getFile();
+        var fileSize = files.get(fileName).getSize();
 
-        if (! requestedFile.exists() || reqFileSize == 0){   // well.. tell 404 if file exists with 0 length is against standard, but saves time
-            writeToSocket(NETPacket.getCode404());
-            print("File "+requestedFile.getName()+" doesn't exists or have 0 size. Returning 404", EMsgType.FAIL);
-            logPrinter.update(requestedFile, EFileStatus.FAILED);
+        if (! file.exists() || fileSize == 0) {   // reply 404 if file exists with 0 length. Saves time
+            writeToSocket(getCode404());
+            print("File "+file.getName()+" doesn't exists or have 0 size. Reply 404", EMsgType.FAIL);
+            logPrinter.update(file, EFileStatus.FAILED);
             return;
         }
-        if (packet.get(0).startsWith("HEAD")){
-            writeToSocket(NETPacket.getCode200(reqFileSize));
-            print("Replying for requested file: "+requestedFile.getName(), EMsgType.INFO);
+        if (packet.getFirst().startsWith("HEAD")) {
+            writeToSocket(getCode200(fileSize));
+            print("Replying for requested file: "+file.getName(), EMsgType.INFO);
             return;
         }
-        if (packet.get(0).startsWith("GET")) {
-            for (String line: packet) {
-                if (line.toLowerCase().startsWith("range")){
-                    parseGETrange(requestedFile, reqFileName, reqFileSize, line);
+        if (packet.getFirst().startsWith("GET")) {
+            for (var line: packet) {
+                if (line.toLowerCase().startsWith("range")) {
+                    parseGetRange(file, fileName, fileSize, line);
                     return;
                 }
             }
         }
     }
 
-    private void parseGETrange(File file, String fileName, long fileSize, String rangeDirective) throws Exception{
+    private void parseGetRange(File file, String fileName, long fileSize, String rangeDirective) throws Exception {
         try {
-            String[] rangeStr = rangeDirective.toLowerCase().replaceAll("^range:\\s+?bytes=", "").split("-", 2);
+            var rangeStr = rangeDirective.toLowerCase()
+                    .replaceAll("^range:\\s+?bytes=", "")
+                    .split("-", 2);
 
-            if (! rangeStr[0].isEmpty() && ! rangeStr[1].isEmpty()) {      // If both ranges defined: Read requested
+            if (! rangeStr[0].isEmpty() && ! rangeStr[1].isEmpty()) {
                 long fromRange = Long.parseLong(rangeStr[0]);
                 long toRange = Long.parseLong(rangeStr[1]);
 
-                if (fromRange > toRange){ // If start bytes greater then end bytes
-                    writeToSocket(NETPacket.getCode400());
-                    print("Requested range for "
-                            + file.getName()
-                            + " is incorrect. Returning 400", EMsgType.FAIL);
+                if (fromRange > toRange) { // If start bytes greater than end bytes
+                    writeToSocket(getCode400());
+                    print("Requested range for "+file.getName()+" is incorrect. Reply 400", EMsgType.FAIL);
                     logPrinter.update(file, EFileStatus.FAILED);
                     return;
                 }
@@ -251,37 +234,30 @@ public class NETCommunications extends CancellableRunnable {
             }
 
             if (! rangeStr[0].isEmpty()) { // If only START defined: Read all
-                writeToSocket(fileName, Long.parseLong(rangeStr[0]), fileSize - 1);
+                writeToSocket(fileName, Long.parseLong(rangeStr[0]), fileSize-1);
                 return;
             }
 
             if (rangeStr[1].isEmpty()) { // If Range not defined: like "Range: bytes=-"
-                writeToSocket(NETPacket.getCode400());
-                print("Requested range for "
-                        + file.getName()
-                        + " is incorrect (empty start & end). Returning 400", EMsgType.FAIL);
+                writeToSocket(getCode400());
+                print("Requested range for "+file.getName()+" is incorrect. Reply 400", EMsgType.FAIL);
                 logPrinter.update(file, EFileStatus.FAILED);
                 return;
             }
 
-            if (fileSize > 500){
+            if (fileSize > 500) {
                 writeToSocket(fileName, fileSize - 500, fileSize);
                 return;
             }
             // If file smaller than 500 bytes
-            writeToSocket(NETPacket.getCode416());
-            print("File size requested for "
-                    + file.getName()
-                    + " while actual size of it: "
-                    + fileSize+". Returning 416", EMsgType.FAIL);
+            writeToSocket(getCode416());
+            print("%s file requested size of %s. Reply 416".formatted(file.getName(), fileSize), EMsgType.FAIL);
             logPrinter.update(file, EFileStatus.FAILED);
         }
-        catch (NumberFormatException nfe){
-            writeToSocket(NETPacket.getCode400());
-            print("Requested range for "
-                    + file.getName()
-                    + " has incorrect format. Returning 400\n\t"
-                    + nfe.getMessage(), EMsgType.FAIL);
+        catch (NumberFormatException nfe) {
+            writeToSocket(getCode400());
+            print("Requested range for "+file.getName()+" has incorrect format. Reply 400\n\t"+nfe.getMessage(),
+                    EMsgType.FAIL);
             logPrinter.update(file, EFileStatus.FAILED);
         }
     }
@@ -293,117 +269,81 @@ public class NETCommunications extends CancellableRunnable {
     /**
      * Send files.
      * */
-    private void writeToSocket(String fileName, long start, long end) throws Exception{
-        File file = files.get(fileName).getFile();
-
-        print("Reply to range: "+start+"-"+end, EMsgType.INFO);
-
-        writeToSocket(NETPacket.getCode206(files.get(fileName).getSize(), start, end));
-        try{
-            if (file.isDirectory())
-                handleSplitFile(file, start, end);
-            else
-                handleRegularFile(file, start, end);
-
+    private void writeToSocket(String fileName, long start, long end) throws Exception {
+        print("Reply to: %s%n         0x%x-0x%x | %d-%d".formatted(fileName, start, end, start, end), EMsgType.INFO);
+        
+        writeToSocket(getCode206(files.get(fileName).getSize(), start, end));
+        var file = files.get(fileName).getFile();
+        try {
+            handleFile(file, start, end, file.isDirectory());
             logPrinter.updateProgress(1.0);
         }
-        catch (Exception e){
+        catch (Exception e) {
             logPrinter.update(file, EFileStatus.FAILED);
-            throw new Exception("File transmission failed:\n         "+e.getMessage());
+            throw new Exception("File transmission failed:%n         "+e.getMessage());
         }
     }
 
-    private void handleSplitFile(File file, long start, long end) throws Exception{
-        long count = end - start + 1;
+    private void handleFile(File file, long start, long end, boolean isSplit) throws Exception {
+        int readPice = CHUNK_SIZE;
+        long offset = 0;
 
-        int readPice = 1024;// NOTE: keep it small for better speed
-        byte[] byteBuf;
-        long currentOffset = 0;
+        try (var inStream = isSplit?
+                new NSSplitReader(file, start):
+                new BufferedInputStream(new FileInputStream(file))) {
 
-        NSSplitReader nsr = new NSSplitReader(file, start);
+            if (!isSplit && inStream.skip(start) != start)
+                throw new IOException("Unable to skip requested range.");
 
-        while (currentOffset < count){
-            if ((currentOffset + readPice) >= count){
-                readPice = Math.toIntExact(count - currentOffset);
+            var count = end-start+1;
+            while (offset < count) {
+                if ((offset + readPice) >= count)
+                    readPice = Math.toIntExact(count - offset);
+
+                var byteBuf = new byte[readPice];
+
+                if (inStream.read(byteBuf) != readPice)
+                    throw new IOException("File stream suddenly ended.");
+                currSockOS.write(byteBuf);
+                logPrinter.updateProgress((offset + readPice) / (count / 100.0) / 100.0);
+                offset += readPice;
             }
-            byteBuf = new byte[readPice];
-
-            if (nsr.read(byteBuf) != readPice)
-                throw new IOException("File stream suddenly ended.");
-
-            currSockOS.write(byteBuf);
-            logPrinter.updateProgress((currentOffset+readPice)/(count/100.0) / 100.0);
-
-            currentOffset += readPice;
+            currSockOS.flush();
         }
-        currSockOS.flush();         // TODO: check if this really needed.
-        nsr.close();
-    }
-    private void handleRegularFile(File file, long start, long end) throws Exception{
-        long count = end - start + 1;
-
-        int readPice = 1024; // NOTE: keep it small for better speed
-        byte[] byteBuf;
-        long currentOffset = 0;
-
-        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-
-        if (bis.skip(start) != start)
-            throw new IOException("Unable to skip requested range.");
-
-        while (currentOffset < count){
-
-            if ((currentOffset + readPice) >= count){
-                readPice = Math.toIntExact(count - currentOffset);
-            }
-            byteBuf = new byte[readPice];
-
-            if (bis.read(byteBuf) != readPice){
-                throw new IOException("File stream suddenly ended.");
-            }
-            currSockOS.write(byteBuf);
-            logPrinter.updateProgress((currentOffset+readPice)/(count/100.0) / 100.0);
-            currentOffset += readPice;
-        }
-        currSockOS.flush();         // TODO: check if this really needed.
-        bis.close();
     }
 
-    public ServerSocket getServerSocket(){
+    public ServerSocket getServerSocket() {
         return serverSocket;
     }
-    public Socket getClientSocket(){
+    public Socket getClientSocket() {
         return clientSocket;
     }
     /**
      * Close when done
      * */
-    private void close(EFileStatus status){
+    private void close(EFileStatus status) {
         try {
             if (serverSocket != null && ! serverSocket.isClosed()) {
                 serverSocket.close();
                 print("Closing server socket.", EMsgType.PASS);
             }
         }
-        catch (IOException ioe){
+        catch (IOException ioe) {
             print("Closing server socket failed. Sometimes it's not an issue.", EMsgType.WARNING);
         }
 
-        HashMap<String, File> tempMap = new HashMap<>();
-        for (UniFile sf : files.values())
-            tempMap.put(sf.getFile().getName(), sf.getFile());
-
+        var tempMap = files.values().stream().collect(Collectors.toMap(
+                uniFile -> uniFile.getFile().getName(), 
+                uniFile -> uniFile.getFile()));
+        
         logPrinter.update(tempMap, status);
-
         print("\tEnd chain", EMsgType.INFO);
         logPrinter.close();
     }
-    private void print(String message, EMsgType type){
+    private void print(String message, EMsgType type) {
         try {
             logPrinter.print(message, type);
         }
-        catch (InterruptedException ie){
-            ie.printStackTrace();
-        }
+        catch (InterruptedException ignored) {}
     }
 }
