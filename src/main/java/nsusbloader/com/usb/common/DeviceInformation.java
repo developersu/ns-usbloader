@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -24,21 +24,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DeviceInformation {
-    private static final byte DEFAULT_IN_EP_ADDRESS = -127; // 0x81
-    private static final byte DEFAULT_OUT_EP_ADDRESS = 1;
+    private static final byte IN_ENDPOINT_ADDRESS = (byte) 0x81;
+    private static final byte OUT_ENDPOINT_ADDRESS = 1;
 
     private Device device;
     private ConfigDescriptor configDescriptor;
-    private List<NsUsbInterface> interfacesInformation = new ArrayList<>();
+    private final List<NsUsbInterface> interfacesInformation = new ArrayList<>();
 
-    private DeviceInformation(){}
+    private DeviceInformation() {}
 
-    public static DeviceInformation build(DeviceHandle handler) throws Exception{
-        Device device = LibUsb.getDevice(handler);
-        return DeviceInformation.build(device);
+    public static DeviceInformation build(DeviceHandle handler) throws Exception {
+        return DeviceInformation.build(LibUsb.getDevice(handler));
     }
-    public static DeviceInformation build(Device device) throws Exception{
-        DeviceInformation deviceInformation = new DeviceInformation();
+    public static DeviceInformation build(Device device) throws Exception {
+        var deviceInformation = new DeviceInformation();
         deviceInformation.device = device;
         deviceInformation.claimConfigurationDescriptor();
         deviceInformation.collectInterfaces();
@@ -46,49 +45,46 @@ public class DeviceInformation {
         return deviceInformation;
     }
 
-    private void claimConfigurationDescriptor() throws Exception{
+    private void claimConfigurationDescriptor() throws Exception {
         configDescriptor = new ConfigDescriptor();
         int returningValue = LibUsb.getActiveConfigDescriptor(device, configDescriptor);
 
         if (returningValue != LibUsb.SUCCESS)
-            throw new Exception("Get Active config descriptor failed: "+ LibUsb.errorName(returningValue));
+            throw new Exception("Get Active config descriptor failed: " + LibUsb.errorName(returningValue));
     }
 
-    private void collectInterfaces(){
-        for (Interface intrface : configDescriptor.iface())
-            interfacesInformation.add(new NsUsbInterface(intrface));
+    private void collectInterfaces() {
+        for (var iface: configDescriptor.iface())
+            interfacesInformation.add(new NsUsbInterface(iface));
     }
 
-    private void freeConfigurationDescriptor(){
+    private void freeConfigurationDescriptor() {
         LibUsb.freeConfigDescriptor(configDescriptor);
     }
 
     /** Bulk transfer endpoint IN */
-    public NsUsbEndpointDescriptor getSimplifiedDefaultEndpointDescriptorIn() throws Exception{
+    public NsUsbEndpointDescriptor getSimplifiedDefaultEndpointDescriptorIn() throws Exception {
         return getSimplifiedDefaultEndpointDescriptor(true);
     }
     /** Bulk transfer endpoint OUT */
-    public NsUsbEndpointDescriptor getSimplifiedDefaultEndpointDescriptorOut() throws Exception{
+    public NsUsbEndpointDescriptor getSimplifiedDefaultEndpointDescriptorOut() throws Exception {
         return getSimplifiedDefaultEndpointDescriptor(false);
     }
 
-    private NsUsbEndpointDescriptor getSimplifiedDefaultEndpointDescriptor(boolean isDescriptorIN) throws Exception{
-        byte endpointAddress;
+    private NsUsbEndpointDescriptor getSimplifiedDefaultEndpointDescriptor(boolean isDescriptorIn) throws Exception {
+        byte endpointAddress = isDescriptorIn ?
+                IN_ENDPOINT_ADDRESS :
+                OUT_ENDPOINT_ADDRESS;
 
-        if (isDescriptorIN)
-            endpointAddress = DEFAULT_IN_EP_ADDRESS;
-        else
-            endpointAddress = DEFAULT_OUT_EP_ADDRESS;
+        var endpointDescriptors = interfacesInformation.getFirst()
+                .getInterfaceDescriptors()[0]
+                .getEndpointDescriptors();
 
-        NsUsbInterface nsUsbInterface = interfacesInformation.get(0);
-
-        NsUsbInterfaceDescriptor firstInterfaceDescriptor = nsUsbInterface.getInterfaceDescriptors()[0];
-        NsUsbEndpointDescriptor[] endpointDescriptors = firstInterfaceDescriptor.getEndpointDescriptors();
-
-        for (NsUsbEndpointDescriptor epDescriptor : endpointDescriptors){
+        for (var epDescriptor : endpointDescriptors) {
             if (epDescriptor.getbEndpointAddress() == endpointAddress)
                 return epDescriptor;
         }
-        throw new Exception("No "+(isDescriptorIN?"IN":"OUT")+" endpoint descriptors found on default interface");
+        throw new Exception("No %s endpoint descriptors found on default interface".formatted(
+                (isDescriptorIn ? "IN" : "OUT")));
     }
 }

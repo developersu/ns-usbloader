@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -19,6 +19,8 @@
 package nsusbloader.com.usb.common;
 
 import org.usb4java.InterfaceDescriptor;
+
+import java.util.Arrays;
 
 public class NsUsbInterfaceDescriptor {
     private final byte bLength;
@@ -44,8 +46,9 @@ public class NsUsbInterfaceDescriptor {
         this.bInterfaceSubClass = interfaceDescriptor.bInterfaceSubClass();
         this.bInterfaceProtocol = interfaceDescriptor.bInterfaceProtocol();
         this.iInterface = interfaceDescriptor.iInterface();
-
-        this.endpointDescriptors = NsUsbEndpointDescriptorUtils.convertFromNatives(interfaceDescriptor.endpoint());
+        this.endpointDescriptors = Arrays.stream(interfaceDescriptor.endpoint())
+                .map(NsUsbEndpointDescriptor::new)
+                .toArray(NsUsbEndpointDescriptor[]::new);
     }
 
     public byte getbLength() {

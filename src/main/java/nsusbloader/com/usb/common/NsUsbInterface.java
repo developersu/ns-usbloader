@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2020 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -19,13 +19,11 @@
 package nsusbloader.com.usb.common;
 
 import org.usb4java.Interface;
-import org.usb4java.InterfaceDescriptor;
 
 import java.util.LinkedList;
 
 /**
  * Adapter for easier access to USB devices which has only one interface with one interface descriptor (BULK)
- *
  * After few JVM failed to core few 'holders' were added: such as NsUsbEndpoint descriptor and NsUsbInterfaceDescriptor
  * */
 
@@ -40,7 +38,7 @@ public class NsUsbInterface {
     }
 
     private void collectDescriptors(){
-        for (InterfaceDescriptor ifaceDescriptor : iface.altsetting()){
+        for (var ifaceDescriptor: iface.altsetting()){
             interfaceDescriptors.add(new NsUsbInterfaceDescriptor(ifaceDescriptor));
         }
     }
