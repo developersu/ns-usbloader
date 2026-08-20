@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2023 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -35,57 +35,60 @@ import nsusbloader.AppPreferences;
 import java.io.File;
 import java.util.ResourceBundle;
 
+import static nsusbloader.ServiceWindow.getErrorNotification;
+
 public class DriversInstall {
+
+    static final long DRIVERS_FILE_SIZE = 3861842;
+    static final String FILE_NAME = "Drivers_set.exe";
 
     private static volatile boolean isRunning;
 
     private final ResourceBundle resourceBundle;
     private Label runInstallerStatusLabel;
 
-    public DriversInstall(ResourceBundle rb){
-        this.resourceBundle = rb;
+    public DriversInstall(ResourceBundle resourceBundle) {
+        this.resourceBundle = resourceBundle;
 
         if (isDriversDistributesWithExecutable())
-            runInstaller("Drivers_set.exe");
+            runInstaller();
         else
             runDownloadProcess();
     }
 
-    private boolean isDriversDistributesWithExecutable(){
-        final File drivers = new File("Drivers_set.exe");
-
-        return drivers.length() == DownloadDriversTask.DRIVERS_FILE_SIZE;
+    private boolean isDriversDistributesWithExecutable() {
+        return new File(FILE_NAME).length() == DRIVERS_FILE_SIZE;
     }
 
-    private void runDownloadProcess(){
-        if (DriversInstall.isRunning)
+    private void runDownloadProcess() {
+        if (isRunning)
             return;
 
-        DriversInstall.isRunning = true;
+        isRunning = true;
 
-        DownloadDriversTask downloadTask = new DownloadDriversTask();
+        var downloadTask = new DownloadDriversTask();
 
-        Button cancelButton = new Button(resourceBundle.getString("btn_Cancel"));
+        var cancelButton = new Button(resourceBundle.getString("btn_Cancel"));
 
-        HBox hBoxInformation = new HBox();
+        var hBoxInformation = new HBox();
         hBoxInformation.setAlignment(Pos.TOP_LEFT);
         hBoxInformation.getChildren().add(new Label(resourceBundle.getString("windowBodyDownloadDrivers")));
 
-        ProgressBar progressBar = new ProgressBar();
+        var progressBar = new ProgressBar();
         progressBar.setPrefWidth(Double.MAX_VALUE);
         progressBar.progressProperty().bind(downloadTask.progressProperty());
 
-        Label downloadStatusLabel = new Label();
+        var downloadStatusLabel = new Label();
         downloadStatusLabel.setWrapText(true);
         downloadStatusLabel.textProperty().bind(downloadTask.messageProperty());
 
         runInstallerStatusLabel = new Label();
         runInstallerStatusLabel.setWrapText(true);
 
-        Pane fillerPane1 = new Pane();
-        Pane fillerPane2 = new Pane();
+        var fillerPane1 = new Pane();
+        var fillerPane2 = new Pane();
 
-        VBox parentVBox = new VBox();
+        var parentVBox = new VBox();
         parentVBox.setAlignment(Pos.TOP_CENTER);
         parentVBox.setFillWidth(true);
         parentVBox.setSpacing(5.0);
@@ -104,8 +107,7 @@ public class DriversInstall {
         VBox.setVgrow(fillerPane1, Priority.ALWAYS);
         VBox.setVgrow(fillerPane2, Priority.ALWAYS);
 
-        Stage stage = new Stage();
-
+        var stage = new Stage();
         stage.setTitle(resourceBundle.getString("windowTitleDownloadDrivers"));
         stage.getIcons().addAll(
                 new Image("/res/dwnload_ico32x32.png"),    //TODO: REDRAW
@@ -116,16 +118,14 @@ public class DriversInstall {
         stage.setMinWidth(400);
         stage.setMinHeight(150);
 
-        Scene mainScene = new Scene(parentVBox, 405, 155);
-
+        var mainScene = new Scene(parentVBox, 405, 155);
         mainScene.getStylesheets().add(AppPreferences.getInstance().getTheme());
         parentVBox.setStyle(AppPreferences.getInstance().getFontStyle());
 
         stage.setOnHidden(windowEvent -> {
             downloadTask.cancel(true );
-            DriversInstall.isRunning = false;
+            isRunning = false;
         });
-
         stage.setScene(mainScene);
         stage.show();
         stage.toFront();
@@ -133,31 +133,32 @@ public class DriversInstall {
         downloadTask.setOnSucceeded(event -> {
             cancelButton.setText(resourceBundle.getString("btn_Close"));
 
-            String returnedValue = downloadTask.getValue();
-
-            if (returnedValue == null)
+            if (downloadTask.getValue())
                 return;
 
-            if (runInstaller(returnedValue))
+            if (runInstaller())
                 stage.close();
         });
 
-        Thread downloadThread = new Thread(downloadTask);
+        var downloadThread = new Thread(downloadTask);
         downloadThread.start();
 
-        cancelButton.setOnAction(actionEvent -> {
-            downloadTask.cancel(true );
+        cancelButton.setOnAction(event -> {
+            downloadTask.cancel(true);
             stage.close();
         });
     }
 
-    private boolean runInstaller(String pathToFile) {
+    private boolean runInstaller() {
         try {
-            Runtime.getRuntime().exec("cmd /c "+pathToFile);
+            new ProcessBuilder(FILE_NAME).start();
             return true;
         }
-        catch (Exception e){
-            runInstallerStatusLabel.setText("Error: "+e);
+        catch (Exception e) {
+            if (runInstallerStatusLabel == null)
+                getErrorNotification(resourceBundle.getString("windowTitleError"), "Error: "+e);
+            else
+                runInstallerStatusLabel.setText("Error: "+e);
             e.printStackTrace();
             return false;
         }

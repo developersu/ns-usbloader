@@ -1,5 +1,5 @@
 /*
-    Copyright 2019-2023 Dmitry Isaenko
+    Copyright 2019-2026 Dmitry Isaenko
 
     This file is part of NS-USBloader.
 
@@ -20,67 +20,44 @@ package nsusbloader.Utilities.WindowsDrivers;
 
 import javafx.concurrent.Task;
 
-import java.io.*;
-import java.net.URL;
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
+import java.net.URI;
 
-public class DownloadDriversTask extends Task<String> {
+import static nsusbloader.Utilities.WindowsDrivers.DriversInstall.DRIVERS_FILE_SIZE;
+import static nsusbloader.Utilities.WindowsDrivers.DriversInstall.FILE_NAME;
 
-    public static final long DRIVERS_FILE_SIZE = 3857375;
-    private static final String driverFileLocationURL = "https://github.com/developersu/NS-Drivers/releases/download/v1.0/Drivers_set.exe";
-
-    private static File driversInstallerFile;
+public class DownloadDriversTask extends Task<Boolean> {
 
     @Override
-    protected String call() {
-        if (isDriversDownloaded() || downloadDrivers())
-            return driversInstallerFile.getAbsolutePath();
-        return null;
-    }
-
-    private boolean isDriversDownloaded(){
-        return driversInstallerFile != null && driversInstallerFile.length() == DRIVERS_FILE_SIZE;
-    }
-
-    private boolean downloadDrivers(){
+    protected Boolean call() {
         try {
-            File tmpDirectory = File.createTempFile("nsul", null);
-            if (! tmpDirectory.delete())
-                return false;
-            if (! tmpDirectory.mkdirs())
-                return false;
-
-            tmpDirectory.deleteOnExit();
-
-            URL url = new URL(driverFileLocationURL);
-            BufferedInputStream bis = new BufferedInputStream(url.openStream());
-
-            driversInstallerFile = new File(tmpDirectory, "drivers.exe");
-            FileOutputStream fos = new FileOutputStream(driversInstallerFile);
-
-            byte[] dataBuffer = new byte[1024];
+            var url = new URI("https", "github.com", "/developersu/NS-Drivers/releases/download/v2.0/Drivers_set.exe", null)
+                    .toURL();
+            var dataBuffer = new byte[1024];
             int bytesRead;
             double totalRead = 0;
 
-            while ((bytesRead = bis.read(dataBuffer, 0, 1024)) != -1) {
-                fos.write(dataBuffer, 0, bytesRead);
-                totalRead += bytesRead;
-                updateProgress(totalRead, DRIVERS_FILE_SIZE);
-                if (this.isCancelled()) {
-                    bis.close();
-                    fos.close();
-                    updateProgress(0, 0);
-                    return false;
+            try (var inStream = new BufferedInputStream(url.openStream())) {
+                var fileOutStream = new FileOutputStream(FILE_NAME);
+                while ((bytesRead = inStream.read(dataBuffer, 0, 1024)) != -1) {
+                    fileOutStream.write(dataBuffer, 0, bytesRead);
+                    totalRead += bytesRead;
+                    updateProgress(totalRead, DRIVERS_FILE_SIZE);
+                    if (isCancelled()) {
+                        fileOutStream.close();
+                        return true;
+                    }
                 }
+                fileOutStream.close();
             }
-            bis.close();
-            fos.close();
-
-            return true;
-        }
-        catch (IOException | SecurityException e){
-            updateMessage("Error: "+e.toString().replaceAll(":.*$", ""));
-            e.printStackTrace();
             return false;
+        }
+        catch (Exception e) {
+            updateMessage("Error: "+e.toString().replaceAll(":.*$", ""));
+            updateProgress(0, 0);
+            e.printStackTrace();
+            return true;
         }
     }
 }
