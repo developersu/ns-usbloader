@@ -61,6 +61,7 @@ Sometimes I add new posts about this project [on my blog page](https://developer
 * Ryukyuan languages by [kuragehime](https://github.com/kuragehimekurara1)
 * Turkish language by [Erimsaholut](https://github.com/Erimsaholut)
 * Serbian (Latin) translation [BlytheScythe](https://github.com/BlytheScythe)
+* Catalan translation [segured928](https://github.com/segured928)
 
 * Angelo Elias Dalzotto makes packages in AUR
 * Phoenix[Msc] provides his shiny Mac M1 for debug
