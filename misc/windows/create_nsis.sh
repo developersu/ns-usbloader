@@ -23,9 +23,9 @@ echo "Version is: MAJOR=$MAJOR MINOR=$MINOR"
 
 case "$1" in
   legacy)
-    makensis -V4 /DVERSIONMAJOR="$MAJOR" /DVERSIONMINOR="$MINOR" /DFILEOUT=Installer-legacy "$NSIS_DIR/installer.nsi"
+    makensis -V4 -DVERSIONMAJOR="$MAJOR" -DVERSIONMINOR="$MINOR" -DFILEOUT=Installer-legacy "$NSIS_DIR/installer.nsi"
     ;;
   *)
-    makensis -V4 /DVERSIONMAJOR="$MAJOR" /DVERSIONMINOR="$MINOR" "$NSIS_DIR/installer.nsi"
+    makensis -V4 -DVERSIONMAJOR="$MAJOR" -DVERSIONMINOR="$MINOR" "$NSIS_DIR/installer.nsi"
     ;;
 esac
