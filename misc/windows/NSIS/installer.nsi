@@ -5,12 +5,23 @@
 
   !define APPNAME "NS-USBloader"
   !define COMPANYNAME "Dmitry Isaenko"
-  !define VERSIONMAJOR 0
-  !define VERSIONMINOR 0
+  ; Version is passed from create_nsis.sh via makensis /DVERSIONMAJOR /DVERSIONMINOR
+  ; (falls back to the values below when built without them)
+  !ifndef VERSIONMAJOR
+    !define VERSIONMAJOR 9999
+  !endif
+  !ifndef VERSIONMINOR
+    !define VERSIONMINOR 9999
+  !endif
   !define VERSIONBUILD 0
 
+  ; Output file base name; e.g. /DFILEOUT=Installer-legacy for the legacy variant
+  !ifndef FILEOUT
+    !define FILEOUT "Installer"
+  !endif
+
   Name "NS-USBloader"
-  OutFile "Installer.exe"
+  OutFile "${FILEOUT}-${VERSIONMAJOR}.${VERSIONMINOR}.exe"
 
 ;Default installation folder
    InstallDir "$PROGRAMFILES\${APPNAME}"
@@ -100,7 +111,7 @@
   LangString l10n_CreateShortcut ${LANG_UKRAINIAN} "Створити ярлик на Робочому столі"
   LangString l10n_CreateShortcut ${LANG_TURKISH} "Masaüstü Kısayolu oluştur"
 
-  BrandingText "NS-USBloader"
+  BrandingText "NS-USBloader v${VERSIONMAJOR}.${VERSIONMINOR}"
 ;--------------------------------
 Section "NS-USBloader" Install
 

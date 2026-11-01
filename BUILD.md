@@ -5,15 +5,14 @@ Java application:
 * Execute 
 `# mvn -B -DskipTests clean package`
 
-NOTE: For building 'legacy' version please update next section in pom.xml to be next: 
-```
-<dependency>
-   <groupId>org.usb4java</groupId>
-   <artifactId>usb4java</artifactId>
-   <version>1.2.0</version>
-   <scope>compile</scope>
-</dependency>
-```
+The build is driven by Maven profiles in a single `pom.xml`:
+
+| Command                                      | Result                                                                                                                                                         |
+|----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `mvn -B -DskipTests clean package`           | standard build (all platforms, `usb4java 1.3.0`, `NS-USBloader.exe`)                                                                                           |
+| `mvn -B -DskipTests clean package -Plegacy`  | legacy build (`usb4java 1.2.0` with default bundled `libusb4java 1.2.0` (no `ru.redrise.libusb4java`, `ns-usbloader-<version>-legacy.jar`, `NS-USBloader.exe`) |
+| `mvn -B -DskipTests clean package -Paarch64` | macOS/Linux aarch64 build (`linux-aarch64`/`mac-aarch64` JFX, aarch64 `libusb4java`, no Windows artifacts)                                                     |
+
 
 **Building JNI libraries (OPTIONAL)**
 

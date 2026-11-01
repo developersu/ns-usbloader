@@ -8,7 +8,7 @@
     <name>NS-USBloader</name>
 
     <artifactId>ns-usbloader</artifactId>
-    <version>7.3</version> <!-- linked via script to NSIS system. Should have format of 2 blocks of numbers -->
+    <version>7.3-SNAPSHOT</version> <!-- linked to NSIS. Should have format of 2 blocks of numbers -->
 
     <url>https://redrise.ru</url>
     <description>NS multi-tool</description>
@@ -51,12 +51,18 @@
         <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
         <javafx.version>25</javafx.version>
         <maven.compiler.release>23</maven.compiler.release>
+        <!-- Build-variant switches (overridden by profiles) -->
+        <usb4java.version>1.3.0</usb4java.version>
+        <javafx.linux.classifier>linux</javafx.linux.classifier>
+        <javafx.mac.classifier>mac</javafx.mac.classifier>
+        <finalNameSuffix></finalNameSuffix>
     </properties>
 
     <issueManagement>
         <system>GitHub</system>
         <url>https://github.com/developersu/${project.artifactId}/issues</url>
     </issueManagement>
+
     <dependencies>
         <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
         <dependency>
@@ -65,48 +71,27 @@
             <version>1.5.0</version>
             <scope>compile</scope>
         </dependency>
+
         <!-- openJFX Linux -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
-            <classifier>linux</classifier>
+            <classifier>${javafx.linux.classifier}</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
-            <classifier>linux</classifier>
+            <classifier>${javafx.linux.classifier}</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
-            <classifier>linux</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <!-- openJFX Windows -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>win</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>win</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>win</classifier>
+            <classifier>${javafx.linux.classifier}</classifier>
             <scope>compile</scope>
         </dependency>
         <!-- openJFX MAC -->
@@ -114,28 +99,21 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
-            <classifier>mac</classifier>
+            <classifier>${javafx.mac.classifier}</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
-            <classifier>mac</classifier>
+            <classifier>${javafx.mac.classifier}</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
-            <classifier>mac</classifier>
-            <scope>compile</scope>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.usb4java/usb4java -->
-        <dependency>
-            <groupId>org.usb4java</groupId>
-            <artifactId>usb4java</artifactId>
-            <version>1.3.0</version>         <!-- Must be 1.2.0 for macOS lower than Mojave -->
+            <classifier>${javafx.mac.classifier}</classifier>
             <scope>compile</scope>
         </dependency>
         <!-- Junit5 -->
@@ -165,8 +143,9 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
     <build>
-        <finalName>${project.artifactId}-${project.version}</finalName>
+        <finalName>${project.artifactId}-${project.version}${finalNameSuffix}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -179,16 +158,6 @@
         </resources>
 
         <plugins>
-            <!--OpenJFX for Java9+
-            <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
-                <configuration>
-                    <mainClass>nsusbloader.NSLMain</mainClass>
-                </configuration>
-            </plugin>
-            -->
             <!-- Junit5 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -213,13 +182,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.1.2</version>
-                <!--
-                <configuration>
-                    <manifestEntries>
-                        <Automatic-Module-Name>nsusbloader</Automatic-Module-Name>
-                    </manifestEntries>
-                </configuration>
-                -->
                 <executions>
                     <execution>
                         <id>default-jar</id>
@@ -253,51 +215,281 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <version>2.7.0</version>
-                <artifactId>launch4j-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>l4j-ns-usbloader</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>launch4j</goal>
-                        </goals>
-                        <configuration>
-                            <headerType>gui</headerType>
-                            <icon>appicon.ico</icon>
-                            <outfile>target/${project.name}.exe</outfile>
-                            <jar>target/${project.artifactId}-${project.version}.jar</jar>
-                            <!-- <downloadUrl>https://download.oracle.com/java/17/archive/jdk-17.0.1_windows-x64_bin.msi</downloadUrl> -->
-                            <errTitle>Launching error</errTitle>
-                            <!-- <dontWrapJar>true</dontWrapJar> -->
-                            <jre>
-                                <path>%PWD%/jdk</path>
-                                <minVersion>23.0.0</minVersion>
-                            </jre>
-                            <versionInfo>
-                                <fileVersion>${project.version}.0.0</fileVersion>
-                                <txtFileVersion>${project.version}</txtFileVersion>
-                                <fileDescription>NS multi-tool</fileDescription>
-                                <copyright>GNU General Public License v3, ${project.inceptionYear} ${project.organization.name}, Russia.</copyright>
-                                <productVersion>${project.version}.0.0</productVersion>
-                                <txtProductVersion>${project.version}</txtProductVersion>
-                                <companyName>${project.organization.name}</companyName>
-                                <productName>${project.name}</productName>
-                                <internalName>${project.name}</internalName>
-                                <originalFilename>${project.name}.exe</originalFilename>
-                            </versionInfo>
-                            <messages>
-                                <startupErr>Startup error</startupErr>
-                                <jreNotFoundErr>JDK not found</jreNotFoundErr>
-                                <jreVersionErr>JDK Version mismatch</jreVersionErr>
-                                <launcherErr>Launcher Error</launcherErr>
-                            </messages>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Default build: usb4java 1.3.0 (official libusb4java excluded) + ru.redrise.libusb4java
+             + Windows JFX + Windows .exe launcher.
+             Auto-activated, and auto-deactivated on -Plegacy/-Paarch64. -->
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <!-- usb4java; the official libusb4java is excluded in favour of ru.redrise:libusb4java -->
+                <dependency>
+                    <groupId>org.usb4java</groupId>
+                    <artifactId>usb4java</artifactId>
+                    <version>${usb4java.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.usb4java</groupId>
+                            <artifactId>libusb4java</artifactId>
+                        </exclusion>
+                    </exclusions>
+                    <scope>compile</scope>
+                </dependency>
+                <!-- openJFX Windows -->
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-fxml</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                    <scope>compile</scope>
+                </dependency>
+                <!-- redrise libusb4java (native libusb) -->
+                <dependency>
+                    <groupId>ru.redrise</groupId>
+                    <artifactId>libusb4java</artifactId>
+                    <classifier>linux-x86-64</classifier>
+                    <version>1.0.30</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>ru.redrise</groupId>
+                    <artifactId>libusb4java</artifactId>
+                    <classifier>win32-x86-64</classifier>
+                    <version>1.0.30</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>ru.redrise</groupId>
+                    <artifactId>libusb4java</artifactId>
+                    <classifier>linux-arm</classifier>
+                    <version>1.0.30</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>ru.redrise</groupId>
+                    <artifactId>libusb4java</artifactId>
+                    <classifier>linux-aarch64</classifier>
+                    <version>1.0.30</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>ru.redrise</groupId>
+                    <artifactId>libusb4java</artifactId>
+                    <classifier>darwin-x86-64</classifier>
+                    <version>1.0.30</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>ru.redrise</groupId>
+                    <artifactId>libusb4java</artifactId>
+                    <classifier>darwin-aarch64</classifier>
+                    <version>1.0.30</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <!-- Windows .exe launcher -->
+                    <plugin>
+                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <version>2.7.0</version>
+                        <artifactId>launch4j-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>l4j-ns-usbloader</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>launch4j</goal>
+                                </goals>
+                                <configuration>
+                                    <headerType>gui</headerType>
+                                    <icon>appicon.ico</icon>
+                                    <outfile>target/${project.name}.exe</outfile>
+                                    <jar>target/${project.artifactId}-${project.version}${finalNameSuffix}.jar</jar>
+
+                                    <errTitle>Launching error</errTitle>
+                                    <jre>
+                                        <path>%PWD%/jdk</path>
+                                        <minVersion>23.0.0</minVersion>
+                                    </jre>
+                                    <versionInfo>
+                                        <fileVersion>${project.version}.0.0</fileVersion>
+                                        <txtFileVersion>${project.version}</txtFileVersion>
+                                        <fileDescription>NS multi-tool</fileDescription>
+                                        <copyright>GNU General Public License v3, ${project.inceptionYear} ${project.organization.name}, Russia.</copyright>
+                                        <productVersion>${project.version}.0.0</productVersion>
+                                        <txtProductVersion>${project.version}</txtProductVersion>
+                                        <companyName>${project.organization.name}</companyName>
+                                        <productName>${project.name}</productName>
+                                        <internalName>${project.name}</internalName>
+                                        <originalFilename>${project.name}.exe</originalFilename>
+                                    </versionInfo>
+                                    <messages>
+                                        <startupErr>Startup error</startupErr>
+                                        <jreNotFoundErr>JDK not found</jreNotFoundErr>
+                                        <jreVersionErr>JDK Version mismatch</jreVersionErr>
+                                        <launcherErr>Launcher Error</launcherErr>
+                                    </messages>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Legacy build: usb4java 1.2.0 with its bundled libusb4java 1.2.0 (no exclusion),
+             no ru.redrise.libusb4java, bundles Windows JFX and the .exe launcher.
+             Activate with: -Plegacy -->
+        <profile>
+            <id>legacy</id>
+            <properties>
+                <usb4java.version>1.2.0</usb4java.version> <!-- Must be 1.2.0 for macOS lower than Mojave -->
+                <finalNameSuffix>-legacy</finalNameSuffix>
+            </properties>
+            <dependencies>
+                <!-- usb4java 1.2.0; transitive org.usb4java:libusb4java:1.2.0 stays in the fat JAR -->
+                <dependency>
+                    <groupId>org.usb4java</groupId>
+                    <artifactId>usb4java</artifactId>
+                    <version>${usb4java.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+                <!-- openJFX Windows (duplicated here because the 'default' profile is
+                     deactivated when this profile is activated) -->
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-fxml</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <!-- Windows .exe launcher (duplicated, see note above) -->
+                    <plugin>
+                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <version>2.7.0</version>
+                        <artifactId>launch4j-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>l4j-ns-usbloader-legacy</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>launch4j</goal>
+                                </goals>
+                                <configuration>
+                                    <headerType>gui</headerType>
+                                    <icon>appicon.ico</icon>
+                                    <outfile>target/${project.name}.exe</outfile>
+                                    <jar>target/${project.artifactId}-${project.version}${finalNameSuffix}.jar</jar>
+
+                                    <errTitle>Launching error</errTitle>
+                                    <jre>
+                                        <path>%PWD%/jdk</path>
+                                        <minVersion>23.0.0</minVersion>
+                                    </jre>
+                                    <versionInfo>
+                                        <fileVersion>${project.version}.0.0</fileVersion>
+                                        <txtFileVersion>${project.version}</txtFileVersion>
+                                        <fileDescription>NS multi-tool</fileDescription>
+                                        <copyright>GNU General Public License v3, ${project.inceptionYear} ${project.organization.name}, Russia.</copyright>
+                                        <productVersion>${project.version}.0.0</productVersion>
+                                        <txtProductVersion>${project.version}</txtProductVersion>
+                                        <companyName>${project.organization.name}</companyName>
+                                        <productName>${project.name}</productName>
+                                        <internalName>${project.name}</internalName>
+                                        <originalFilename>${project.name}.exe</originalFilename>
+                                    </versionInfo>
+                                    <messages>
+                                        <startupErr>Startup error</startupErr>
+                                        <jreNotFoundErr>JDK not found</jreNotFoundErr>
+                                        <jreVersionErr>JDK Version mismatch</jreVersionErr>
+                                        <launcherErr>Launcher Error</launcherErr>
+                                    </messages>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- macOS/Linux aarch64 build: usb4java 1.3.0 (official libusb4java excluded)
+             + aarch64 JFX classifiers + aarch64 ru.redrise libusb, no Windows artifacts.
+             Activate with: -Paarch64 -->
+        <profile>
+            <id>aarch64</id>
+            <properties>
+                <javafx.linux.classifier>linux-aarch64</javafx.linux.classifier>
+                <javafx.mac.classifier>mac-aarch64</javafx.mac.classifier>
+                <finalNameSuffix>-mac+linux-aarch64</finalNameSuffix>
+            </properties>
+            <dependencies>
+                <!-- usb4java; the official libusb4java is excluded in favour of ru.redrise:libusb4java -->
+                <dependency>
+                    <groupId>org.usb4java</groupId>
+                    <artifactId>usb4java</artifactId>
+                    <version>${usb4java.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.usb4java</groupId>
+                            <artifactId>libusb4java</artifactId>
+                        </exclusion>
+                    </exclusions>
+                    <scope>compile</scope>
+                </dependency>
+                <!-- redrise libusb4java (native libusb, aarch64 only) -->
+                <dependency>
+                    <groupId>ru.redrise</groupId>
+                    <artifactId>libusb4java</artifactId>
+                    <classifier>linux-aarch64</classifier>
+                    <version>1.0.30</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>ru.redrise</groupId>
+                    <artifactId>libusb4java</artifactId>
+                    <classifier>darwin-aarch64</classifier>
+                    <version>1.0.30</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>
