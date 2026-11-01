@@ -7,7 +7,7 @@ steps:
       - mvn -B -DskipTests clean package
       - mvn test -B
       - echo target/ns-usbloader-*jar
-      - mkdir artifacts
+      - mkdir -p artifacts
       - cp target/ns-usbloader-*jar artifacts
       - cp target/NS-USBloader.exe artifacts
     volumes:
@@ -35,7 +35,7 @@ steps:
     commands:
       - mvn -B -DskipTests clean package -Plegacy
       - echo target/ns-usbloader-*jar
-      - mkdir artifacts
+      - mkdir -p artifacts
       - cp target/ns-usbloader-*jar artifacts
       - cp target/NS-USBloader.exe artifacts
     volumes:
@@ -63,7 +63,7 @@ steps:
     commands:
       - mvn -B -DskipTests clean package -Paarch64
       - echo target/ns-usbloader-*jar
-      - mkdir artifacts
+      - mkdir -p artifacts
       - cp target/ns-usbloader-*jar artifacts
     volumes:
       - /home/docker/woodpecker/files/m2:/root/.m2
