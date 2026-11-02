@@ -24,7 +24,7 @@
   OutFile "${FILEOUT}-${VERSIONMAJOR}.${VERSIONMINOR}.exe"
 
 ;Default installation folder
-   InstallDir "$PROGRAMFILES\${APPNAME}"
+   InstallDir "$PROGRAMFILES64\${APPNAME}"
 
 ;Get installation folder from registry if available
 	InstallDirRegKey HKCU "Software\${APPNAME}" ""
