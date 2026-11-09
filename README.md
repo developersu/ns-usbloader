@@ -243,8 +243,6 @@ If you want to see this app translated to your language, go grab [this file](htt
 
 If you're familiar with pull requests, go ahead and create one! No worries if you are not. Just upload it somewhere (like pastebin/google drive/whatever else). [Create a new issue](https://github.com/developersu/ns-usbloader/issues) and post a link. I'll grab it and add it.
 
-To convert files of any locale to readable format (and vice versa) you can use this site [https://itpro.cz/juniconv/](https://itpro.cz/juniconv/)
-
 ## Support this app
 
 If you like this app, just give it a star on GitHub
